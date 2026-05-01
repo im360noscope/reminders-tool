@@ -1,30 +1,59 @@
-<img src="assets/images/example.png" alt="Example Template Screenshots">
+# Reminders
 
-<p>A minimal Expo template to create a LightOS-inspired app.</p>
+A reminders app for the Light Phone III.
 
-> [!NOTE]
-> This is very much a WIP. There's a lot of things I want to add but it'll take me a bit of time :)
+Organize tasks into lists, add due dates and times, and check things off as you go. Supports nested subtasks and a Today view for time-sensitive tasks.
 
-## Quick Start
+Built with [vandamd's light-template](https://github.com/vandamd/light-template) — a community-made Expo template for building LightOS-style apps for the Light Phone III.
 
-1. Update `app.json` with your app name, slug, and package name
-2. Run `bun dev`
+---
 
-## Commands
+## Features
 
-```bash
-bun dev  # Build and run
-bun run sync-version   # Sync version across files
-bun run generate-icon  # Generate icon from app name
-bun run generate-readme-image  # Generate README example image
+* Organize tasks into multiple lists
+* Add due dates and times to any task
+* Today view shows only tasks due today
+* Subtasks on any task
+* Check off tasks and subtasks with a tap
+* Completed tasks move to a collapsible group at the bottom
+* Long-press a list to rename, reorder, or delete it
+* Custom LightOS-style date and time pickers
+* Respects LightOS theme (black/white mode)
+* Haptic feedback on every tap
+
+---
+
+## Building
+
+This project uses [Expo](https://expo.dev) and [EAS Build](https://docs.expo.dev/build/introduction/).
+
+### Prerequisites
+
+* [Bun](https://bun.sh)
+* [EAS CLI](https://docs.expo.dev/build/setup/)
+* An Expo account
+
+### Steps
+
+```
+bun install
+eas login
+eas build --platform android --profile preview
 ```
 
-## GitHub Releases
+EAS will build the APK in the cloud and provide a download link.
 
-Trigger the workflow manually in Actions tab. It builds an APK and creates a GitHub release tagged with the version from `app.json`. Changelog is auto-generated from commits since the last release.
+---
 
-Requires `EXPO_TOKEN` secret in repo settings.
+## Installing on Light Phone III
 
-## Detailed Docs
+1. Download the APK from the latest [GitHub Release](https://github.com/im360noscope/reminders-tool/releases)
+2. On your Light Phone III, enable installing from unknown sources
+3. Transfer and install the APK, or use [Obtainium](https://github.com/ImranR98/Obtainium) to manage updates automatically
 
-See [AGENTS.md](./AGENTS.md) for complete component reference, patterns, and examples.
+---
+
+## Credits
+
+* [vandamd](https://github.com/vandamd) — [light-template](https://github.com/vandamd/light-template), the community Expo template this app is built on
+* [The Light Phone](https://www.thelightphone.com) — for building a phone worth making apps for
