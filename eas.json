@@ -3,6 +3,11 @@
         "appVersionSource": "local"
     },
     "build": {
+        "preview": {
+            "android": {
+                "buildType": "apk"
+            }
+        },
         "production": {
             "android": {
                 "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=arm64-v8a"
