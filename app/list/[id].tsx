@@ -1,0 +1,178 @@
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Header } from "@/components/Header";
+import { HapticPressable } from "@/components/HapticPressable";
+import { StyledText } from "@/components/StyledText";
+import { TaskCheckbox } from "@/components/TaskCheckbox";
+import { useInvertColors } from "@/contexts/InvertColorsContext";
+import { useReminders, type Task } from "@/contexts/RemindersContext";
+import { n } from "@/utils/scaling";
+
+function formatDate(date: string): string {
+  const [, mo, d] = date.split("-").map(Number);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[mo - 1]} ${d}`;
+}
+
+function formatTime(time: string): string {
+  const [hStr, mStr] = time.split(":");
+  const h = parseInt(hStr, 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${mStr} ${ampm}`;
+}
+
+interface TaskRowProps {
+  task: Task;
+  listTitle: string;
+  onToggle: () => void;
+  onPress: () => void;
+  dimmed?: boolean;
+}
+
+function TaskRow({ task, listTitle, onToggle, onPress, dimmed }: TaskRowProps) {
+  const { invertColors } = useInvertColors();
+  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
+
+  const meta = [
+    listTitle,
+    task.date ? formatDate(task.date) : null,
+    task.time ? formatTime(task.time) : null,
+  ].filter(Boolean).join(" · ");
+
+  return (
+    <View style={[styles.taskRow, { borderBottomColor: dividerColor, opacity: dimmed ? 0.4 : 1 }]}>
+      <TaskCheckbox checked={task.completed} onToggle={onToggle} />
+      <HapticPressable onPress={onPress} style={styles.taskContent}>
+        <StyledText style={[styles.taskTitle, task.completed && styles.taskDone]}>
+          {task.title}
+        </StyledText>
+        {meta ? (
+          <StyledText style={styles.taskMeta}>{meta}</StyledText>
+        ) : null}
+      </HapticPressable>
+    </View>
+  );
+}
+
+export default function ListScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { invertColors } = useInvertColors();
+  const { lists, tasks, toggleTask } = useReminders();
+  const bg = invertColors ? "white" : "black";
+  const textColor = invertColors ? "black" : "white";
+  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
+
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const list = lists.find(l => l.id === id);
+  const listTitle = list?.title ?? "List";
+
+  const listTasks = tasks.filter(t => t.listId === id);
+  const active = listTasks
+    .filter(t => !t.completed)
+    .sort((a, b) => a.order - b.order);
+  const completed = listTasks
+    .filter(t => t.completed)
+    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
+      <Header
+        headerTitle={listTitle}
+        rightAction={{
+          icon: "add",
+          onPress: () => router.push({ pathname: "/(tabs)/add" }),
+        }}
+      />
+
+      {listTasks.length === 0 ? (
+        <View style={styles.empty}>
+          <StyledText style={styles.emptyText}>no tasks</StyledText>
+        </View>
+      ) : (
+        <ScrollView overScrollMode="never" showsVerticalScrollIndicator={false}>
+          {active.map(task => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              listTitle={listTitle}
+              onToggle={() => toggleTask(task.id)}
+              onPress={() => router.push({ pathname: "/task/[id]", params: { id: task.id } })}
+            />
+          ))}
+
+          {completed.length > 0 && (
+            <>
+              <HapticPressable
+                onPress={() => setShowCompleted(v => !v)}
+                style={[styles.completedHeader, { borderBottomColor: dividerColor }]}
+              >
+                <StyledText style={styles.completedLabel}>
+                  Completed ({completed.length})
+                </StyledText>
+              </HapticPressable>
+
+              {showCompleted && completed.map(task => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  listTitle={listTitle}
+                  onToggle={() => toggleTask(task.id)}
+                  onPress={() => router.push({ pathname: "/task/[id]", params: { id: task.id } })}
+                  dimmed
+                />
+              ))}
+            </>
+          )}
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  taskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: n(22),
+    borderBottomWidth: n(1),
+  },
+  taskContent: {
+    flex: 1,
+    paddingVertical: n(16),
+  },
+  taskTitle: {
+    fontSize: n(26),
+  },
+  taskDone: {
+    opacity: 0.4,
+  },
+  taskMeta: {
+    fontSize: n(18),
+    opacity: 0.5,
+    marginTop: n(3),
+  },
+  empty: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: n(20),
+    opacity: 0.4,
+  },
+  completedHeader: {
+    paddingHorizontal: n(22),
+    paddingVertical: n(14),
+    borderBottomWidth: n(1),
+  },
+  completedLabel: {
+    fontSize: n(18),
+    opacity: 0.5,
+  },
+});
