@@ -16,53 +16,49 @@ interface HeaderProps {
   headerTitle?: string;
   hideBackButton?: boolean;
   rightAction?: RightAction;
+  reorderingDone?: () => void; // when set, replaces rightAction with a DONE text button
 }
 
 export function Header({
   headerTitle,
   hideBackButton = false,
   rightAction,
+  reorderingDone,
 }: HeaderProps) {
   const { invertColors } = useInvertColors();
   const iconColor = invertColors ? "black" : "white";
 
   const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    }
+    if (router.canGoBack()) router.back();
   };
 
   return (
-    <View
-      style={[
-        styles.header,
-        { backgroundColor: invertColors ? "white" : "black" },
-      ]}
-    >
+    <View style={[styles.header, { backgroundColor: invertColors ? "white" : "black" }]}>
+      {/* Left — back button or spacer */}
       {hideBackButton ? (
         <View style={styles.button} />
       ) : (
         <HapticPressable onPress={handleBack}>
           <View style={styles.button}>
-            <MaterialIcons
-              color={iconColor}
-              name="arrow-back-ios"
-              size={n(28)}
-            />
+            <MaterialIcons color={iconColor} name="arrow-back-ios" size={n(28)} />
           </View>
         </HapticPressable>
       )}
+
+      {/* Center — title */}
       <StyledText numberOfLines={1} style={styles.title}>
         {headerTitle}
       </StyledText>
-      {rightAction?.show !== false && rightAction?.icon ? (
+
+      {/* Right — DONE text (reorder mode) or icon button or spacer */}
+      {reorderingDone ? (
+        <HapticPressable onPress={reorderingDone} style={styles.doneButton}>
+          <StyledText style={styles.doneText}>DONE</StyledText>
+        </HapticPressable>
+      ) : rightAction?.show !== false && rightAction?.icon ? (
         <HapticPressable onPress={rightAction.onPress}>
           <View style={styles.button}>
-            <MaterialIcons
-              color={iconColor}
-              name={rightAction.icon}
-              size={n(28)}
-            />
+            <MaterialIcons color={iconColor} name={rightAction.icon} size={n(28)} />
           </View>
         </HapticPressable>
       ) : (
@@ -93,5 +89,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: n(6),
     paddingRight: n(4),
+  },
+  doneButton: {
+    paddingVertical: n(6),
+    paddingLeft: n(8),
+    minWidth: n(32),
+    alignItems: "flex-end",
+  },
+  doneText: {
+    fontSize: n(16),
   },
 });

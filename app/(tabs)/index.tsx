@@ -2,14 +2,14 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import {
+  Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HapticPressable } from "@/components/HapticPressable";
@@ -19,15 +19,16 @@ import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders, type ReminderList } from "@/contexts/RemindersContext";
 import { n } from "@/utils/scaling";
 
-type LongPressAction = "rename" | "delete";
+type LongPressAction = "rename" | "reorder" | "delete";
 
 export default function ListsScreen() {
   const { invertColors } = useInvertColors();
-  const { lists, tasks, addList, renameList, deleteList, moveListUp, moveListDown } = useReminders();
+  const { lists, addList, renameList, deleteList, moveListUp, moveListDown } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
 
+  const [isReordering, setIsReordering] = useState(false);
   const [actionList, setActionList] = useState<ReminderList | null>(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -38,9 +39,10 @@ export default function ListsScreen() {
   const sorted = [...lists].sort((a, b) => a.order - b.order);
 
   const handleLongPress = useCallback((list: ReminderList) => {
+    if (isReordering) return;
     setActionList(list);
     setShowActionMenu(true);
-  }, []);
+  }, [isReordering]);
 
   const handleAction = useCallback((action: LongPressAction) => {
     setShowActionMenu(false);
@@ -48,6 +50,8 @@ export default function ListsScreen() {
     if (action === "rename") {
       setRenameTitle(actionList.title);
       setShowRenameModal(true);
+    } else if (action === "reorder") {
+      setIsReordering(true);
     } else if (action === "delete") {
       Alert.alert(
         "Delete List",
@@ -77,44 +81,46 @@ export default function ListsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-      <Header headerTitle="Lists" hideBackButton />
+      <Header
+        headerTitle="Lists"
+        hideBackButton
+        rightAction={isReordering ? undefined : {
+          icon: "add",
+          onPress: () => { setNewListTitle(""); setShowAddModal(true); },
+        }}
+        reorderingDone={isReordering ? () => setIsReordering(false) : undefined}
+      />
 
       <ScrollView overScrollMode="never" showsVerticalScrollIndicator={false} style={styles.scroll}>
         {sorted.map((list, idx) => (
           <HapticPressable
             key={list.id}
-            onPress={() => router.push({ pathname: "/list/[id]", params: { id: list.id } })}
+            onPress={() => { if (!isReordering) router.push({ pathname: "/list/[id]", params: { id: list.id } }); }}
             onLongPress={() => handleLongPress(list)}
             delayLongPress={400}
             style={styles.listItem}
           >
             <StyledText style={styles.listTitle}>{list.title}</StyledText>
-            <View style={styles.arrowGroup}>
-              <HapticPressable onPress={() => moveListUp(list.id)} disabled={idx === 0}>
-                <MaterialIcons
-                  name="keyboard-arrow-up"
-                  size={n(28)}
-                  color={idx === 0 ? dimColor : textColor}
-                />
-              </HapticPressable>
-              <HapticPressable onPress={() => moveListDown(list.id)} disabled={idx === sorted.length - 1}>
-                <MaterialIcons
-                  name="keyboard-arrow-down"
-                  size={n(28)}
-                  color={idx === sorted.length - 1 ? dimColor : textColor}
-                />
-              </HapticPressable>
-            </View>
+            {isReordering && (
+              <View style={styles.arrowGroup}>
+                <HapticPressable onPress={() => moveListUp(list.id)} disabled={idx === 0}>
+                  <MaterialIcons
+                    name="keyboard-arrow-up"
+                    size={n(28)}
+                    color={idx === 0 ? dimColor : textColor}
+                  />
+                </HapticPressable>
+                <HapticPressable onPress={() => moveListDown(list.id)} disabled={idx === sorted.length - 1}>
+                  <MaterialIcons
+                    name="keyboard-arrow-down"
+                    size={n(28)}
+                    color={idx === sorted.length - 1 ? dimColor : textColor}
+                  />
+                </HapticPressable>
+              </View>
+            )}
           </HapticPressable>
         ))}
-
-        <HapticPressable
-          onPress={() => { setNewListTitle(""); setShowAddModal(true); }}
-          style={styles.addRow}
-        >
-          <MaterialIcons name="add-circle-outline" size={n(30)} color={textColor} />
-          <StyledText style={styles.addText}>New List</StyledText>
-        </HapticPressable>
       </ScrollView>
 
       {/* Long-press action menu */}
@@ -122,7 +128,7 @@ export default function ListsScreen() {
         <HapticPressable style={styles.menuBackdrop} onPress={() => setShowActionMenu(false)}>
           <View style={[styles.menuCard, { backgroundColor: bg }]}>
             <StyledText style={styles.menuListName}>{actionList?.title}</StyledText>
-            {(["rename", "delete"] as LongPressAction[]).map((action) => (
+            {(["rename", "reorder", "delete"] as LongPressAction[]).map((action) => (
               <HapticPressable
                 key={action}
                 onPress={() => handleAction(action)}
@@ -140,7 +146,7 @@ export default function ListsScreen() {
       {/* Add list modal */}
       <Modal visible={showAddModal} animationType="none" transparent={false} statusBarTranslucent>
         <KeyboardAvoidingView
-          style={[styles.inputBackdrop, { backgroundColor: bg }]}
+          style={[styles.modalBackdrop, { backgroundColor: bg }]}
           behavior={Platform.OS === "android" ? "height" : "padding"}
         >
           <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -164,7 +170,7 @@ export default function ListsScreen() {
       {/* Rename modal */}
       <Modal visible={showRenameModal} animationType="none" transparent={false} statusBarTranslucent>
         <KeyboardAvoidingView
-          style={[styles.inputBackdrop, { backgroundColor: bg }]}
+          style={[styles.modalBackdrop, { backgroundColor: bg }]}
           behavior={Platform.OS === "android" ? "height" : "padding"}
         >
           <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -205,17 +211,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: n(4),
   },
-  addRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: n(22),
-    paddingVertical: n(20),
-    gap: n(12),
-  },
-  addText: {
-    fontSize: n(24),
-    opacity: 0.5,
-  },
   menuBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -223,9 +218,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: n(40),
   },
-  menuCard: {
-    width: "100%",
-  },
+  menuCard: { width: "100%" },
   menuListName: {
     fontSize: n(20),
     opacity: 0.5,
@@ -236,15 +229,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: n(22),
     paddingVertical: n(20),
   },
-  menuItemText: {
-    fontSize: n(24),
-  },
-  menuItemDelete: {
-    opacity: 0.4,
-  },
-  inputBackdrop: {
-    flex: 1,
-  },
+  menuItemText: { fontSize: n(24) },
+  menuItemDelete: { opacity: 0.4 },
+  modalBackdrop: { flex: 1 },
   inputArea: {
     paddingHorizontal: n(22),
     paddingTop: n(24),
