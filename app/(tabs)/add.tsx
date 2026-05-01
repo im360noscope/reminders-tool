@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput as RNTextInput,
@@ -27,13 +28,12 @@ function formatDisplayDate(dateStr: string): string {
 }
 
 function formatDisplayTime(digits: string, ampm: "AM" | "PM"): string {
-  const h = digits.slice(0, 2);
+  const h = parseInt(digits.slice(0, 2), 10);
   const m = digits.slice(2, 4);
-  return `${parseInt(h, 10)}:${m} ${ampm}`;
+  return `${h}:${m} ${ampm}`;
 }
 
 function digitsToTime(digits: string, ampm: "AM" | "PM"): string {
-  // Returns HH:MM in 24h format for storage
   let h = parseInt(digits.slice(0, 2), 10);
   const m = digits.slice(2, 4);
   if (ampm === "PM" && h !== 12) h += 12;
@@ -46,32 +46,20 @@ export default function AddScreen() {
   const { lists, settings, addTask } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
-  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
-  const placeholderColor = invertColors ? "#AAAAAA" : "#555555";
+  const dimColor = invertColors ? "#AAAAAA" : "#555555";
 
-  const inputRef = useRef<RNTextInput>(null);
-
-  // Form state
   const [title, setTitle] = useState("");
   const [selectedListId, setSelectedListId] = useState<string>(settings.defaultListId);
-
-  // Date
   const [date, setDate] = useState<string | undefined>();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth());
-
-  // Time
   const [timeDigits, setTimeDigits] = useState("");
   const [ampm, setAmPm] = useState<"AM" | "PM">("AM");
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [confirmedTime, setConfirmedTime] = useState<string | undefined>(); // HH:MM 24h
-
-  // List picker
+  const [confirmedTime, setConfirmedTime] = useState<string | undefined>();
   const [showListPicker, setShowListPicker] = useState(false);
-
-  // Toast
   const [toastVisible, setToastVisible] = useState(false);
   const [toastTask, setToastTask] = useState({ title: "", listTitle: "" });
 
@@ -80,25 +68,19 @@ export default function AddScreen() {
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
-    Keyboard.dismiss();
-
     const task = addTask({
       title: title.trim(),
       listId: selectedListId,
       date,
       time: confirmedTime,
     });
-
     const listTitle = lists.find(l => l.id === selectedListId)?.title ?? "";
-
     if (settings.afterAddBehavior === "toast") {
       setToastTask({ title: task.title, listTitle });
       setToastVisible(true);
     } else {
       router.push({ pathname: "/list/[id]", params: { id: selectedListId } });
     }
-
-    // Reset form (keep last list)
     setTitle("");
     setDate(undefined);
     setConfirmedTime(undefined);
@@ -106,38 +88,11 @@ export default function AddScreen() {
     setAmPm("AM");
   }, [canSave, title, selectedListId, date, confirmedTime, lists, settings, addTask]);
 
-  const handleDateSelect = useCallback((d: string) => {
-    setDate(d);
-    setShowDatePicker(false);
-  }, []);
-
   const handleTimeConfirm = useCallback(() => {
     if (timeDigits.length !== 4) return;
-    const t24 = digitsToTime(timeDigits, ampm);
-    setConfirmedTime(t24);
+    setConfirmedTime(digitsToTime(timeDigits, ampm));
     setShowTimePicker(false);
   }, [timeDigits, ampm]);
-
-  const handleDigit = useCallback((d: string) => {
-    setTimeDigits(prev => prev.length < 4 ? prev + d : prev);
-  }, []);
-
-  const handleBackspace = useCallback(() => {
-    setTimeDigits(prev => prev.slice(0, -1));
-  }, []);
-
-  const handleClearDate = useCallback(() => {
-    setDate(undefined);
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, []);
-
-  const handleClearTime = useCallback(() => {
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
@@ -147,94 +102,77 @@ export default function AddScreen() {
         rightAction={{ icon: "check", onPress: handleSave, show: canSave }}
       />
 
-      <ScrollView
-        overScrollMode="never"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        style={styles.scroll}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "android" ? "height" : "padding"}
       >
-        {/* Task name */}
-        <View style={[styles.field, { borderBottomColor: dividerColor }]}>
-          <RNTextInput
-            ref={inputRef}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Task name"
-            placeholderTextColor={placeholderColor}
-            style={[styles.titleInput, { color: textColor }]}
-            allowFontScaling={false}
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={handleSave}
-          />
-        </View>
-
-        {/* List */}
-        <HapticPressable
-          onPress={() => setShowListPicker(true)}
-          style={[styles.field, { borderBottomColor: dividerColor }]}
+        <ScrollView
+          overScrollMode="never"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
         >
-          <StyledText style={styles.fieldLabel}>List</StyledText>
-          <StyledText style={[styles.fieldValue, { color: textColor }]}>
-            {selectedList?.title ?? "Inbox"}
-          </StyledText>
-        </HapticPressable>
+          {/* Task name */}
+          <View style={styles.field}>
+            <RNTextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Task name"
+              placeholderTextColor={dimColor}
+              style={[styles.titleInput, { color: textColor }]}
+              allowFontScaling={false}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
+            />
+          </View>
 
-        {/* Date */}
-        <HapticPressable
-          onPress={() => setShowDatePicker(true)}
-          style={[styles.field, { borderBottomColor: dividerColor }]}
-        >
-          <StyledText style={styles.fieldLabel}>Date</StyledText>
-          {date ? (
-            <View style={styles.fieldValueRow}>
-              <StyledText style={[styles.fieldValue, { color: textColor }]}>
-                {formatDisplayDate(date)}
-              </StyledText>
-              <HapticPressable onPress={handleClearDate}>
-                <StyledText style={styles.clearBtn}>CLEAR</StyledText>
-              </HapticPressable>
-            </View>
-          ) : (
-            <StyledText style={[styles.fieldValue, { color: placeholderColor }]}>
-              None
-            </StyledText>
-          )}
-        </HapticPressable>
+          {/* List */}
+          <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
+            <StyledText style={styles.fieldLabel}>List</StyledText>
+            <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
+          </HapticPressable>
 
-        {/* Time — only available if date is set */}
-        {date && (
-          <HapticPressable
-            onPress={() => setShowTimePicker(true)}
-            style={[styles.field, { borderBottomColor: dividerColor }]}
-          >
-            <StyledText style={styles.fieldLabel}>Time</StyledText>
-            {confirmedTime ? (
+          {/* Date */}
+          <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
+            <StyledText style={styles.fieldLabel}>Date</StyledText>
+            {date ? (
               <View style={styles.fieldValueRow}>
-                <StyledText style={[styles.fieldValue, { color: textColor }]}>
-                  {formatDisplayTime(
-                    timeDigits.length === 4 ? timeDigits : confirmedTime.replace(":", ""),
-                    ampm
-                  )}
-                </StyledText>
-                <HapticPressable onPress={handleClearTime}>
+                <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
+                <HapticPressable onPress={() => { setDate(undefined); setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
                   <StyledText style={styles.clearBtn}>CLEAR</StyledText>
                 </HapticPressable>
               </View>
             ) : (
-              <StyledText style={[styles.fieldValue, { color: placeholderColor }]}>
-                None
-              </StyledText>
+              <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
             )}
           </HapticPressable>
-        )}
-      </ScrollView>
 
-      {/* Pickers */}
+          {/* Time */}
+          {date && (
+            <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
+              <StyledText style={styles.fieldLabel}>Time</StyledText>
+              {confirmedTime ? (
+                <View style={styles.fieldValueRow}>
+                  <StyledText style={styles.fieldValue}>
+                    {formatDisplayTime(timeDigits, ampm)}
+                  </StyledText>
+                  <HapticPressable onPress={() => { setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
+                    <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                  </HapticPressable>
+                </View>
+              ) : (
+                <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+              )}
+            </HapticPressable>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
       <DatePicker
         visible={showDatePicker}
         value={date}
-        onSelect={handleDateSelect}
+        onSelect={(d) => { setDate(d); setShowDatePicker(false); }}
         onDismiss={() => setShowDatePicker(false)}
         viewYear={viewYear}
         viewMonth={viewMonth}
@@ -252,8 +190,8 @@ export default function AddScreen() {
         visible={showTimePicker}
         digits={timeDigits}
         ampm={ampm}
-        onDigit={handleDigit}
-        onBackspace={handleBackspace}
+        onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)}
+        onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))}
         onAmPm={setAmPm}
         onConfirm={handleTimeConfirm}
         onDismiss={() => setShowTimePicker(false)}
@@ -263,14 +201,10 @@ export default function AddScreen() {
         visible={showListPicker}
         lists={lists}
         selectedId={selectedListId}
-        onSelect={(list) => {
-          setSelectedListId(list.id);
-          setShowListPicker(false);
-        }}
+        onSelect={(list) => { setSelectedListId(list.id); setShowListPicker(false); }}
         onDismiss={() => setShowListPicker(false)}
       />
 
-      {/* Full-screen toast */}
       <AddToast
         visible={toastVisible}
         taskTitle={toastTask.title}
@@ -287,7 +221,6 @@ const styles = StyleSheet.create({
   field: {
     paddingHorizontal: n(22),
     paddingVertical: n(18),
-    borderBottomWidth: n(1),
   },
   fieldLabel: {
     fontSize: n(14),

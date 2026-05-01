@@ -2,7 +2,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   TextInput as RNTextInput,
@@ -14,6 +15,7 @@ import { Header } from "@/components/Header";
 import { HapticPressable } from "@/components/HapticPressable";
 import { ListPickerModal } from "@/components/ListPickerModal";
 import { StyledText } from "@/components/StyledText";
+import { SwipeBackContainer } from "@/components/SwipeBackContainer";
 import { TaskCheckbox } from "@/components/TaskCheckbox";
 import { TimePicker } from "@/components/TimePicker";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
@@ -33,10 +35,7 @@ function timeToDisplayParts(time24: string): { digits: string; ampm: "AM" | "PM"
   const ampm: "AM" | "PM" = h >= 12 ? "PM" : "AM";
   if (h > 12) h -= 12;
   if (h === 0) h = 12;
-  return {
-    digits: `${String(h).padStart(2, "0")}${mStr}`,
-    ampm,
-  };
+  return { digits: `${String(h).padStart(2, "0")}${mStr}`, ampm };
 }
 
 function digitsToTime(digits: string, ampm: "AM" | "PM"): string {
@@ -59,12 +58,10 @@ export default function TaskScreen() {
   const { tasks, lists, updateTask, deleteTask, toggleTask, addSubtask, toggleSubtask, deleteSubtask } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
-  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
-  const placeholderColor = invertColors ? "#AAAAAA" : "#555555";
+  const dimColor = invertColors ? "#AAAAAA" : "#555555";
 
   const task = tasks.find(t => t.id === id);
 
-  // Local edit state — initialized from task
   const [title, setTitle] = useState(task?.title ?? "");
   const [listId, setListId] = useState(task?.listId ?? "");
   const [date, setDate] = useState<string | undefined>(task?.date);
@@ -74,11 +71,9 @@ export default function TaskScreen() {
   const [timeDigits, setTimeDigits] = useState(initTimeParts.digits);
   const [ampm, setAmPm] = useState<"AM" | "PM">(initTimeParts.ampm);
 
-  // Subtask input
   const [newSubtask, setNewSubtask] = useState("");
   const subtaskInputRef = useRef<RNTextInput>(null);
 
-  // Pickers
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth());
@@ -90,13 +85,7 @@ export default function TaskScreen() {
 
   const handleSave = useCallback(() => {
     if (!task || !title.trim()) return;
-    Keyboard.dismiss();
-    updateTask(task.id, {
-      title: title.trim(),
-      listId,
-      date,
-      time: confirmedTime,
-    });
+    updateTask(task.id, { title: title.trim(), listId, date, time: confirmedTime });
     router.back();
   }, [task, title, listId, date, confirmedTime, updateTask]);
 
@@ -104,14 +93,7 @@ export default function TaskScreen() {
     if (!task) return;
     Alert.alert("Delete Task", `Delete "${task.title}"?`, [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "DELETE",
-        style: "destructive",
-        onPress: () => {
-          deleteTask(task.id);
-          router.back();
-        },
-      },
+      { text: "DELETE", style: "destructive", onPress: () => { deleteTask(task.id); router.back(); } },
     ]);
   }, [task, deleteTask]);
 
@@ -124,202 +106,177 @@ export default function TaskScreen() {
 
   const handleTimeConfirm = useCallback(() => {
     if (timeDigits.length !== 4) return;
-    const t24 = digitsToTime(timeDigits, ampm);
-    setConfirmedTime(t24);
+    setConfirmedTime(digitsToTime(timeDigits, ampm));
     setShowTimePicker(false);
   }, [timeDigits, ampm]);
 
-  const handleClearDate = useCallback(() => {
-    setDate(undefined);
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, []);
-
-  const handleClearTime = useCallback(() => {
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, []);
-
   if (!task) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-        <Header />
-        <View style={styles.empty}>
-          <StyledText style={styles.emptyText}>task not found</StyledText>
-        </View>
-      </SafeAreaView>
+      <SwipeBackContainer onSwipeBack={() => router.back()}>
+        <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
+          <Header />
+          <View style={styles.empty}>
+            <StyledText style={styles.emptyText}>task not found</StyledText>
+          </View>
+        </SafeAreaView>
+      </SwipeBackContainer>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-      <Header
-        headerTitle="Edit"
-        rightAction={{ icon: "check", onPress: handleSave }}
-      />
+    <SwipeBackContainer onSwipeBack={handleSave}>
+      <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
+        <Header
+          headerTitle="Edit"
+          rightAction={{ icon: "check", onPress: handleSave }}
+        />
 
-      <ScrollView
-        overScrollMode="never"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Title */}
-        <View style={[styles.field, { borderBottomColor: dividerColor }]}>
-          <RNTextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Task name"
-            placeholderTextColor={placeholderColor}
-            style={[styles.titleInput, { color: textColor }]}
-            allowFontScaling={false}
-            returnKeyType="done"
-            onSubmitEditing={handleSave}
-          />
-        </View>
-
-        {/* List */}
-        <HapticPressable
-          onPress={() => setShowListPicker(true)}
-          style={[styles.field, { borderBottomColor: dividerColor }]}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "android" ? "height" : "padding"}
         >
-          <StyledText style={styles.fieldLabel}>List</StyledText>
-          <StyledText style={styles.fieldValue}>
-            {selectedList?.title ?? "Inbox"}
-          </StyledText>
-        </HapticPressable>
-
-        {/* Date */}
-        <HapticPressable
-          onPress={() => setShowDatePicker(true)}
-          style={[styles.field, { borderBottomColor: dividerColor }]}
-        >
-          <StyledText style={styles.fieldLabel}>Date</StyledText>
-          {date ? (
-            <View style={styles.fieldValueRow}>
-              <StyledText style={styles.fieldValue}>
-                {formatDisplayDate(date)}
-              </StyledText>
-              <HapticPressable onPress={handleClearDate}>
-                <StyledText style={styles.clearBtn}>CLEAR</StyledText>
-              </HapticPressable>
-            </View>
-          ) : (
-            <StyledText style={[styles.fieldValue, { color: placeholderColor }]}>
-              None
-            </StyledText>
-          )}
-        </HapticPressable>
-
-        {/* Time */}
-        {date && (
-          <HapticPressable
-            onPress={() => setShowTimePicker(true)}
-            style={[styles.field, { borderBottomColor: dividerColor }]}
+          <ScrollView
+            overScrollMode="never"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <StyledText style={styles.fieldLabel}>Time</StyledText>
-            {confirmedTime ? (
-              <View style={styles.fieldValueRow}>
-                <StyledText style={styles.fieldValue}>
-                  {formatDisplayTime(timeDigits, ampm)}
+            {/* Title */}
+            <View style={styles.field}>
+              <RNTextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Task name"
+                placeholderTextColor={dimColor}
+                style={[styles.titleInput, { color: textColor }]}
+                allowFontScaling={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSave}
+              />
+            </View>
+
+            {/* List */}
+            <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
+              <StyledText style={styles.fieldLabel}>List</StyledText>
+              <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
+            </HapticPressable>
+
+            {/* Date */}
+            <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
+              <StyledText style={styles.fieldLabel}>Date</StyledText>
+              {date ? (
+                <View style={styles.fieldValueRow}>
+                  <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
+                  <HapticPressable onPress={() => { setDate(undefined); setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
+                    <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                  </HapticPressable>
+                </View>
+              ) : (
+                <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+              )}
+            </HapticPressable>
+
+            {/* Time */}
+            {date && (
+              <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
+                <StyledText style={styles.fieldLabel}>Time</StyledText>
+                {confirmedTime ? (
+                  <View style={styles.fieldValueRow}>
+                    <StyledText style={styles.fieldValue}>
+                      {formatDisplayTime(timeDigits, ampm)}
+                    </StyledText>
+                    <HapticPressable onPress={() => { setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
+                      <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                    </HapticPressable>
+                  </View>
+                ) : (
+                  <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                )}
+              </HapticPressable>
+            )}
+
+            {/* Subtasks */}
+            <View style={styles.sectionHeader}>
+              <StyledText style={styles.sectionLabel}>Subtasks</StyledText>
+            </View>
+
+            {task.subtasks.map(sub => (
+              <View key={sub.id} style={styles.subtaskRow}>
+                <TaskCheckbox
+                  checked={sub.completed}
+                  onToggle={() => toggleSubtask(task.id, sub.id)}
+                  size={20}
+                />
+                <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>
+                  {sub.title}
                 </StyledText>
-                <HapticPressable onPress={handleClearTime}>
-                  <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                <HapticPressable
+                  onPress={() => deleteSubtask(task.id, sub.id)}
+                  style={styles.deleteSubtask}
+                >
+                  <StyledText style={styles.deleteSubtaskText}>×</StyledText>
                 </HapticPressable>
               </View>
-            ) : (
-              <StyledText style={[styles.fieldValue, { color: placeholderColor }]}>
-                None
-              </StyledText>
-            )}
-          </HapticPressable>
-        )}
+            ))}
 
-        {/* Subtasks */}
-        <View style={[styles.sectionHeader, { borderBottomColor: dividerColor }]}>
-          <StyledText style={styles.sectionLabel}>Subtasks</StyledText>
-        </View>
+            {/* Add subtask */}
+            <View style={styles.subtaskInputRow}>
+              <RNTextInput
+                ref={subtaskInputRef}
+                value={newSubtask}
+                onChangeText={setNewSubtask}
+                placeholder="Add subtask…"
+                placeholderTextColor={dimColor}
+                style={[styles.subtaskField, { color: textColor }]}
+                allowFontScaling={false}
+                returnKeyType="done"
+                onSubmitEditing={handleAddSubtask}
+              />
+            </View>
 
-        {task.subtasks.map(sub => (
-          <View key={sub.id} style={[styles.subtaskRow, { borderBottomColor: dividerColor }]}>
-            <TaskCheckbox
-              checked={sub.completed}
-              onToggle={() => toggleSubtask(task.id, sub.id)}
-              size={20}
-            />
-            <StyledText
-              style={[styles.subtaskTitle, sub.completed && styles.taskDone]}
-            >
-              {sub.title}
-            </StyledText>
-            <HapticPressable
-              onPress={() => deleteSubtask(task.id, sub.id)}
-              style={styles.deleteSubtask}
-            >
-              <StyledText style={styles.deleteSubtaskText}>×</StyledText>
+            {/* Delete */}
+            <HapticPressable onPress={handleDelete} style={styles.deleteRow}>
+              <StyledText style={styles.deleteText}>DELETE TASK</StyledText>
             </HapticPressable>
-          </View>
-        ))}
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-        {/* Add subtask input */}
-        <View style={[styles.subtaskInput, { borderBottomColor: dividerColor }]}>
-          <RNTextInput
-            ref={subtaskInputRef}
-            value={newSubtask}
-            onChangeText={setNewSubtask}
-            placeholder="Add subtask…"
-            placeholderTextColor={placeholderColor}
-            style={[styles.subtaskField, { color: textColor }]}
-            allowFontScaling={false}
-            returnKeyType="done"
-            onSubmitEditing={handleAddSubtask}
-          />
-        </View>
+        <DatePicker
+          visible={showDatePicker}
+          value={date}
+          onSelect={(d) => { setDate(d); setShowDatePicker(false); }}
+          onDismiss={() => setShowDatePicker(false)}
+          viewYear={viewYear}
+          viewMonth={viewMonth}
+          onPrevMonth={() => {
+            if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+            else setViewMonth(m => m - 1);
+          }}
+          onNextMonth={() => {
+            if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+            else setViewMonth(m => m + 1);
+          }}
+        />
 
-        {/* Delete task */}
-        <HapticPressable onPress={handleDelete} style={styles.deleteRow}>
-          <StyledText style={styles.deleteText}>DELETE TASK</StyledText>
-        </HapticPressable>
-      </ScrollView>
+        <TimePicker
+          visible={showTimePicker}
+          digits={timeDigits}
+          ampm={ampm}
+          onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)}
+          onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))}
+          onAmPm={setAmPm}
+          onConfirm={handleTimeConfirm}
+          onDismiss={() => setShowTimePicker(false)}
+        />
 
-      {/* Pickers */}
-      <DatePicker
-        visible={showDatePicker}
-        value={date}
-        onSelect={(d) => { setDate(d); setShowDatePicker(false); }}
-        onDismiss={() => setShowDatePicker(false)}
-        viewYear={viewYear}
-        viewMonth={viewMonth}
-        onPrevMonth={() => {
-          if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-          else setViewMonth(m => m - 1);
-        }}
-        onNextMonth={() => {
-          if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-          else setViewMonth(m => m + 1);
-        }}
-      />
-
-      <TimePicker
-        visible={showTimePicker}
-        digits={timeDigits}
-        ampm={ampm}
-        onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)}
-        onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))}
-        onAmPm={setAmPm}
-        onConfirm={handleTimeConfirm}
-        onDismiss={() => setShowTimePicker(false)}
-      />
-
-      <ListPickerModal
-        visible={showListPicker}
-        lists={lists}
-        selectedId={listId}
-        onSelect={(list) => { setListId(list.id); setShowListPicker(false); }}
-        onDismiss={() => setShowListPicker(false)}
-      />
-    </SafeAreaView>
+        <ListPickerModal
+          visible={showListPicker}
+          lists={lists}
+          selectedId={listId}
+          onSelect={(list) => { setListId(list.id); setShowListPicker(false); }}
+          onDismiss={() => setShowListPicker(false)}
+        />
+      </SafeAreaView>
+    </SwipeBackContainer>
   );
 }
 
@@ -328,7 +285,6 @@ const styles = StyleSheet.create({
   field: {
     paddingHorizontal: n(22),
     paddingVertical: n(18),
-    borderBottomWidth: n(1),
   },
   fieldLabel: {
     fontSize: n(14),
@@ -344,10 +300,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  clearBtn: {
-    fontSize: n(14),
-    opacity: 0.4,
-  },
+  clearBtn: { fontSize: n(14), opacity: 0.4 },
   titleInput: {
     fontSize: n(30),
     fontFamily: "PublicSans-Regular",
@@ -356,38 +309,24 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingHorizontal: n(22),
     paddingVertical: n(12),
-    borderBottomWidth: n(1),
   },
-  sectionLabel: {
-    fontSize: n(14),
-    opacity: 0.4,
-  },
+  sectionLabel: { fontSize: n(14), opacity: 0.4 },
   subtaskRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingRight: n(22),
-    borderBottomWidth: n(1),
   },
   subtaskTitle: {
     flex: 1,
     fontSize: n(22),
     paddingVertical: n(14),
   },
-  taskDone: {
-    opacity: 0.4,
-  },
-  deleteSubtask: {
-    paddingHorizontal: n(8),
-    paddingVertical: n(8),
-  },
-  deleteSubtaskText: {
-    fontSize: n(28),
-    opacity: 0.4,
-  },
-  subtaskInput: {
+  taskDone: { opacity: 0.4 },
+  deleteSubtask: { paddingHorizontal: n(8), paddingVertical: n(8) },
+  deleteSubtaskText: { fontSize: n(28), opacity: 0.4 },
+  subtaskInputRow: {
     paddingHorizontal: n(22),
     paddingVertical: n(14),
-    borderBottomWidth: n(1),
   },
   subtaskField: {
     fontSize: n(22),
@@ -398,17 +337,7 @@ const styles = StyleSheet.create({
     paddingVertical: n(28),
     alignItems: "center",
   },
-  deleteText: {
-    fontSize: n(18),
-    opacity: 0.3,
-  },
-  empty: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyText: {
-    fontSize: n(20),
-    opacity: 0.4,
-  },
+  deleteText: { fontSize: n(18), opacity: 0.3 },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center" },
+  emptyText: { fontSize: n(20), opacity: 0.4 },
 });

@@ -1,11 +1,11 @@
-import { StyleSheet, View, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/Header";
+import { HapticPressable } from "@/components/HapticPressable";
 import { StyledText } from "@/components/StyledText";
 import { TaskCheckbox } from "@/components/TaskCheckbox";
-import { HapticPressable } from "@/components/HapticPressable";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders, type Task } from "@/contexts/RemindersContext";
 import { n } from "@/utils/scaling";
@@ -18,14 +18,13 @@ function getTodayStr(): string {
 function formatTime(time: string): string {
   const [hStr, mStr] = time.split(":");
   const h = parseInt(hStr, 10);
-  const m = mStr;
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${m} ${ampm}`;
+  return `${h12}:${mStr} ${ampm}`;
 }
 
 function formatDate(date: string): string {
-  const [y, mo, d] = date.split("-").map(Number);
+  const [, mo, d] = date.split("-").map(Number);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${months[mo - 1]} ${d}`;
@@ -40,9 +39,6 @@ interface TaskRowProps {
 }
 
 function TaskRow({ task, listTitle, onToggle, onPress, dimmed }: TaskRowProps) {
-  const { invertColors } = useInvertColors();
-  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
-
   const meta = [
     listTitle,
     task.date ? formatDate(task.date) : null,
@@ -50,12 +46,10 @@ function TaskRow({ task, listTitle, onToggle, onPress, dimmed }: TaskRowProps) {
   ].filter(Boolean).join(" · ");
 
   return (
-    <View style={[styles.taskRow, { borderBottomColor: dividerColor, opacity: dimmed ? 0.4 : 1 }]}>
+    <View style={[styles.taskRow, dimmed && styles.taskRowDimmed]}>
       <TaskCheckbox checked={task.completed} onToggle={onToggle} />
       <HapticPressable onPress={onPress} style={styles.taskContent}>
-        <StyledText
-          style={[styles.taskTitle, task.completed && styles.taskDone]}
-        >
+        <StyledText style={[styles.taskTitle, task.completed && styles.taskDone]}>
           {task.title}
         </StyledText>
         {meta ? <StyledText style={styles.taskMeta}>{meta}</StyledText> : null}
@@ -68,14 +62,11 @@ export default function TodayScreen() {
   const { invertColors } = useInvertColors();
   const { tasks, lists, toggleTask } = useReminders();
   const bg = invertColors ? "white" : "black";
-  const dividerColor = invertColors ? "#DDDDDD" : "#1A1A1A";
   const [showCompleted, setShowCompleted] = useState(false);
 
   const todayStr = getTodayStr();
-
   const todayTasks = tasks.filter(t => t.date === todayStr);
 
-  // Sort: no-time tasks first (by order), then timed tasks by time
   const active = todayTasks
     .filter(t => !t.completed)
     .sort((a, b) => {
@@ -89,25 +80,18 @@ export default function TodayScreen() {
     .filter(t => t.completed)
     .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
-  const getListTitle = (listId: string) =>
-    lists.find(l => l.id === listId)?.title ?? "";
-
-  const isEmpty = todayTasks.length === 0;
+  const getListTitle = (listId: string) => lists.find(l => l.id === listId)?.title ?? "";
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
       <Header headerTitle="Today" hideBackButton />
 
-      {isEmpty ? (
+      {todayTasks.length === 0 ? (
         <View style={styles.empty}>
           <StyledText style={styles.emptyText}>no tasks today</StyledText>
         </View>
       ) : (
-        <ScrollView
-          overScrollMode="never"
-          showsVerticalScrollIndicator={false}
-          style={styles.scroll}
-        >
+        <ScrollView overScrollMode="never" showsVerticalScrollIndicator={false} style={styles.scroll}>
           {active.map(task => (
             <TaskRow
               key={task.id}
@@ -122,13 +106,12 @@ export default function TodayScreen() {
             <>
               <HapticPressable
                 onPress={() => setShowCompleted(v => !v)}
-                style={[styles.completedHeader, { borderBottomColor: dividerColor }]}
+                style={styles.completedHeader}
               >
                 <StyledText style={styles.completedLabel}>
                   Completed ({completed.length})
                 </StyledText>
               </HapticPressable>
-
               {showCompleted && completed.map(task => (
                 <TaskRow
                   key={task.id}
@@ -163,7 +146,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingRight: n(22),
-    borderBottomWidth: n(1),
+  },
+  taskRowDimmed: {
+    opacity: 0.4,
   },
   taskContent: {
     flex: 1,
@@ -183,7 +168,6 @@ const styles = StyleSheet.create({
   completedHeader: {
     paddingHorizontal: n(22),
     paddingVertical: n(14),
-    borderBottomWidth: n(1),
   },
   completedLabel: {
     fontSize: n(18),
