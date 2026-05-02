@@ -25,6 +25,7 @@ export default function SettingsScreen() {
 
       <ScrollView overScrollMode="never" showsVerticalScrollIndicator={false}>
 
+        {/* Invert Colors */}
         <View style={styles.row}>
           <ToggleSwitch
             label="Invert Colors"
@@ -33,36 +34,26 @@ export default function SettingsScreen() {
           />
         </View>
 
+        {/* Default List */}
         <HapticPressable onPress={() => setShowListPicker(true)} style={styles.row}>
-          <View style={styles.rowInner}>
-            <StyledText style={styles.rowLabel}>Default List</StyledText>
-            <StyledText style={styles.rowValue}>{defaultList?.title ?? "Inbox"}</StyledText>
-          </View>
+          <StyledText style={styles.selectorLabel}>Default List</StyledText>
+          <StyledText style={styles.selectorValue}>{defaultList?.title ?? "Inbox"}</StyledText>
         </HapticPressable>
 
+        {/* After Quick Add */}
         <View style={styles.row}>
-          <StyledText style={styles.sectionLabel}>After Adding a Task</StyledText>
+          <StyledText style={styles.selectorLabel}>After Quick Add</StyledText>
+          <HapticPressable onPress={() => updateSettings({ afterAddBehavior: "toast" })}>
+            <StyledText style={[styles.optionText, isToast && styles.optionSelected]}>
+              Add Next
+            </StyledText>
+          </HapticPressable>
+          <HapticPressable onPress={() => updateSettings({ afterAddBehavior: "go-to-list" })}>
+            <StyledText style={[styles.optionText, !isToast && styles.optionSelected]}>
+              Go to List
+            </StyledText>
+          </HapticPressable>
         </View>
-
-        <HapticPressable
-          onPress={() => updateSettings({ afterAddBehavior: "toast" })}
-          style={styles.row}
-        >
-          <StyledText style={[styles.optionText, !isToast && styles.optionInactive]}>
-            Show confirmation
-          </StyledText>
-          {isToast && <StyledText style={styles.checkmark}>✓</StyledText>}
-        </HapticPressable>
-
-        <HapticPressable
-          onPress={() => updateSettings({ afterAddBehavior: "go-to-list" })}
-          style={styles.row}
-        >
-          <StyledText style={[styles.optionText, isToast && styles.optionInactive]}>
-            Go to list
-          </StyledText>
-          {!isToast && <StyledText style={styles.checkmark}>✓</StyledText>}
-        </HapticPressable>
 
       </ScrollView>
 
@@ -82,20 +73,25 @@ const styles = StyleSheet.create({
   row: {
     paddingHorizontal: n(22),
     paddingVertical: n(16),
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: n(4),
   },
-  rowInner: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  selectorLabel: {
+    fontSize: n(20),
+    paddingTop: n(7.5),
+    lineHeight: n(20),
   },
-  rowLabel: { fontSize: n(30) },
-  rowValue: { fontSize: n(22), opacity: 0.5 },
-  sectionLabel: { fontSize: n(16), opacity: 0.4 },
-  optionText: { fontSize: n(28) },
-  optionInactive: { opacity: 0.3 },
-  checkmark: { fontSize: n(22) },
+  selectorValue: {
+    fontSize: n(30),
+    paddingBottom: n(10),
+  },
+  optionText: {
+    fontSize: n(30),
+    opacity: 0.3,
+  },
+  optionSelected: {
+    opacity: 1,
+    textDecorationLine: "underline",
+  },
 });
