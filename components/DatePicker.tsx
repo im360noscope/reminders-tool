@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: n(16),
     textAlign: "center",
-    opacity: 0.35,
+
     fontFamily: "PublicSans-Regular",
   },
   grid: {},
