@@ -30,11 +30,8 @@ export default function ListsScreen() {
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
 
   const {
-    handleScroll,
-    scrollIndicatorHeight,
-    scrollIndicatorPosition,
-    setContentHeight,
-    setScrollViewHeight,
+    handleScroll, scrollIndicatorHeight, scrollIndicatorPosition,
+    setContentHeight, setScrollViewHeight,
   } = useScrollIndicator();
 
   const [isReordering, setIsReordering] = useState(false);
@@ -132,15 +129,9 @@ export default function ListsScreen() {
             ))}
           </View>
         </Animated.ScrollView>
-
         {scrollIndicatorHeight > 0 && (
           <View style={[styles.scrollTrack, { backgroundColor: textColor }]}>
-            <Animated.View
-              style={[
-                styles.scrollThumb,
-                { backgroundColor: textColor, height: scrollIndicatorHeight, transform: [{ translateY: scrollIndicatorPosition }] },
-              ]}
-            />
+            <Animated.View style={[styles.scrollThumb, { backgroundColor: textColor, height: scrollIndicatorHeight, transform: [{ translateY: scrollIndicatorPosition }] }]} />
           </View>
         )}
       </View>
@@ -163,26 +154,54 @@ export default function ListsScreen() {
 
       {/* Add list modal */}
       <Modal visible={showAddModal} animationType="none" transparent={false} statusBarTranslucent>
-        <KeyboardAvoidingView style={[styles.modalBackdrop, { backgroundColor: bg }]} behavior={Platform.OS === "android" ? "height" : "padding"}>
-          <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-            <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleAddList }} />
-            <View style={styles.inputArea}>
-              <TextInput autoFocus value={newListTitle} onChangeText={setNewListTitle} placeholder="List name" placeholderTextColor={dimColor} onSubmitEditing={handleAddList} style={[styles.modalInput, { color: textColor }]} allowFontScaling={false} />
-            </View>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
+        <View style={[styles.modalFill, { backgroundColor: bg }]}>
+          <KeyboardAvoidingView
+            style={styles.modalFill}
+            behavior="padding"
+          >
+            <SafeAreaView style={styles.modalFill} edges={["top"]}>
+              <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleAddList }} />
+              <View style={styles.inputArea}>
+                <TextInput
+                  autoFocus
+                  value={newListTitle}
+                  onChangeText={setNewListTitle}
+                  placeholder="List name"
+                  placeholderTextColor={dimColor}
+                  onSubmitEditing={handleAddList}
+                  style={[styles.modalInput, { color: textColor }]}
+                  allowFontScaling={false}
+                />
+              </View>
+            </SafeAreaView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
 
       {/* Rename modal */}
       <Modal visible={showRenameModal} animationType="none" transparent={false} statusBarTranslucent>
-        <KeyboardAvoidingView style={[styles.modalBackdrop, { backgroundColor: bg }]} behavior={Platform.OS === "android" ? "height" : "padding"}>
-          <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
-            <Header headerTitle="Rename" rightAction={{ icon: "check", onPress: handleRename }} />
-            <View style={styles.inputArea}>
-              <TextInput autoFocus value={renameTitle} onChangeText={setRenameTitle} onSubmitEditing={handleRename} placeholder="List name" placeholderTextColor={dimColor} style={[styles.modalInput, { color: textColor }]} allowFontScaling={false} />
-            </View>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
+        <View style={[styles.modalFill, { backgroundColor: bg }]}>
+          <KeyboardAvoidingView
+            style={styles.modalFill}
+            behavior="padding"
+          >
+            <SafeAreaView style={styles.modalFill} edges={["top"]}>
+              <Header headerTitle="Rename" rightAction={{ icon: "check", onPress: handleRename }} />
+              <View style={styles.inputArea}>
+                <TextInput
+                  autoFocus
+                  value={renameTitle}
+                  onChangeText={setRenameTitle}
+                  onSubmitEditing={handleRename}
+                  placeholder="List name"
+                  placeholderTextColor={dimColor}
+                  style={[styles.modalInput, { color: textColor }]}
+                  allowFontScaling={false}
+                />
+              </View>
+            </SafeAreaView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -202,7 +221,7 @@ const styles = StyleSheet.create({
   menuItem: { paddingHorizontal: n(22), paddingVertical: n(20) },
   menuItemText: { fontSize: n(24) },
   menuItemDelete: { opacity: 0.4 },
-  modalBackdrop: { flex: 1 },
+  modalFill: { flex: 1 },
   inputArea: { paddingHorizontal: n(22), paddingTop: n(24) },
   modalInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingBottom: n(8) },
 });
