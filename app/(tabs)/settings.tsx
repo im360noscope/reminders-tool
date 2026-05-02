@@ -3,13 +3,11 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/Header";
 import { HapticPressable } from "@/components/HapticPressable";
-import { ListPickerModal } from "@/components/ListPickerModal";
 import { StyledText } from "@/components/StyledText";
 import { ToggleSwitch } from "@/components/ToggleSwitch";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders } from "@/contexts/RemindersContext";
 import { n } from "@/utils/scaling";
-import { useState } from "react";
 
 const AFTER_QUICK_ADD_LABELS: Record<string, string> = {
   "toast": "Add Next",
@@ -18,9 +16,8 @@ const AFTER_QUICK_ADD_LABELS: Record<string, string> = {
 
 export default function SettingsScreen() {
   const { invertColors, setInvertColors } = useInvertColors();
-  const { lists, settings, updateSettings } = useReminders();
+  const { lists, settings } = useReminders();
   const bg = invertColors ? "white" : "black";
-  const [showListPicker, setShowListPicker] = useState(false);
 
   const defaultList = lists.find(l => l.id === settings.defaultListId);
 
@@ -40,7 +37,10 @@ export default function SettingsScreen() {
         </View>
 
         {/* Default List */}
-        <HapticPressable onPress={() => setShowListPicker(true)} style={styles.row}>
+        <HapticPressable
+          onPress={() => router.push("/settings/default-list")}
+          style={styles.row}
+        >
           <StyledText style={styles.selectorLabel}>Default List</StyledText>
           <StyledText style={styles.selectorValue}>{defaultList?.title ?? "Inbox"}</StyledText>
         </HapticPressable>
@@ -57,14 +57,6 @@ export default function SettingsScreen() {
         </HapticPressable>
 
       </ScrollView>
-
-      <ListPickerModal
-        visible={showListPicker}
-        lists={lists}
-        selectedId={settings.defaultListId}
-        onSelect={(list) => { updateSettings({ defaultListId: list.id }); setShowListPicker(false); }}
-        onDismiss={() => setShowListPicker(false)}
-      />
     </SafeAreaView>
   );
 }
