@@ -1,5 +1,5 @@
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AddTaskModal } from "@/components/AddTaskModal";
@@ -59,6 +59,12 @@ export default function TodayScreen() {
   const textColor = invertColors ? "black" : "white";
   const [showCompleted, setShowCompleted] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setShowAddTask(false);
+    }, [])
+  );
   const { handleScroll, scrollIndicatorHeight, scrollIndicatorPosition, setContentHeight, setScrollViewHeight } = useScrollIndicator();
 
   const todayStr = getTodayStr();
