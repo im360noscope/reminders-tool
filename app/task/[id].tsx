@@ -2,9 +2,9 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   TextInput as RNTextInput,
   View,
@@ -20,12 +20,12 @@ import { TaskCheckbox } from "@/components/TaskCheckbox";
 import { TimePicker } from "@/components/TimePicker";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders } from "@/contexts/RemindersContext";
+import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { n } from "@/utils/scaling";
 
 function formatDisplayDate(dateStr: string): string {
   const [y, mo, d] = dateStr.split("-").map(Number);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${months[mo - 1]} ${d}, ${y}`;
 }
 
@@ -55,22 +55,21 @@ function formatDisplayTime(digits: string, ampm: "AM" | "PM"): string {
 export default function TaskScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { invertColors } = useInvertColors();
-  const { tasks, lists, updateTask, deleteTask, toggleTask, addSubtask, toggleSubtask, deleteSubtask } = useReminders();
+  const { tasks, lists, updateTask, deleteTask, toggleSubtask, addSubtask, deleteSubtask } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
 
-  const task = tasks.find(t => t.id === id);
+  const { handleScroll, scrollIndicatorHeight, scrollIndicatorPosition, setContentHeight, setScrollViewHeight } = useScrollIndicator();
 
+  const task = tasks.find(t => t.id === id);
   const [title, setTitle] = useState(task?.title ?? "");
   const [listId, setListId] = useState(task?.listId ?? "");
   const [date, setDate] = useState<string | undefined>(task?.date);
   const [confirmedTime, setConfirmedTime] = useState<string | undefined>(task?.time);
-
   const initTimeParts = task?.time ? timeToDisplayParts(task.time) : { digits: "", ampm: "AM" as const };
   const [timeDigits, setTimeDigits] = useState(initTimeParts.digits);
   const [ampm, setAmPm] = useState<"AM" | "PM">(initTimeParts.ampm);
-
   const [newSubtask, setNewSubtask] = useState("");
   const subtaskInputRef = useRef<RNTextInput>(null);
 
@@ -115,9 +114,7 @@ export default function TaskScreen() {
       <SwipeBackContainer onSwipeBack={() => router.back()}>
         <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
           <Header />
-          <View style={styles.empty}>
-            <StyledText style={styles.emptyText}>task not found</StyledText>
-          </View>
+          <View style={styles.empty}><StyledText style={styles.emptyText}>task not found</StyledText></View>
         </SafeAreaView>
       </SwipeBackContainer>
     );
@@ -126,155 +123,94 @@ export default function TaskScreen() {
   return (
     <SwipeBackContainer onSwipeBack={handleSave}>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-        <Header
-          headerTitle="Edit"
-          rightAction={{ icon: "check", onPress: handleSave }}
-        />
+        <Header headerTitle="Edit" rightAction={{ icon: "check", onPress: handleSave }} />
 
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "android" ? "height" : "padding"}
-        >
-          <ScrollView
-            overScrollMode="never"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Title */}
-            <View style={styles.field}>
-              <RNTextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Task name"
-                placeholderTextColor={dimColor}
-                style={[styles.titleInput, { color: textColor }]}
-                allowFontScaling={false}
-                returnKeyType="done"
-                onSubmitEditing={handleSave}
-              />
-            </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "android" ? "height" : "padding"}>
+          <View style={styles.scrollWrapper}>
+            <Animated.ScrollView
+              onLayout={(e) => setScrollViewHeight(e.nativeEvent.layout.height)}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              overScrollMode="never"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}>
 
-            {/* List */}
-            <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
-              <StyledText style={styles.fieldLabel}>List</StyledText>
-              <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
-            </HapticPressable>
-
-            {/* Date */}
-            <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
-              <StyledText style={styles.fieldLabel}>Date</StyledText>
-              {date ? (
-                <View style={styles.fieldValueRow}>
-                  <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
-                  <HapticPressable onPress={() => { setDate(undefined); setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
-                    <StyledText style={styles.clearBtn}>CLEAR</StyledText>
-                  </HapticPressable>
+                <View style={styles.field}>
+                  <RNTextInput value={title} onChangeText={setTitle} placeholder="Task name" placeholderTextColor={dimColor} style={[styles.titleInput, { color: textColor }]} allowFontScaling={false} returnKeyType="done" onSubmitEditing={handleSave} />
                 </View>
-              ) : (
-                <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
-              )}
-            </HapticPressable>
 
-            {/* Time */}
-            {date && (
-              <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
-                <StyledText style={styles.fieldLabel}>Time</StyledText>
-                {confirmedTime ? (
-                  <View style={styles.fieldValueRow}>
-                    <StyledText style={styles.fieldValue}>
-                      {formatDisplayTime(timeDigits, ampm)}
-                    </StyledText>
-                    <HapticPressable onPress={() => { setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
-                      <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
+                  <StyledText style={styles.fieldLabel}>List</StyledText>
+                  <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
+                </HapticPressable>
+
+                <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
+                  <StyledText style={styles.fieldLabel}>Date</StyledText>
+                  {date ? (
+                    <View style={styles.fieldValueRow}>
+                      <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
+                      <HapticPressable onPress={() => { setDate(undefined); setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
+                        <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                      </HapticPressable>
+                    </View>
+                  ) : (
+                    <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                  )}
+                </HapticPressable>
+
+                {date && (
+                  <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
+                    <StyledText style={styles.fieldLabel}>Time</StyledText>
+                    {confirmedTime ? (
+                      <View style={styles.fieldValueRow}>
+                        <StyledText style={styles.fieldValue}>{formatDisplayTime(timeDigits, ampm)}</StyledText>
+                        <HapticPressable onPress={() => { setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
+                          <StyledText style={styles.clearBtn}>CLEAR</StyledText>
+                        </HapticPressable>
+                      </View>
+                    ) : (
+                      <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                    )}
+                  </HapticPressable>
+                )}
+
+                <View style={styles.sectionHeader}>
+                  <StyledText style={styles.sectionLabel}>Subtasks</StyledText>
+                </View>
+
+                {task.subtasks.map(sub => (
+                  <View key={sub.id} style={styles.subtaskRow}>
+                    <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} />
+                    <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>{sub.title}</StyledText>
+                    <HapticPressable onPress={() => deleteSubtask(task.id, sub.id)} style={styles.deleteSubtask}>
+                      <StyledText style={styles.deleteSubtaskText}>×</StyledText>
                     </HapticPressable>
                   </View>
-                ) : (
-                  <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
-                )}
-              </HapticPressable>
-            )}
+                ))}
 
-            {/* Subtasks */}
-            <View style={styles.sectionHeader}>
-              <StyledText style={styles.sectionLabel}>Subtasks</StyledText>
-            </View>
+                <View style={styles.subtaskInputRow}>
+                  <RNTextInput ref={subtaskInputRef} value={newSubtask} onChangeText={setNewSubtask} placeholder="Add subtask…" placeholderTextColor={dimColor} style={[styles.subtaskField, { color: textColor }]} allowFontScaling={false} returnKeyType="done" onSubmitEditing={handleAddSubtask} />
+                </View>
 
-            {task.subtasks.map(sub => (
-              <View key={sub.id} style={styles.subtaskRow}>
-                <TaskCheckbox
-                  checked={sub.completed}
-                  onToggle={() => toggleSubtask(task.id, sub.id)}
-                  size={20}
-                />
-                <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>
-                  {sub.title}
-                </StyledText>
-                <HapticPressable
-                  onPress={() => deleteSubtask(task.id, sub.id)}
-                  style={styles.deleteSubtask}
-                >
-                  <StyledText style={styles.deleteSubtaskText}>×</StyledText>
+                <HapticPressable onPress={handleDelete} style={styles.deleteRow}>
+                  <StyledText style={styles.deleteText}>DELETE TASK</StyledText>
                 </HapticPressable>
+
               </View>
-            ))}
-
-            {/* Add subtask */}
-            <View style={styles.subtaskInputRow}>
-              <RNTextInput
-                ref={subtaskInputRef}
-                value={newSubtask}
-                onChangeText={setNewSubtask}
-                placeholder="Add subtask…"
-                placeholderTextColor={dimColor}
-                style={[styles.subtaskField, { color: textColor }]}
-                allowFontScaling={false}
-                returnKeyType="done"
-                onSubmitEditing={handleAddSubtask}
-              />
-            </View>
-
-            {/* Delete */}
-            <HapticPressable onPress={handleDelete} style={styles.deleteRow}>
-              <StyledText style={styles.deleteText}>DELETE TASK</StyledText>
-            </HapticPressable>
-          </ScrollView>
+            </Animated.ScrollView>
+            {scrollIndicatorHeight > 0 && (
+              <View style={[styles.scrollTrack, { backgroundColor: textColor }]}>
+                <Animated.View style={[styles.scrollThumb, { backgroundColor: textColor, height: scrollIndicatorHeight, transform: [{ translateY: scrollIndicatorPosition }] }]} />
+              </View>
+            )}
+          </View>
         </KeyboardAvoidingView>
 
-        <DatePicker
-          visible={showDatePicker}
-          value={date}
-          onSelect={(d) => { setDate(d); setShowDatePicker(false); }}
-          onDismiss={() => setShowDatePicker(false)}
-          viewYear={viewYear}
-          viewMonth={viewMonth}
-          onPrevMonth={() => {
-            if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-            else setViewMonth(m => m - 1);
-          }}
-          onNextMonth={() => {
-            if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-            else setViewMonth(m => m + 1);
-          }}
-        />
-
-        <TimePicker
-          visible={showTimePicker}
-          digits={timeDigits}
-          ampm={ampm}
-          onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)}
-          onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))}
-          onAmPm={setAmPm}
-          onConfirm={handleTimeConfirm}
-          onDismiss={() => setShowTimePicker(false)}
-        />
-
-        <ListPickerModal
-          visible={showListPicker}
-          lists={lists}
-          selectedId={listId}
-          onSelect={(list) => { setListId(list.id); setShowListPicker(false); }}
-          onDismiss={() => setShowListPicker(false)}
-        />
+        <DatePicker visible={showDatePicker} value={date} onSelect={(d) => { setDate(d); setShowDatePicker(false); }} onDismiss={() => setShowDatePicker(false)} viewYear={viewYear} viewMonth={viewMonth} onPrevMonth={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); }} onNextMonth={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); }} />
+        <TimePicker visible={showTimePicker} digits={timeDigits} ampm={ampm} onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)} onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))} onAmPm={setAmPm} onConfirm={handleTimeConfirm} onDismiss={() => setShowTimePicker(false)} />
+        <ListPickerModal visible={showListPicker} lists={lists} selectedId={listId} onSelect={(list) => { setListId(list.id); setShowListPicker(false); }} onDismiss={() => setShowListPicker(false)} />
       </SafeAreaView>
     </SwipeBackContainer>
   );
@@ -282,61 +218,25 @@ export default function TaskScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  field: {
-    paddingHorizontal: n(22),
-    paddingVertical: n(18),
-  },
-  fieldLabel: {
-    fontSize: n(14),
-    opacity: 0.4,
-    marginBottom: n(4),
-  },
-  fieldValue: {
-    fontSize: n(24),
-    fontFamily: "PublicSans-Regular",
-  },
-  fieldValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  scrollWrapper: { flex: 1, flexDirection: "row", position: "relative" },
+  scrollTrack: { width: n(1), height: "100%", position: "absolute", right: n(18) },
+  scrollThumb: { width: n(5), position: "absolute", right: n(-2) },
+  field: { paddingHorizontal: n(22), paddingVertical: n(18) },
+  fieldLabel: { fontSize: n(14), opacity: 0.4, marginBottom: n(4) },
+  fieldValue: { fontSize: n(24), fontFamily: "PublicSans-Regular" },
+  fieldValueRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   clearBtn: { fontSize: n(14), opacity: 0.4 },
-  titleInput: {
-    fontSize: n(30),
-    fontFamily: "PublicSans-Regular",
-    paddingVertical: n(4),
-  },
-  sectionHeader: {
-    paddingHorizontal: n(22),
-    paddingVertical: n(12),
-  },
+  titleInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingVertical: n(4) },
+  sectionHeader: { paddingHorizontal: n(22), paddingVertical: n(12) },
   sectionLabel: { fontSize: n(14), opacity: 0.4 },
-  subtaskRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingRight: n(22),
-  },
-  subtaskTitle: {
-    flex: 1,
-    fontSize: n(22),
-    paddingVertical: n(14),
-  },
+  subtaskRow: { flexDirection: "row", alignItems: "center", paddingRight: n(22) },
+  subtaskTitle: { flex: 1, fontSize: n(22), paddingVertical: n(14) },
   taskDone: { opacity: 0.4 },
   deleteSubtask: { paddingHorizontal: n(8), paddingVertical: n(8) },
   deleteSubtaskText: { fontSize: n(28), opacity: 0.4 },
-  subtaskInputRow: {
-    paddingHorizontal: n(22),
-    paddingVertical: n(14),
-  },
-  subtaskField: {
-    fontSize: n(22),
-    fontFamily: "PublicSans-Regular",
-  },
-  deleteRow: {
-    paddingHorizontal: n(22),
-    paddingVertical: n(28),
-    alignItems: "center",
-  },
+  subtaskInputRow: { paddingHorizontal: n(22), paddingVertical: n(14) },
+  subtaskField: { fontSize: n(22), fontFamily: "PublicSans-Regular" },
+  deleteRow: { paddingHorizontal: n(22), paddingVertical: n(28), alignItems: "center" },
   deleteText: { fontSize: n(18), opacity: 0.3 },
   empty: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyText: { fontSize: n(20), opacity: 0.4 },

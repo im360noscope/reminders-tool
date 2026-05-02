@@ -3,10 +3,10 @@ import { router } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -17,6 +17,7 @@ import { Header } from "@/components/Header";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders, type ReminderList } from "@/contexts/RemindersContext";
+import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { n } from "@/utils/scaling";
 
 type LongPressAction = "rename" | "reorder" | "delete";
@@ -27,6 +28,14 @@ export default function ListsScreen() {
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
+
+  const {
+    handleScroll,
+    scrollIndicatorHeight,
+    scrollIndicatorPosition,
+    setContentHeight,
+    setScrollViewHeight,
+  } = useScrollIndicator();
 
   const [isReordering, setIsReordering] = useState(false);
   const [actionList, setActionList] = useState<ReminderList | null>(null);
@@ -91,37 +100,50 @@ export default function ListsScreen() {
         reorderingDone={isReordering ? () => setIsReordering(false) : undefined}
       />
 
-      <ScrollView overScrollMode="never" showsVerticalScrollIndicator={false} style={styles.scroll}>
-        {sorted.map((list, idx) => (
-          <HapticPressable
-            key={list.id}
-            onPress={() => { if (!isReordering) router.push({ pathname: "/list/[id]", params: { id: list.id } }); }}
-            onLongPress={() => handleLongPress(list)}
-            delayLongPress={400}
-            style={styles.listItem}
-          >
-            <StyledText style={styles.listTitle}>{list.title}</StyledText>
-            {isReordering && (
-              <View style={styles.arrowGroup}>
-                <HapticPressable onPress={() => moveListUp(list.id)} disabled={idx === 0}>
-                  <MaterialIcons
-                    name="keyboard-arrow-up"
-                    size={n(28)}
-                    color={idx === 0 ? dimColor : textColor}
-                  />
-                </HapticPressable>
-                <HapticPressable onPress={() => moveListDown(list.id)} disabled={idx === sorted.length - 1}>
-                  <MaterialIcons
-                    name="keyboard-arrow-down"
-                    size={n(28)}
-                    color={idx === sorted.length - 1 ? dimColor : textColor}
-                  />
-                </HapticPressable>
-              </View>
-            )}
-          </HapticPressable>
-        ))}
-      </ScrollView>
+      <View style={styles.scrollWrapper}>
+        <Animated.ScrollView
+          onLayout={(e) => setScrollViewHeight(e.nativeEvent.layout.height)}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          overScrollMode="never"
+          showsVerticalScrollIndicator={false}
+        >
+          <View onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}>
+            {sorted.map((list, idx) => (
+              <HapticPressable
+                key={list.id}
+                onPress={() => { if (!isReordering) router.push({ pathname: "/list/[id]", params: { id: list.id } }); }}
+                onLongPress={() => handleLongPress(list)}
+                delayLongPress={400}
+                style={styles.listItem}
+              >
+                <StyledText style={styles.listTitle}>{list.title}</StyledText>
+                {isReordering && (
+                  <View style={styles.arrowGroup}>
+                    <HapticPressable onPress={() => moveListUp(list.id)} disabled={idx === 0}>
+                      <MaterialIcons name="keyboard-arrow-up" size={n(28)} color={idx === 0 ? dimColor : textColor} />
+                    </HapticPressable>
+                    <HapticPressable onPress={() => moveListDown(list.id)} disabled={idx === sorted.length - 1}>
+                      <MaterialIcons name="keyboard-arrow-down" size={n(28)} color={idx === sorted.length - 1 ? dimColor : textColor} />
+                    </HapticPressable>
+                  </View>
+                )}
+              </HapticPressable>
+            ))}
+          </View>
+        </Animated.ScrollView>
+
+        {scrollIndicatorHeight > 0 && (
+          <View style={[styles.scrollTrack, { backgroundColor: textColor }]}>
+            <Animated.View
+              style={[
+                styles.scrollThumb,
+                { backgroundColor: textColor, height: scrollIndicatorHeight, transform: [{ translateY: scrollIndicatorPosition }] },
+              ]}
+            />
+          </View>
+        )}
+      </View>
 
       {/* Long-press action menu */}
       <Modal visible={showActionMenu} animationType="none" transparent statusBarTranslucent>
@@ -129,11 +151,7 @@ export default function ListsScreen() {
           <View style={[styles.menuCard, { backgroundColor: bg }]}>
             <StyledText style={styles.menuListName}>{actionList?.title}</StyledText>
             {(["rename", "reorder", "delete"] as LongPressAction[]).map((action) => (
-              <HapticPressable
-                key={action}
-                onPress={() => handleAction(action)}
-                style={styles.menuItem}
-              >
+              <HapticPressable key={action} onPress={() => handleAction(action)} style={styles.menuItem}>
                 <StyledText style={[styles.menuItemText, action === "delete" && styles.menuItemDelete]}>
                   {action.toUpperCase()}
                 </StyledText>
@@ -145,23 +163,11 @@ export default function ListsScreen() {
 
       {/* Add list modal */}
       <Modal visible={showAddModal} animationType="none" transparent={false} statusBarTranslucent>
-        <KeyboardAvoidingView
-          style={[styles.modalBackdrop, { backgroundColor: bg }]}
-          behavior={Platform.OS === "android" ? "height" : "padding"}
-        >
+        <KeyboardAvoidingView style={[styles.modalBackdrop, { backgroundColor: bg }]} behavior={Platform.OS === "android" ? "height" : "padding"}>
           <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
             <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleAddList }} />
             <View style={styles.inputArea}>
-              <TextInput
-                autoFocus
-                value={newListTitle}
-                onChangeText={setNewListTitle}
-                placeholder="List name"
-                placeholderTextColor={dimColor}
-                onSubmitEditing={handleAddList}
-                style={[styles.modalInput, { color: textColor }]}
-                allowFontScaling={false}
-              />
+              <TextInput autoFocus value={newListTitle} onChangeText={setNewListTitle} placeholder="List name" placeholderTextColor={dimColor} onSubmitEditing={handleAddList} style={[styles.modalInput, { color: textColor }]} allowFontScaling={false} />
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>
@@ -169,23 +175,11 @@ export default function ListsScreen() {
 
       {/* Rename modal */}
       <Modal visible={showRenameModal} animationType="none" transparent={false} statusBarTranslucent>
-        <KeyboardAvoidingView
-          style={[styles.modalBackdrop, { backgroundColor: bg }]}
-          behavior={Platform.OS === "android" ? "height" : "padding"}
-        >
+        <KeyboardAvoidingView style={[styles.modalBackdrop, { backgroundColor: bg }]} behavior={Platform.OS === "android" ? "height" : "padding"}>
           <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
             <Header headerTitle="Rename" rightAction={{ icon: "check", onPress: handleRename }} />
             <View style={styles.inputArea}>
-              <TextInput
-                autoFocus
-                value={renameTitle}
-                onChangeText={setRenameTitle}
-                onSubmitEditing={handleRename}
-                placeholder="List name"
-                placeholderTextColor={dimColor}
-                style={[styles.modalInput, { color: textColor }]}
-                allowFontScaling={false}
-              />
+              <TextInput autoFocus value={renameTitle} onChangeText={setRenameTitle} onSubmitEditing={handleRename} placeholder="List name" placeholderTextColor={dimColor} style={[styles.modalInput, { color: textColor }]} allowFontScaling={false} />
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>
@@ -196,49 +190,19 @@ export default function ListsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { flex: 1 },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: n(22),
-    paddingVertical: n(16),
-  },
-  listTitle: {
-    fontSize: n(30),
-    flex: 1,
-  },
-  arrowGroup: {
-    flexDirection: "row",
-    gap: n(4),
-  },
-  menuBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: n(40),
-  },
+  scrollWrapper: { flex: 1, flexDirection: "row", position: "relative" },
+  scrollTrack: { width: n(1), height: "100%", position: "absolute", right: n(18) },
+  scrollThumb: { width: n(5), position: "absolute", right: n(-2) },
+  listItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: n(22), paddingVertical: n(16) },
+  listTitle: { fontSize: n(30), flex: 1 },
+  arrowGroup: { flexDirection: "row", gap: n(4) },
+  menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: n(40) },
   menuCard: { width: "100%" },
-  menuListName: {
-    fontSize: n(20),
-    opacity: 0.5,
-    paddingHorizontal: n(22),
-    paddingVertical: n(16),
-  },
-  menuItem: {
-    paddingHorizontal: n(22),
-    paddingVertical: n(20),
-  },
+  menuListName: { fontSize: n(20), opacity: 0.5, paddingHorizontal: n(22), paddingVertical: n(16) },
+  menuItem: { paddingHorizontal: n(22), paddingVertical: n(20) },
   menuItemText: { fontSize: n(24) },
   menuItemDelete: { opacity: 0.4 },
   modalBackdrop: { flex: 1 },
-  inputArea: {
-    paddingHorizontal: n(22),
-    paddingTop: n(24),
-  },
-  modalInput: {
-    fontSize: n(30),
-    fontFamily: "PublicSans-Regular",
-    paddingBottom: n(8),
-  },
+  inputArea: { paddingHorizontal: n(22), paddingTop: n(24) },
+  modalInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingBottom: n(8) },
 });
