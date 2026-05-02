@@ -42,10 +42,11 @@ function digitsToTime(digits: string, ampm: "AM" | "PM"): string {
 interface AddTaskModalProps {
   visible: boolean;
   defaultListId: string;
+  defaultDate?: string; // "YYYY-MM-DD" — pre-fills date when provided
   onDismiss: () => void;
 }
 
-export function AddTaskModal({ visible, defaultListId, onDismiss }: AddTaskModalProps) {
+export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }: AddTaskModalProps) {
   const { invertColors } = useInvertColors();
   const { lists, settings, addTask } = useReminders();
   const bg = invertColors ? "white" : "black";
@@ -54,7 +55,7 @@ export function AddTaskModal({ visible, defaultListId, onDismiss }: AddTaskModal
 
   const [title, setTitle] = useState("");
   const [selectedListId, setSelectedListId] = useState(defaultListId);
-  const [date, setDate] = useState<string | undefined>();
+  const [date, setDate] = useState<string | undefined>(defaultDate);
   const [confirmedTime, setConfirmedTime] = useState<string | undefined>();
   const [timeDigits, setTimeDigits] = useState("");
   const [ampm, setAmPm] = useState<"AM" | "PM">("AM");
@@ -71,15 +72,14 @@ export function AddTaskModal({ visible, defaultListId, onDismiss }: AddTaskModal
   const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0];
   const canSave = title.trim().length > 0;
 
-  // Reset form when modal opens with a (possibly new) defaultListId
   const handleShow = useCallback(() => {
     setTitle("");
     setSelectedListId(defaultListId);
-    setDate(undefined);
+    setDate(defaultDate);
     setConfirmedTime(undefined);
     setTimeDigits("");
     setAmPm("AM");
-  }, [defaultListId]);
+  }, [defaultListId, defaultDate]);
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
@@ -99,11 +99,11 @@ export function AddTaskModal({ visible, defaultListId, onDismiss }: AddTaskModal
     }
 
     setTitle("");
-    setDate(undefined);
+    setDate(defaultDate);
     setConfirmedTime(undefined);
     setTimeDigits("");
     setAmPm("AM");
-  }, [canSave, title, selectedListId, date, confirmedTime, lists, settings, addTask, onDismiss]);
+  }, [canSave, title, selectedListId, date, confirmedTime, lists, settings, addTask, onDismiss, defaultDate]);
 
   const handleTimeConfirm = useCallback(() => {
     if (timeDigits.length !== 4) return;
@@ -165,7 +165,7 @@ export function AddTaskModal({ visible, defaultListId, onDismiss }: AddTaskModal
             )}
           </HapticPressable>
 
-          {/* Time */}
+          {/* Time — only if date is set */}
           {date && (
             <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
               <StyledText style={styles.fieldLabel}>Time</StyledText>

@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AddTaskModal } from "@/components/AddTaskModal";
 import { Header } from "@/components/Header";
 import { HapticPressable } from "@/components/HapticPressable";
 import { StyledText } from "@/components/StyledText";
@@ -53,10 +54,11 @@ function TaskRow({ task, listTitle, onToggle, onPress, dimmed }: TaskRowProps) {
 
 export default function TodayScreen() {
   const { invertColors } = useInvertColors();
-  const { tasks, lists, toggleTask } = useReminders();
+  const { tasks, lists, settings, toggleTask } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
   const { handleScroll, scrollIndicatorHeight, scrollIndicatorPosition, setContentHeight, setScrollViewHeight } = useScrollIndicator();
 
   const todayStr = getTodayStr();
@@ -72,7 +74,12 @@ export default function TodayScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-      <Header headerTitle="Today" hideBackButton />
+      <Header
+        headerTitle="Today"
+        hideBackButton
+        rightAction={{ icon: "add", onPress: () => setShowAddTask(true) }}
+      />
+
       {todayTasks.length === 0 ? (
         <View style={styles.empty}>
           <StyledText style={styles.emptyText}>no tasks today</StyledText>
@@ -109,6 +116,13 @@ export default function TodayScreen() {
           )}
         </View>
       )}
+
+      <AddTaskModal
+        visible={showAddTask}
+        defaultListId={settings.defaultListId}
+        defaultDate={todayStr}
+        onDismiss={() => setShowAddTask(false)}
+      />
     </SafeAreaView>
   );
 }
