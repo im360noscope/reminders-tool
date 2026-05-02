@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AddTaskModal } from "@/components/AddTaskModal";
 import { Header } from "@/components/Header";
 import { HapticPressable } from "@/components/HapticPressable";
 import { StyledText } from "@/components/StyledText";
@@ -54,6 +55,7 @@ export default function ListScreen() {
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
   const { handleScroll, scrollIndicatorHeight, scrollIndicatorPosition, setContentHeight, setScrollViewHeight } = useScrollIndicator();
 
   const list = lists.find(l => l.id === id);
@@ -65,7 +67,11 @@ export default function ListScreen() {
   return (
     <SwipeBackContainer onSwipeBack={() => router.back()}>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
-        <Header headerTitle={listTitle} rightAction={{ icon: "add", onPress: () => router.push("/(tabs)/add") }} />
+        <Header
+          headerTitle={listTitle}
+          rightAction={{ icon: "add", onPress: () => setShowAddTask(true) }}
+        />
+
         {listTasks.length === 0 ? (
           <View style={styles.empty}>
             <StyledText style={styles.emptyText}>no tasks</StyledText>
@@ -102,6 +108,12 @@ export default function ListScreen() {
             )}
           </View>
         )}
+
+        <AddTaskModal
+          visible={showAddTask}
+          defaultListId={id ?? "inbox"}
+          onDismiss={() => setShowAddTask(false)}
+        />
       </SafeAreaView>
     </SwipeBackContainer>
   );
