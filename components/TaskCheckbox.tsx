@@ -35,7 +35,7 @@ export function TaskCheckbox({ checked, onToggle, size = 22 }: TaskCheckboxProps
 const styles = StyleSheet.create({
   hitArea: {
     paddingHorizontal: n(14),
-    paddingTop: n(14),   // aligns circle with first text line
+    paddingTop: n(17),    // nudged down slightly to optically center on first text line
     paddingBottom: n(8),
     alignSelf: "flex-start",
   },

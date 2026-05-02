@@ -1,13 +1,12 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, StyleSheet, View, TouchableOpacity } from "react-native";
+import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
 const DAY_HEADERS = ["S", "M", "T", "W", "T", "F", "S"];
-
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -15,7 +14,7 @@ const MONTH_NAMES = [
 
 interface DatePickerProps {
   visible: boolean;
-  value?: string; // "YYYY-MM-DD"
+  value?: string;
   onSelect: (date: string) => void;
   onDismiss: () => void;
   viewYear: number;
@@ -25,14 +24,8 @@ interface DatePickerProps {
 }
 
 export function DatePicker({
-  visible,
-  value,
-  onSelect,
-  onDismiss,
-  viewYear,
-  viewMonth,
-  onPrevMonth,
-  onNextMonth,
+  visible, value, onSelect, onDismiss,
+  viewYear, viewMonth, onPrevMonth, onNextMonth,
 }: DatePickerProps) {
   const { invertColors } = useInvertColors();
   const bg = invertColors ? "white" : "black";
@@ -47,7 +40,6 @@ export function DatePicker({
     const cells: (number | null)[] = [];
     for (let i = 0; i < firstDay; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-
     const rows: (number | null)[][] = [];
     for (let i = 0; i < cells.length; i += 7) {
       rows.push(cells.slice(i, i + 7).concat(Array(7).fill(null)).slice(0, 7));
@@ -64,20 +56,20 @@ export function DatePicker({
     <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
 
-        {/* Month/year header with arrows */}
+        {/* Month/year header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onPrevMonth} style={styles.navBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <StyledText style={styles.arrow}>{"<"}</StyledText>
+          <TouchableOpacity onPress={onPrevMonth} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <MaterialIcons name="chevron-left" size={n(36)} color={textColor} />
           </TouchableOpacity>
           <StyledText style={styles.monthTitle}>
             {MONTH_NAMES[viewMonth]} {viewYear}
           </StyledText>
-          <TouchableOpacity onPress={onNextMonth} style={styles.navBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-            <StyledText style={styles.arrow}>{">"}</StyledText>
+          <TouchableOpacity onPress={onNextMonth} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <MaterialIcons name="chevron-right" size={n(36)} color={textColor} />
           </TouchableOpacity>
         </View>
 
-        {/* Day-of-week headers */}
+        {/* Day headers */}
         <View style={styles.dayHeaderRow}>
           {DAY_HEADERS.map((d, i) => (
             <View key={`h-${i}`} style={styles.cell}>
@@ -86,17 +78,15 @@ export function DatePicker({
           ))}
         </View>
 
-        {/* Calendar grid */}
+        {/* Calendar grid — does NOT flex, so × stays anchored */}
         <View style={styles.grid}>
           {rows.map((row, ri) => (
             <View key={`row-${ri}`} style={styles.row}>
               {row.map((day, ci) => {
                 if (!day) return <View key={`e-${ci}`} style={styles.cell} />;
-
                 const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const isToday = dateStr === todayStr;
                 const isSelected = dateStr === value;
-
                 return (
                   <TouchableOpacity
                     key={`d-${day}`}
@@ -104,12 +94,7 @@ export function DatePicker({
                     style={styles.cell}
                     activeOpacity={0.6}
                   >
-                    <StyledText
-                      style={[
-                        styles.dayText,
-                        isSelected && styles.daySelected,
-                      ]}
-                    >
+                    <StyledText style={[styles.dayText, isSelected && styles.daySelected]}>
                       {day}
                     </StyledText>
                     {isToday && (
@@ -122,9 +107,12 @@ export function DatePicker({
           ))}
         </View>
 
-        {/* Dismiss — pinned to bottom */}
+        {/* × anchored to bottom — absolutely positioned so it never moves */}
         <View style={styles.footer}>
-          <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 20, bottom: 20, left: 40, right: 40 }}>
+          <TouchableOpacity
+            onPress={onDismiss}
+            hitSlop={{ top: 20, bottom: 20, left: 40, right: 40 }}
+          >
             <StyledText style={styles.dismissX}>✕</StyledText>
           </TouchableOpacity>
         </View>
@@ -147,12 +135,6 @@ const styles = StyleSheet.create({
     paddingBottom: n(16),
     paddingHorizontal: n(4),
   },
-  navBtn: {
-    paddingHorizontal: n(6),
-  },
-  arrow: {
-    fontSize: n(26),
-  },
   monthTitle: {
     fontSize: n(22),
   },
@@ -164,10 +146,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: n(16),
     textAlign: "center",
-
     fontFamily: "PublicSans-Regular",
   },
-  grid: {},
+  grid: {
+    // No flex — fixed height based on content so footer stays anchored
+  },
   row: {
     flexDirection: "row",
   },
@@ -193,10 +176,11 @@ const styles = StyleSheet.create({
     height: n(1.5),
   },
   footer: {
-    flex: 1,
+    position: "absolute",
+    bottom: n(48),
+    left: 0,
+    right: 0,
     alignItems: "center",
-    justifyContent: "flex-end",
-    paddingBottom: n(32),
   },
   dismissX: {
     fontSize: n(28),

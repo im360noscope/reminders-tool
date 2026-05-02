@@ -5,17 +5,70 @@ import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
-function formatDisplay(digits: string): string {
-  // Build display like LightOS: digits fill in from left
-  // 0 digits: "  :  ", 1: " _:  ", etc.
-  const padded = digits.padEnd(4, " ");
-  const h = padded.slice(0, 2).trimStart() || " ";
-  const m = padded.slice(2, 4);
-  // Show as "7:30" style — trim leading zero from hour
-  const hDisplay = digits.length === 0 ? "  " : digits.length === 1 ? digits[0] : String(parseInt(digits.slice(0, 2), 10));
-  const mDisplay = digits.length <= 2 ? (digits.length === 0 ? "  " : "  ") : padded.slice(2, 4);
-  return `${hDisplay}:${mDisplay}`;
+// ─── Digit validation ─────────────────────────────────────────────────────────
+// Digits fill right-to-left into fixed slots: [H][H]:[M][M]
+// 1 digit  →  _:_D   (minutes tens)
+// 2 digits →  _:DD   (minutes)
+// 3 digits →  H:DD   (hours single + minutes)
+// 4 digits →  HH:DD  (hours double + minutes)
+
+function isValidNextDigit(current: string, next: string): boolean {
+  const proposed = current + next;
+  const len = proposed.length;
+
+  if (len === 1) {
+    // First digit is minutes-tens: must be 0-5
+    // BUT we also allow any digit 0-9 here because with 3 digits
+    // this becomes the hour — validate based on final position.
+    // Actually: this digit ends up as minutes-tens after a 3rd digit is added,
+    // OR as hours-ones if only 3 digits total.
+    // Simplest valid rule: any digit 0-9 is ok at position 1.
+    return true;
+  }
+
+  if (len === 2) {
+    // Two digits = minutes (tens and ones): must be 00-59
+    const mins = parseInt(proposed, 10);
+    return mins >= 0 && mins <= 59;
+  }
+
+  if (len === 3) {
+    // H:MM — first digit is hour (1-9 since leading 0 not shown for single digit)
+    // minutes are last 2
+    const h = parseInt(proposed[0], 10);
+    const m = parseInt(proposed.slice(1), 10);
+    return h >= 1 && h <= 12 && m >= 0 && m <= 59;
+  }
+
+  if (len === 4) {
+    // HH:MM
+    const h = parseInt(proposed.slice(0, 2), 10);
+    const m = parseInt(proposed.slice(2), 10);
+    return h >= 1 && h <= 12 && m >= 0 && m <= 59;
+  }
+
+  return false;
 }
+
+// ─── Display builder ──────────────────────────────────────────────────────────
+// digits="" → "  :  "
+// digits="7" → "  : 7"   (7 in minutes-tens slot)
+// digits="73"→ "  :73"
+// digits="730"→"7:30"
+// digits="1230"→"12:30"
+
+function buildDisplay(digits: string): string {
+  switch (digits.length) {
+    case 0: return "  :  ";
+    case 1: return `  : ${digits[0]}`;
+    case 2: return `  :${digits}`;
+    case 3: return `${digits[0]}:${digits.slice(1)}`;
+    case 4: return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+    default: return "  :  ";
+  }
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface TimePickerProps {
   visible: boolean;
@@ -42,29 +95,13 @@ export function TimePicker({
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const hasDigits = digits.length > 0;
+  const canConfirm = digits.length === 3 || digits.length === 4;
 
-  // Build display time string
-  let timeDisplay = "";
-  if (digits.length === 0) {
-    timeDisplay = " : ";
-  } else {
-    const hRaw = digits.slice(0, Math.min(2, digits.length));
-    const mRaw = digits.slice(2, 4);
-    const hNum = parseInt(hRaw, 10);
-    const hStr = digits.length >= 2 ? String(hNum) : hRaw;
-    const mStr = digits.length >= 3 ? mRaw.padEnd(2, " ") : digits.length === 2 ? "  " : "  ";
-    timeDisplay = `${hStr}:${mStr.length > 0 ? mRaw : "  "}`;
-  }
-
-  // Simpler, reliable display builder
-  const buildDisplay = () => {
-    if (digits.length === 0) return " : ";
-    const h = digits.slice(0, Math.min(2, digits.length));
-    const m = digits.slice(2, 4);
-    const hNum = parseInt(h.padEnd(2, "0"), 10);
-    const hDisplay = digits.length >= 2 ? String(hNum) : h;
-    const mDisplay = digits.length >= 3 ? m.padEnd(2, " ") : "";
-    return `${hDisplay}:${mDisplay}`;
+  const handleDigit = (d: string) => {
+    if (digits.length >= 4) return;
+    if (isValidNextDigit(digits, d)) {
+      onDigit(d);
+    }
   };
 
   const numRows = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]];
@@ -73,18 +110,26 @@ export function TimePicker({
     <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
 
-        {/* Time display + AM/PM */}
+        {/* AM/PM + time display */}
         <View style={styles.topSection}>
-          <TouchableOpacity onPress={() => onAmPm("AM")} style={styles.ampmBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => onAmPm("AM")}
+            style={styles.ampmBtn}
+            activeOpacity={1}
+          >
             <StyledText style={styles.ampmText}>AM</StyledText>
             {ampm === "AM" && <View style={[styles.ampmUnderline, { backgroundColor: textColor }]} />}
           </TouchableOpacity>
 
-          <StyledText style={styles.timeDisplay} numberOfLines={1} adjustsFontSizeToFit={false}>
-            {buildDisplay()}
+          <StyledText style={styles.timeDisplay}>
+            {buildDisplay(digits)}
           </StyledText>
 
-          <TouchableOpacity onPress={() => onAmPm("PM")} style={styles.ampmBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => onAmPm("PM")}
+            style={styles.ampmBtn}
+            activeOpacity={1}
+          >
             <StyledText style={styles.ampmText}>PM</StyledText>
             {ampm === "PM" && <View style={[styles.ampmUnderline, { backgroundColor: textColor }]} />}
           </TouchableOpacity>
@@ -97,45 +142,44 @@ export function TimePicker({
               {row.map((d) => (
                 <TouchableOpacity
                   key={d}
-                  onPress={() => onDigit(d)}
+                  onPress={() => handleDigit(d)}
                   style={styles.numBtn}
                   activeOpacity={0.6}
-                  disabled={digits.length >= 4}
                 >
-                  <StyledText style={[styles.numText, digits.length >= 4 && styles.numDisabled]}>
-                    {d}
-                  </StyledText>
+                  <StyledText style={styles.numText}>{d}</StyledText>
                 </TouchableOpacity>
               ))}
             </View>
           ))}
 
-          {/* Bottom row: SAVE | 0 | < */}
+          {/* Bottom row */}
           <View style={styles.numRow}>
-            {hasDigits ? (
+            {/* Left: SAVE when can confirm, × dismiss when no digits, empty otherwise */}
+            {canConfirm ? (
               <TouchableOpacity onPress={onConfirm} style={styles.numBtn} activeOpacity={0.6}>
                 <StyledText style={styles.saveText}>SAVE</StyledText>
               </TouchableOpacity>
-            ) : (
+            ) : !hasDigits ? (
               <TouchableOpacity onPress={onDismiss} style={styles.numBtn} activeOpacity={0.6}>
                 <StyledText style={styles.dismissX}>✕</StyledText>
               </TouchableOpacity>
+            ) : (
+              <View style={styles.numBtn} />
             )}
 
+            {/* 0 */}
             <TouchableOpacity
-              onPress={() => onDigit("0")}
+              onPress={() => handleDigit("0")}
               style={styles.numBtn}
               activeOpacity={0.6}
-              disabled={digits.length >= 4}
             >
-              <StyledText style={[styles.numText, digits.length >= 4 && styles.numDisabled]}>
-                0
-              </StyledText>
+              <StyledText style={styles.numText}>0</StyledText>
             </TouchableOpacity>
 
+            {/* Right: backspace chevron when has digits, empty otherwise */}
             {hasDigits ? (
               <TouchableOpacity onPress={onBackspace} style={styles.numBtn} activeOpacity={0.6}>
-                <StyledText style={styles.backText}>{"<"}</StyledText>
+                <MaterialIcons name="chevron-left" size={n(44)} color={textColor} />
               </TouchableOpacity>
             ) : (
               <View style={styles.numBtn} />
@@ -174,7 +218,8 @@ const styles = StyleSheet.create({
     marginTop: n(3),
   },
   timeDisplay: {
-    fontSize: n(80),
+    fontSize: n(72),
+    fontWeight: "200",
     fontFamily: "PublicSans-Regular",
     textAlign: "center",
     includeFontPadding: false,
@@ -198,15 +243,8 @@ const styles = StyleSheet.create({
     fontSize: n(36),
     fontFamily: "PublicSans-Regular",
   },
-  numDisabled: {
-    opacity: 0.2,
-  },
   saveText: {
     fontSize: n(20),
-    fontFamily: "PublicSans-Regular",
-  },
-  backText: {
-    fontSize: n(30),
     fontFamily: "PublicSans-Regular",
   },
   dismissX: {
