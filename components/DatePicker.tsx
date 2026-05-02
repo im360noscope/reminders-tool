@@ -1,8 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HapticPressable } from "@/components/HapticPressable";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
@@ -19,9 +18,8 @@ interface DatePickerProps {
   value?: string; // "YYYY-MM-DD"
   onSelect: (date: string) => void;
   onDismiss: () => void;
-  // Internal navigation state
   viewYear: number;
-  viewMonth: number; // 0-indexed
+  viewMonth: number;
   onPrevMonth: () => void;
   onNextMonth: () => void;
 }
@@ -43,16 +41,18 @@ export function DatePicker({
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-  // Build calendar grid
-  const { days } = useMemo(() => {
-    const firstDay = new Date(viewYear, viewMonth, 1).getDay(); // 0=Sun
+  const { rows } = useMemo(() => {
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
     const cells: (number | null)[] = [];
     for (let i = 0; i < firstDay; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-    return { days: cells };
+    const rows: (number | null)[][] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      rows.push(cells.slice(i, i + 7).concat(Array(7).fill(null)).slice(0, 7));
+    }
+    return { rows };
   }, [viewYear, viewMonth]);
 
   const handleDayPress = (day: number) => {
@@ -60,28 +60,24 @@ export function DatePicker({
     onSelect(dateStr);
   };
 
-  const rows: (number | null)[][] = [];
-  for (let i = 0; i < days.length; i += 7) {
-    rows.push(days.slice(i, i + 7).concat(Array(7).fill(null)).slice(0, 7));
-  }
-
   return (
     <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
-        {/* Header */}
+
+        {/* Month/year header with arrows */}
         <View style={styles.header}>
-          <HapticPressable onPress={onPrevMonth} style={styles.navBtn}>
-            <MaterialIcons name="chevron-left" size={n(36)} color={textColor} />
-          </HapticPressable>
+          <TouchableOpacity onPress={onPrevMonth} style={styles.navBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <StyledText style={styles.arrow}>{"<"}</StyledText>
+          </TouchableOpacity>
           <StyledText style={styles.monthTitle}>
             {MONTH_NAMES[viewMonth]} {viewYear}
           </StyledText>
-          <HapticPressable onPress={onNextMonth} style={styles.navBtn}>
-            <MaterialIcons name="chevron-right" size={n(36)} color={textColor} />
-          </HapticPressable>
+          <TouchableOpacity onPress={onNextMonth} style={styles.navBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <StyledText style={styles.arrow}>{">"}</StyledText>
+          </TouchableOpacity>
         </View>
 
-        {/* Day headers */}
+        {/* Day-of-week headers */}
         <View style={styles.dayHeaderRow}>
           {DAY_HEADERS.map((d, i) => (
             <View key={`h-${i}`} style={styles.cell}>
@@ -95,42 +91,44 @@ export function DatePicker({
           {rows.map((row, ri) => (
             <View key={`row-${ri}`} style={styles.row}>
               {row.map((day, ci) => {
-                if (!day) {
-                  return <View key={`empty-${ci}`} style={styles.cell} />;
-                }
+                if (!day) return <View key={`e-${ci}`} style={styles.cell} />;
+
                 const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                 const isToday = dateStr === todayStr;
                 const isSelected = dateStr === value;
 
                 return (
-                  <HapticPressable
-                    key={`day-${day}`}
+                  <TouchableOpacity
+                    key={`d-${day}`}
                     onPress={() => handleDayPress(day)}
                     style={styles.cell}
+                    activeOpacity={0.6}
                   >
                     <StyledText
                       style={[
                         styles.dayText,
-                        isSelected && { fontFamily: "PublicSans-Regular", opacity: 0.5 },
-                        isToday && styles.todayText,
+                        isSelected && styles.daySelected,
                       ]}
                     >
                       {day}
                     </StyledText>
-                    {isToday && <View style={[styles.todayUnderline, { backgroundColor: textColor }]} />}
-                  </HapticPressable>
+                    {isToday && (
+                      <View style={[styles.todayUnderline, { backgroundColor: textColor }]} />
+                    )}
+                  </TouchableOpacity>
                 );
               })}
             </View>
           ))}
         </View>
 
-        {/* Dismiss */}
+        {/* Dismiss — pinned to bottom */}
         <View style={styles.footer}>
-          <HapticPressable onPress={onDismiss}>
-            <MaterialIcons name="close" size={n(36)} color={textColor} />
-          </HapticPressable>
+          <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 20, bottom: 20, left: 40, right: 40 }}>
+            <StyledText style={styles.dismissX}>✕</StyledText>
+          </TouchableOpacity>
         </View>
+
       </SafeAreaView>
     </Modal>
   );
@@ -139,59 +137,68 @@ export function DatePicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: n(22),
+    paddingHorizontal: n(16),
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: n(18),
+    paddingTop: n(10),
+    paddingBottom: n(16),
+    paddingHorizontal: n(4),
   },
   navBtn: {
-    padding: n(4),
+    paddingHorizontal: n(6),
+  },
+  arrow: {
+    fontSize: n(26),
   },
   monthTitle: {
     fontSize: n(22),
   },
   dayHeaderRow: {
     flexDirection: "row",
-    marginBottom: n(8),
+    marginBottom: n(4),
   },
   dayHeader: {
-    fontSize: n(18),
-    textAlign: "center",
-    opacity: 0.6,
-  },
-  grid: {
     flex: 1,
-    justifyContent: "flex-start",
+    fontSize: n(16),
+    textAlign: "center",
+    opacity: 0.35,
+    fontFamily: "PublicSans-Regular",
   },
+  grid: {},
   row: {
     flexDirection: "row",
-    marginBottom: n(4),
   },
   cell: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: n(10),
+    paddingVertical: n(13),
     position: "relative",
   },
   dayText: {
-    fontSize: n(26),
+    fontSize: n(22),
     textAlign: "center",
+    fontFamily: "PublicSans-Regular",
   },
-  todayText: {
-    // no extra style needed — underline handles it
+  daySelected: {
+    opacity: 0.4,
   },
   todayUnderline: {
     position: "absolute",
-    bottom: n(6),
-    width: n(16),
+    bottom: n(7),
+    width: n(14),
     height: n(1.5),
   },
   footer: {
+    flex: 1,
     alignItems: "center",
-    paddingVertical: n(28),
+    justifyContent: "flex-end",
+    paddingBottom: n(32),
+  },
+  dismissX: {
+    fontSize: n(28),
   },
 });
