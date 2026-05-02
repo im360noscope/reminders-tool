@@ -9,7 +9,7 @@ interface TaskCheckboxProps {
   size?: number;
 }
 
-export function TaskCheckbox({ checked, onToggle, size = 24 }: TaskCheckboxProps) {
+export function TaskCheckbox({ checked, onToggle, size = 22 }: TaskCheckboxProps) {
   const { invertColors } = useInvertColors();
   const color = invertColors ? "black" : "white";
   const dim = n(size);
@@ -34,9 +34,10 @@ export function TaskCheckbox({ checked, onToggle, size = 24 }: TaskCheckboxProps
 
 const styles = StyleSheet.create({
   hitArea: {
-    padding: n(8),
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: n(14),
+    paddingTop: n(14),   // aligns circle with first text line
+    paddingBottom: n(8),
+    alignSelf: "flex-start",
   },
   circle: {
     borderWidth: n(1.5),
