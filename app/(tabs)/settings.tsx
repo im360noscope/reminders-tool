@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Header } from "@/components/Header";
@@ -10,6 +11,11 @@ import { useReminders } from "@/contexts/RemindersContext";
 import { n } from "@/utils/scaling";
 import { useState } from "react";
 
+const AFTER_QUICK_ADD_LABELS: Record<string, string> = {
+  "toast": "Add Next",
+  "go-to-list": "Go to List",
+};
+
 export default function SettingsScreen() {
   const { invertColors, setInvertColors } = useInvertColors();
   const { lists, settings, updateSettings } = useReminders();
@@ -17,7 +23,6 @@ export default function SettingsScreen() {
   const [showListPicker, setShowListPicker] = useState(false);
 
   const defaultList = lists.find(l => l.id === settings.defaultListId);
-  const isToast = settings.afterAddBehavior === "toast";
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
@@ -41,19 +46,15 @@ export default function SettingsScreen() {
         </HapticPressable>
 
         {/* After Quick Add */}
-        <View style={styles.row}>
+        <HapticPressable
+          onPress={() => router.push("/settings/after-quick-add")}
+          style={styles.row}
+        >
           <StyledText style={styles.selectorLabel}>After Quick Add</StyledText>
-          <HapticPressable onPress={() => updateSettings({ afterAddBehavior: "toast" })}>
-            <StyledText style={[styles.optionText, isToast && styles.optionSelected]}>
-              Add Next
-            </StyledText>
-          </HapticPressable>
-          <HapticPressable onPress={() => updateSettings({ afterAddBehavior: "go-to-list" })}>
-            <StyledText style={[styles.optionText, !isToast && styles.optionSelected]}>
-              Go to List
-            </StyledText>
-          </HapticPressable>
-        </View>
+          <StyledText style={styles.selectorValue}>
+            {AFTER_QUICK_ADD_LABELS[settings.afterAddBehavior] ?? "Add Next"}
+          </StyledText>
+        </HapticPressable>
 
       </ScrollView>
 
@@ -75,7 +76,6 @@ const styles = StyleSheet.create({
     paddingVertical: n(16),
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: n(4),
   },
   selectorLabel: {
     fontSize: n(20),
@@ -85,13 +85,5 @@ const styles = StyleSheet.create({
   selectorValue: {
     fontSize: n(30),
     paddingBottom: n(10),
-  },
-  optionText: {
-    fontSize: n(30),
-    opacity: 0.3,
-  },
-  optionSelected: {
-    opacity: 1,
-    textDecorationLine: "underline",
   },
 });
