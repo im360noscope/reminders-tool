@@ -182,7 +182,7 @@ export default function TaskScreen() {
 
                 {task.subtasks.map(sub => (
                   <View key={sub.id} style={styles.subtaskRow}>
-                    <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} />
+                    <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} paddingTop={14} />
                     <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>{sub.title}</StyledText>
                     <HapticPressable onPress={() => deleteSubtask(task.id, sub.id)} style={styles.deleteSubtask}>
                       <StyledText style={styles.deleteSubtaskText}>×</StyledText>
