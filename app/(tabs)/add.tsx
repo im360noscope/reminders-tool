@@ -61,7 +61,7 @@ export default function AddScreen() {
   const [confirmedTime, setConfirmedTime] = useState<string | undefined>();
   const [showListPicker, setShowListPicker] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
-  const [toastTask, setToastTask] = useState({ title: "", listTitle: "" });
+  
 
   const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0];
   const canSave = title.trim().length > 0;
@@ -74,9 +74,9 @@ export default function AddScreen() {
       date,
       time: confirmedTime,
     });
-    const listTitle = lists.find(l => l.id === selectedListId)?.title ?? "";
+    
     if (settings.afterAddBehavior === "toast") {
-      setToastTask({ title: task.title, listTitle });
+      
       setToastVisible(true);
     } else {
       router.push({ pathname: "/list/[id]", params: { id: selectedListId } });
@@ -207,8 +207,6 @@ export default function AddScreen() {
 
       <AddToast
         visible={toastVisible}
-        taskTitle={toastTask.title}
-        listTitle={toastTask.listTitle}
         onHide={() => setToastVisible(false)}
       />
     </SafeAreaView>

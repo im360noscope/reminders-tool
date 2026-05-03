@@ -67,7 +67,7 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showListPicker, setShowListPicker] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
-  const [toastTask, setToastTask] = useState({ title: "", listTitle: "" });
+  
 
   const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0];
   const canSave = title.trim().length > 0;
@@ -89,10 +89,10 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
       date,
       time: confirmedTime,
     });
-    const listTitle = lists.find(l => l.id === selectedListId)?.title ?? "";
+    
 
     if (settings.afterAddBehavior === "toast") {
-      setToastTask({ title: task.title, listTitle });
+      
       setToastVisible(true);
     } else {
       onDismiss();
@@ -221,8 +221,8 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
 
         <AddToast
           visible={toastVisible}
-          taskTitle={toastTask.title}
-          listTitle={toastTask.listTitle}
+          
+          
           onHide={() => { setToastVisible(false); onDismiss(); }}
         />
       </SafeAreaView>

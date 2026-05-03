@@ -1,17 +1,15 @@
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
 interface AddToastProps {
   visible: boolean;
-  taskTitle: string;
-  listTitle: string;
   onHide: () => void;
 }
 
-export function AddToast({ visible, taskTitle, listTitle, onHide }: AddToastProps) {
+export function AddToast({ visible, onHide }: AddToastProps) {
   const { invertColors } = useInvertColors();
 
   useEffect(() => {
@@ -20,46 +18,29 @@ export function AddToast({ visible, taskTitle, listTitle, onHide }: AddToastProp
     return () => clearTimeout(timer);
   }, [visible, onHide]);
 
-  if (!visible) return null;
-
   return (
-    <View
-      style={[
-        styles.overlay,
-        { backgroundColor: invertColors ? "white" : "black" },
-      ]}
+    <Modal
+      visible={visible}
+      animationType="none"
+      transparent={false}
+      statusBarTranslucent
     >
-      <View style={styles.content}>
-        <StyledText style={styles.label}>reminder added</StyledText>
-        <StyledText style={styles.title}>{taskTitle}</StyledText>
-        <StyledText style={styles.meta}>{listTitle}</StyledText>
+      <View style={[styles.container, { backgroundColor: invertColors ? "white" : "black" }]}>
+        <StyledText style={[styles.text, { color: invertColors ? "black" : "white" }]}>
+          added
+        </StyledText>
       </View>
-    </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 999,
+  container: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  content: {
-    alignItems: "center",
-    paddingHorizontal: n(32),
-    gap: n(12),
-  },
-  label: {
-    fontSize: n(16),
-    opacity: 0.5,
-  },
-  title: {
-    fontSize: n(30),
-    textAlign: "center",
-  },
-  meta: {
-    fontSize: n(18),
-    opacity: 0.5,
+  text: {
+    fontSize: n(24),
   },
 });
