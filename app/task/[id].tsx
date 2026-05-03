@@ -199,7 +199,7 @@ export default function TaskScreen() {
 
                 {task.subtasks.map(sub => (
                   <View key={sub.id} style={styles.subtaskRow}>
-                    <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} paddingTop={14} />
+                    <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} paddingTop={17} />
                     {editingSubtaskId === sub.id ? (
                       <RNTextInput
                         autoFocus
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   titleInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingVertical: n(4) },
   sectionHeader: { paddingHorizontal: n(22), paddingVertical: n(12) },
   sectionLabel: { fontSize: n(14), opacity: 0.4 },
-  subtaskRow: { flexDirection: "row", alignItems: "center", paddingRight: n(22) },
+  subtaskRow: { flexDirection: "row", alignItems: "flex-start", paddingRight: n(22) },
   subtaskTitle: { flex: 1, fontSize: n(22), paddingVertical: n(14) },
   taskDone: { opacity: 0.4 },
   deleteSubtask: { paddingHorizontal: n(8), paddingVertical: n(8) },
