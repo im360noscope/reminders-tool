@@ -72,6 +72,8 @@ export default function TaskScreen() {
   const [ampm, setAmPm] = useState<"AM" | "PM">(initTimeParts.ampm);
   const [newSubtask, setNewSubtask] = useState("");
   const subtaskInputRef = useRef<RNTextInput>(null);
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
 
   const now = new Date();
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -95,6 +97,18 @@ export default function TaskScreen() {
       { text: "DELETE", style: "destructive", onPress: () => { deleteTask(task.id); router.back(); } },
     ]);
   }, [task, deleteTask]);
+
+  const handleRenameSubtask = useCallback((subtaskId: string) => {
+    const t = editingSubtaskTitle.trim();
+    setEditingSubtaskId(null);
+    if (!t || !task) return;
+    const subtask = task.subtasks.find(s => s.id === subtaskId);
+    if (!subtask || t === subtask.title) return;
+    const updatedSubtasks = task.subtasks.map(s =>
+      s.id === subtaskId ? { ...s, title: t } : s
+    );
+    updateTask(task.id, { subtasks: updatedSubtasks });
+  }, [editingSubtaskTitle, task, updateTask]);
 
   const handleAddSubtask = useCallback(() => {
     const t = newSubtask.trim();
@@ -183,7 +197,25 @@ export default function TaskScreen() {
                 {task.subtasks.map(sub => (
                   <View key={sub.id} style={styles.subtaskRow}>
                     <TaskCheckbox checked={sub.completed} onToggle={() => toggleSubtask(task.id, sub.id)} size={20} paddingTop={14} />
-                    <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>{sub.title}</StyledText>
+                    {editingSubtaskId === sub.id ? (
+                      <RNTextInput
+                        autoFocus
+                        value={editingSubtaskTitle}
+                        onChangeText={setEditingSubtaskTitle}
+                        onSubmitEditing={() => handleRenameSubtask(sub.id)}
+                        onBlur={() => handleRenameSubtask(sub.id)}
+                        style={[styles.subtaskTitle, { color: textColor }]}
+                        allowFontScaling={false}
+                        returnKeyType="done"
+                      />
+                    ) : (
+                      <HapticPressable
+                        onPress={() => { setEditingSubtaskId(sub.id); setEditingSubtaskTitle(sub.title); }}
+                        style={{ flex: 1 }}
+                      >
+                        <StyledText style={[styles.subtaskTitle, sub.completed && styles.taskDone]}>{sub.title}</StyledText>
+                      </HapticPressable>
+                    )}
                     <HapticPressable onPress={() => deleteSubtask(task.id, sub.id)} style={styles.deleteSubtask}>
                       <StyledText style={styles.deleteSubtaskText}>×</StyledText>
                     </HapticPressable>
