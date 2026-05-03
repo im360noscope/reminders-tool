@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Modal, StyleSheet, Text as DefaultText, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
@@ -69,8 +69,13 @@ export function DatePicker({
         {/* Day headers */}
         <View style={styles.dayHeaderRow}>
           {DAY_HEADERS.map((d, i) => (
-            <View key={`h-${i}`} style={styles.cell}>
-              <StyledText style={[styles.dayHeader, { color: textColor }]}>{d}</StyledText>
+            <View key={`h-${i}`} style={styles.dayHeaderCell}>
+              <DefaultText
+                allowFontScaling={false}
+                style={[styles.dayHeader, { color: textColor }]}
+              >
+                {d}
+              </DefaultText>
             </View>
           ))}
         </View>
@@ -139,10 +144,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: n(4),
   },
+  dayHeaderCell: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: n(8),
+  },
   dayHeader: {
     fontSize: n(16),
     textAlign: "center",
     fontFamily: "PublicSans-Regular",
+    color: "white",
   },
   grid: {
     // No flex — fixed height based on content so footer stays anchored
