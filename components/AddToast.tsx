@@ -41,6 +41,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   text: {
-    fontSize: n(24),
+    fontSize: n(40),
   },
 });
