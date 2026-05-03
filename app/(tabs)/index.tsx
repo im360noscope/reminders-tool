@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Animated,
   StyleSheet,
@@ -11,14 +11,13 @@ import { HapticPressable } from "@/components/HapticPressable";
 import { Header } from "@/components/Header";
 import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
-import { useReminders, type ReminderList } from "@/contexts/RemindersContext";
+import { useReminders } from "@/contexts/RemindersContext";
 import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { n } from "@/utils/scaling";
-import { AddTaskModal } from "@/components/AddTaskModal";
 
 export default function ListsScreen() {
   const { invertColors } = useInvertColors();
-  const { lists, deleteList, moveListUp, moveListDown, addList } = useReminders();
+  const { lists, deleteList, moveListUp, moveListDown } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
@@ -35,8 +34,6 @@ export default function ListsScreen() {
   } = useScrollIndicator();
 
   const [isReordering, setIsReordering] = useState(false);
-  const [showAddList, setShowAddList] = useState(false);
-
   const sorted = [...lists].sort((a, b) => a.order - b.order);
 
   // Handle confirm screen returning with a delete action
@@ -44,7 +41,6 @@ export default function ListsScreen() {
     if (params.confirmed === "true" && params.action?.startsWith("delete-list:")) {
       const id = params.action.replace("delete-list:", "");
       deleteList(id);
-      // Clear params
       router.setParams({ confirmed: undefined, action: undefined });
     }
   }, [params.confirmed, params.action]);
@@ -64,7 +60,7 @@ export default function ListsScreen() {
         hideBackButton
         rightAction={isReordering ? undefined : {
           icon: "add",
-          onPress: () => setShowAddList(true),
+          onPress: () => router.push("/list-actions/new"),
         }}
         reorderingDone={isReordering ? () => setIsReordering(false) : undefined}
       />
@@ -114,60 +110,7 @@ export default function ListsScreen() {
           </View>
         )}
       </View>
-
-      <AddListModal
-        visible={showAddList}
-        onDismiss={() => setShowAddList(false)}
-        onSave={(title) => { addList(title); setShowAddList(false); }}
-        invertColors={invertColors}
-      />
     </SafeAreaView>
-  );
-}
-
-// Inline add-list modal — kept simple since we don't have a route for this yet
-import { KeyboardAvoidingView, Modal, TextInput } from "react-native";
-
-function AddListModal({ visible, onDismiss, onSave, invertColors }: {
-  visible: boolean;
-  onDismiss: () => void;
-  onSave: (title: string) => void;
-  invertColors: boolean;
-}) {
-  const bg = invertColors ? "white" : "black";
-  const textColor = invertColors ? "black" : "white";
-  const dimColor = invertColors ? "#AAAAAA" : "#555555";
-  const [title, setTitle] = useState("");
-
-  const handleSave = () => {
-    const t = title.trim();
-    if (!t) return;
-    onSave(t);
-    setTitle("");
-  };
-
-  return (
-    <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
-      <View style={[styles.modalFill, { backgroundColor: bg }]}>
-        <KeyboardAvoidingView style={styles.modalFill} behavior="padding">
-          <SafeAreaView style={styles.modalFill} edges={["top"]}>
-            <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleSave, show: title.trim().length > 0 }} />
-            <View style={styles.inputArea}>
-              <TextInput
-                autoFocus
-                value={title}
-                onChangeText={setTitle}
-                placeholder="List name"
-                placeholderTextColor={dimColor}
-                onSubmitEditing={handleSave}
-                style={[styles.modalInput, { color: textColor }]}
-                allowFontScaling={false}
-              />
-            </View>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
   );
 }
 
@@ -179,7 +122,4 @@ const styles = StyleSheet.create({
   listItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: n(22), paddingVertical: n(16) },
   listTitle: { fontSize: n(30), flex: 1 },
   arrowGroup: { flexDirection: "row", gap: n(4) },
-  modalFill: { flex: 1 },
-  inputArea: { paddingHorizontal: n(22), paddingTop: n(24) },
-  modalInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingBottom: n(8) },
 });
