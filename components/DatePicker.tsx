@@ -140,7 +140,6 @@ const styles = StyleSheet.create({
     marginBottom: n(4),
   },
   dayHeader: {
-    flex: 1,
     fontSize: n(16),
     textAlign: "center",
     fontFamily: "PublicSans-Regular",
