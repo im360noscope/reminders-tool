@@ -1,126 +1,16 @@
-import { useCallback, useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  TouchableWithoutFeedback,
-  Platform,
-  StyleSheet,
-  TextInput as RNTextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Toast } from "@/components/Toast";
-import { DatePicker } from "@/components/DatePicker";
-import { Header } from "@/components/Header";
-import { HapticPressable } from "@/components/HapticPressable";
-import { ListPickerModal } from "@/components/ListPickerModal";
-import { StyledText } from "@/components/StyledText";
-import { TimePicker } from "@/components/TimePicker";
+import { Modal } from "react-native";
+import { TaskForm } from "@/components/TaskForm";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
-import { useReminders } from "@/contexts/RemindersContext";
-import { n } from "@/utils/scaling";
-
-function formatDisplayDate(dateStr: string): string {
-  const [y, mo, d] = dateStr.split("-").map(Number);
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${months[mo - 1]} ${d}, ${y}`;
-}
-
-function formatDisplayTime(digits: string, ampm: "AM" | "PM"): string {
-  const h = parseInt(digits.slice(0, 2), 10);
-  const m = digits.slice(2, 4);
-  return `${h}:${m} ${ampm}`;
-}
-
-function digitsToTime(digits: string, ampm: "AM" | "PM"): string {
-  // 3 digits: H:MM (e.g. "630" → hour=6, mins="30")
-  // 4 digits: HH:MM (e.g. "1230" → hour=12, mins="30")
-  let h: number;
-  let m: string;
-  if (digits.length === 3) {
-    h = parseInt(digits[0], 10);
-    m = digits.slice(1);
-  } else {
-    h = parseInt(digits.slice(0, 2), 10);
-    m = digits.slice(2, 4);
-  }
-  if (ampm === "PM" && h !== 12) h += 12;
-  if (ampm === "AM" && h === 12) h = 0;
-  return `${String(h).padStart(2, "0")}:${m}`;
-}
 
 interface AddTaskModalProps {
   visible: boolean;
-  defaultListId: string;
-  defaultDate?: string; // "YYYY-MM-DD" — pre-fills date when provided
+  defaultListId?: string;
+  defaultDate?: string;
   onDismiss: () => void;
 }
 
 export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }: AddTaskModalProps) {
   const { invertColors } = useInvertColors();
-  const { lists, settings, addTask } = useReminders();
-  const bg = invertColors ? "white" : "black";
-  const textColor = invertColors ? "black" : "white";
-  const dimColor = invertColors ? "#AAAAAA" : "#555555";
-
-  const [title, setTitle] = useState("");
-  const [selectedListId, setSelectedListId] = useState(defaultListId);
-  const [date, setDate] = useState<string | undefined>(defaultDate);
-  const [confirmedTime, setConfirmedTime] = useState<string | undefined>();
-  const [timeDigits, setTimeDigits] = useState("");
-  const [ampm, setAmPm] = useState<"AM" | "PM">("AM");
-
-  const now = new Date();
-  const [viewYear, setViewYear] = useState(now.getFullYear());
-  const [viewMonth, setViewMonth] = useState(now.getMonth());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showListPicker, setShowListPicker] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
-  
-
-  const selectedList = lists.find(l => l.id === selectedListId) ?? lists[0];
-  const canSave = title.trim().length > 0;
-
-  const handleShow = useCallback(() => {
-    setTitle("");
-    setSelectedListId(defaultListId);
-    setDate(defaultDate);
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, [defaultListId, defaultDate]);
-
-  const handleSave = useCallback(() => {
-    if (!canSave) return;
-    const task = addTask({
-      title: title.trim(),
-      listId: selectedListId,
-      date,
-      time: confirmedTime,
-    });
-    
-
-    if (settings.afterAddBehavior === "toast") {
-      
-      setToastVisible(true);
-    } else {
-      onDismiss();
-    }
-
-    setTitle("");
-    setDate(defaultDate);
-    setConfirmedTime(undefined);
-    setTimeDigits("");
-    setAmPm("AM");
-  }, [canSave, title, selectedListId, date, confirmedTime, lists, settings, addTask, onDismiss, defaultDate]);
-
-  const handleTimeConfirm = useCallback(() => {
-    if (timeDigits.length !== 3 && timeDigits.length !== 4) return;
-    setConfirmedTime(digitsToTime(timeDigits, ampm));
-    setShowTimePicker(false);
-  }, [timeDigits, ampm]);
 
   return (
     <Modal
@@ -128,128 +18,12 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
       animationType="none"
       transparent={false}
       statusBarTranslucent
-      onShow={handleShow}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
-        <Header
-          headerTitle="Add Task"
-          rightAction={{ icon: "check", onPress: handleSave, show: canSave }}
-        />
-
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "android" ? "height" : "padding"}
-        >
-          {/* Task name */}
-          <View style={styles.field}>
-            <RNTextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Task name"
-              placeholderTextColor={dimColor}
-              style={[styles.titleInput, { color: textColor }]}
-              allowFontScaling={false}
-              autoFocus
-              returnKeyType="done"
-              onSubmitEditing={Keyboard.dismiss}
-            />
-          </View>
-
-          {/* List */}
-          <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
-            <StyledText style={styles.fieldLabel}>List</StyledText>
-            <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
-          </HapticPressable>
-
-          {/* Date */}
-          <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
-            <StyledText style={styles.fieldLabel}>Date</StyledText>
-            {date ? (
-              <View style={styles.fieldValueRow}>
-                <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
-                <HapticPressable onPress={() => { setDate(undefined); setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
-                  <StyledText style={styles.clearBtn}>CLEAR</StyledText>
-                </HapticPressable>
-              </View>
-            ) : (
-              <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
-            )}
-          </HapticPressable>
-
-          {/* Time — only if date is set */}
-          {date && (
-            <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
-              <StyledText style={styles.fieldLabel}>Time</StyledText>
-              {confirmedTime ? (
-                <View style={styles.fieldValueRow}>
-                  <StyledText style={styles.fieldValue}>{formatDisplayTime(timeDigits, ampm)}</StyledText>
-                  <HapticPressable onPress={() => { setConfirmedTime(undefined); setTimeDigits(""); setAmPm("AM"); }}>
-                    <StyledText style={styles.clearBtn}>CLEAR</StyledText>
-                  </HapticPressable>
-                </View>
-              ) : (
-                <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
-              )}
-            </HapticPressable>
-          )}
-        </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
-
-        <DatePicker
-          visible={showDatePicker}
-          value={date}
-          onSelect={(d) => { setDate(d); setShowDatePicker(false); }}
-          onDismiss={() => setShowDatePicker(false)}
-          viewYear={viewYear}
-          viewMonth={viewMonth}
-          onPrevMonth={() => {
-            if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-            else setViewMonth(m => m - 1);
-          }}
-          onNextMonth={() => {
-            if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-            else setViewMonth(m => m + 1);
-          }}
-        />
-
-        <TimePicker
-          visible={showTimePicker}
-          digits={timeDigits}
-          ampm={ampm}
-          onDigit={(d) => setTimeDigits(prev => prev.length < 4 ? prev + d : prev)}
-          onBackspace={() => setTimeDigits(prev => prev.slice(0, -1))}
-          onAmPm={setAmPm}
-          onConfirm={handleTimeConfirm}
-          onDismiss={() => setShowTimePicker(false)}
-        />
-
-        <ListPickerModal
-          visible={showListPicker}
-          lists={lists}
-          selectedId={selectedListId}
-          onSelect={(list) => { setSelectedListId(list.id); setShowListPicker(false); }}
-          onDismiss={() => setShowListPicker(false)}
-        />
-
-        <Toast
-          message="added"
-          visible={toastVisible}
-          
-          
-          onHide={() => { setToastVisible(false); onDismiss(); }}
-        />
-      </SafeAreaView>
+      <TaskForm
+        defaultListId={defaultListId}
+        defaultDate={defaultDate}
+        onSaved={onDismiss}
+      />
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  field: { paddingHorizontal: n(22), paddingVertical: n(18) },
-  fieldLabel: { fontSize: n(14), opacity: 0.4, marginBottom: n(4) },
-  fieldValue: { fontSize: n(24), fontFamily: "PublicSans-Regular" },
-  fieldValueRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  clearBtn: { fontSize: n(14), opacity: 0.4 },
-  titleInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingVertical: n(4) },
-});
