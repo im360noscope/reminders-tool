@@ -92,10 +92,10 @@ export default function ListsScreen() {
                 {isReordering && (
                   <View style={styles.arrowGroup}>
                     <HapticPressable onPress={() => moveListUp(list.id)} disabled={idx === 0}>
-                      <MaterialIcons name="keyboard-arrow-up" size={n(28)} color={idx === 0 ? dimColor : textColor} />
+                      <MaterialIcons name="keyboard-arrow-up" size={n(32)} color={idx === 0 ? dimColor : textColor} />
                     </HapticPressable>
                     <HapticPressable onPress={() => moveListDown(list.id)} disabled={idx === sorted.length - 1}>
-                      <MaterialIcons name="keyboard-arrow-down" size={n(28)} color={idx === sorted.length - 1 ? dimColor : textColor} />
+                      <MaterialIcons name="keyboard-arrow-down" size={n(32)} color={idx === sorted.length - 1 ? dimColor : textColor} />
                     </HapticPressable>
                   </View>
                 )}
@@ -121,5 +121,5 @@ const styles = StyleSheet.create({
   scrollThumb: { width: n(5), position: "absolute", right: n(-2) },
   listItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: n(22), paddingVertical: n(16) },
   listTitle: { fontSize: n(30), flex: 1 },
-  arrowGroup: { flexDirection: "row", gap: n(4) },
+  arrowGroup: { flexDirection: "row", gap: n(12), paddingRight: n(24) },
 });
