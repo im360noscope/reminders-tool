@@ -4,30 +4,27 @@ import { StyledText } from "@/components/StyledText";
 import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
-interface AddToastProps {
+interface ToastProps {
   visible: boolean;
+  message: string;
+  duration?: number; // ms, defaults to 1000
   onHide: () => void;
 }
 
-export function AddToast({ visible, onHide }: AddToastProps) {
+export function Toast({ visible, message, duration = 1000, onHide }: ToastProps) {
   const { invertColors } = useInvertColors();
 
   useEffect(() => {
     if (!visible) return;
-    const timer = setTimeout(onHide, 1000);
+    const timer = setTimeout(onHide, duration);
     return () => clearTimeout(timer);
-  }, [visible, onHide]);
+  }, [visible, duration, onHide]);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="none"
-      transparent={false}
-      statusBarTranslucent
-    >
+    <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
       <View style={[styles.container, { backgroundColor: invertColors ? "white" : "black" }]}>
         <StyledText style={[styles.text, { color: invertColors ? "black" : "white" }]}>
-          added
+          {message}
         </StyledText>
       </View>
     </Modal>

@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AddToast } from "@/components/AddToast";
+import { Toast } from "@/components/Toast";
 import { DatePicker } from "@/components/DatePicker";
 import { Header } from "@/components/Header";
 import { HapticPressable } from "@/components/HapticPressable";
@@ -205,7 +205,8 @@ export default function AddScreen() {
         onDismiss={() => setShowListPicker(false)}
       />
 
-      <AddToast
+      <Toast
+          message="added"
         visible={toastVisible}
         onHide={() => setToastVisible(false)}
       />
