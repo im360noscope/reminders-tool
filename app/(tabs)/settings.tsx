@@ -14,6 +14,11 @@ const AFTER_QUICK_ADD_LABELS: Record<string, string> = {
   "go-to-list": "Go to List",
 };
 
+const ADD_POSITION_LABELS: Record<string, string> = {
+  "top": "Top of List",
+  "bottom": "Bottom of List",
+};
+
 export default function SettingsScreen() {
   const { invertColors, setInvertColors } = useInvertColors();
   const { lists, settings } = useReminders();
@@ -53,6 +58,17 @@ export default function SettingsScreen() {
           <StyledText style={styles.selectorLabel}>After Quick Add</StyledText>
           <StyledText style={styles.selectorValue}>
             {AFTER_QUICK_ADD_LABELS[settings.afterAddBehavior] ?? "Add Next"}
+          </StyledText>
+        </HapticPressable>
+
+        {/* Add New Tasks */}
+        <HapticPressable
+          onPress={() => router.push("/settings/add-position")}
+          style={styles.row}
+        >
+          <StyledText style={styles.selectorLabel}>Add New Tasks</StyledText>
+          <StyledText style={styles.selectorValue}>
+            {ADD_POSITION_LABELS[settings.addPosition ?? "bottom"] ?? "Bottom of List"}
           </StyledText>
         </HapticPressable>
 

@@ -40,6 +40,7 @@ export interface ReminderList {
 export interface Settings {
   defaultListId: string;
   afterAddBehavior: "toast" | "go-to-list";
+  addPosition: "top" | "bottom";
   invertColors?: boolean; // handled separately, here for completeness
 }
 
@@ -61,6 +62,7 @@ const DEFAULT_LIST: ReminderList = {
 const DEFAULT_SETTINGS: Settings = {
   defaultListId: "inbox",
   afterAddBehavior: "toast",
+  addPosition: "bottom",
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -205,20 +207,30 @@ export function RemindersProvider({ children }: { children: ReactNode }) {
     task: Omit<Task, "id" | "createdAt" | "order" | "subtasks" | "completed">
   ): Task => {
     const listTasks = tasks.filter(t => t.listId === task.listId);
-    const maxOrder = listTasks.length > 0
-      ? Math.max(...listTasks.map(t => t.order))
-      : -1;
+    const isTop = settings.addPosition === "top";
+    let order: number;
+    if (isTop) {
+      const minOrder = listTasks.length > 0
+        ? Math.min(...listTasks.map(t => t.order))
+        : 0;
+      order = minOrder - 1;
+    } else {
+      const maxOrder = listTasks.length > 0
+        ? Math.max(...listTasks.map(t => t.order))
+        : -1;
+      order = maxOrder + 1;
+    }
     const newTask: Task = {
       ...task,
       id: generateId(),
       createdAt: Date.now(),
-      order: maxOrder + 1,
+      order,
       subtasks: [],
       completed: false,
     };
     persistTasks([...tasks, newTask]);
     return newTask;
-  }, [tasks, persistTasks]);
+  }, [tasks, settings.addPosition, persistTasks]);
 
   const updateTask = useCallback((id: string, updates: Partial<Omit<Task, "id" | "createdAt">>) => {
     persistTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
