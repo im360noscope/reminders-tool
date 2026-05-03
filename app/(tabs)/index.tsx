@@ -1,14 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useCallback, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
-  Alert,
   Animated,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,15 +14,20 @@ import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { useReminders, type ReminderList } from "@/contexts/RemindersContext";
 import { useScrollIndicator } from "@/hooks/useScrollIndicator";
 import { n } from "@/utils/scaling";
-
-type LongPressAction = "rename" | "reorder" | "delete";
+import { AddTaskModal } from "@/components/AddTaskModal";
 
 export default function ListsScreen() {
   const { invertColors } = useInvertColors();
-  const { lists, addList, renameList, deleteList, moveListUp, moveListDown } = useReminders();
+  const { lists, deleteList, moveListUp, moveListDown, addList } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
+
+  const params = useLocalSearchParams<{
+    confirmed?: string;
+    action?: string;
+    startReorder?: string;
+  }>();
 
   const {
     handleScroll, scrollIndicatorHeight, scrollIndicatorPosition,
@@ -35,55 +35,27 @@ export default function ListsScreen() {
   } = useScrollIndicator();
 
   const [isReordering, setIsReordering] = useState(false);
-  const [actionList, setActionList] = useState<ReminderList | null>(null);
-  const [showActionMenu, setShowActionMenu] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newListTitle, setNewListTitle] = useState("");
-  const [showRenameModal, setShowRenameModal] = useState(false);
-  const [renameTitle, setRenameTitle] = useState("");
+  const [showAddList, setShowAddList] = useState(false);
 
   const sorted = [...lists].sort((a, b) => a.order - b.order);
 
-  const handleLongPress = useCallback((list: ReminderList) => {
-    if (isReordering) return;
-    setActionList(list);
-    setShowActionMenu(true);
-  }, [isReordering]);
-
-  const handleAction = useCallback((action: LongPressAction) => {
-    setShowActionMenu(false);
-    if (!actionList) return;
-    if (action === "rename") {
-      setRenameTitle(actionList.title);
-      setShowRenameModal(true);
-    } else if (action === "reorder") {
-      setIsReordering(true);
-    } else if (action === "delete") {
-      Alert.alert(
-        "Delete List",
-        `Delete "${actionList.title}"? Tasks will be moved to your default list.`,
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "DELETE", style: "destructive", onPress: () => deleteList(actionList.id) },
-        ]
-      );
+  // Handle confirm screen returning with a delete action
+  useEffect(() => {
+    if (params.confirmed === "true" && params.action?.startsWith("delete-list:")) {
+      const id = params.action.replace("delete-list:", "");
+      deleteList(id);
+      // Clear params
+      router.setParams({ confirmed: undefined, action: undefined });
     }
-  }, [actionList, deleteList]);
+  }, [params.confirmed, params.action]);
 
-  const handleAddList = useCallback(() => {
-    const t = newListTitle.trim();
-    if (!t) return;
-    addList(t);
-    setNewListTitle("");
-    setShowAddModal(false);
-  }, [newListTitle, addList]);
-
-  const handleRename = useCallback(() => {
-    const t = renameTitle.trim();
-    if (!t || !actionList) return;
-    renameList(actionList.id, t);
-    setShowRenameModal(false);
-  }, [renameTitle, actionList, renameList]);
+  // Handle reorder mode triggered from list-actions screen
+  useEffect(() => {
+    if (params.startReorder === "true") {
+      setIsReordering(true);
+      router.setParams({ startReorder: undefined });
+    }
+  }, [params.startReorder]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
@@ -92,7 +64,7 @@ export default function ListsScreen() {
         hideBackButton
         rightAction={isReordering ? undefined : {
           icon: "add",
-          onPress: () => { setNewListTitle(""); setShowAddModal(true); },
+          onPress: () => setShowAddList(true),
         }}
         reorderingDone={isReordering ? () => setIsReordering(false) : undefined}
       />
@@ -109,8 +81,14 @@ export default function ListsScreen() {
             {sorted.map((list, idx) => (
               <HapticPressable
                 key={list.id}
-                onPress={() => { if (!isReordering) router.push({ pathname: "/list/[id]", params: { id: list.id } }); }}
-                onLongPress={() => handleLongPress(list)}
+                onPress={() => {
+                  if (!isReordering)
+                    router.push({ pathname: "/list/[id]", params: { id: list.id } });
+                }}
+                onLongPress={() => {
+                  if (!isReordering)
+                    router.push({ pathname: "/list-actions/[id]/", params: { id: list.id } });
+                }}
                 delayLongPress={400}
                 style={styles.listItem}
               >
@@ -129,6 +107,7 @@ export default function ListsScreen() {
             ))}
           </View>
         </Animated.ScrollView>
+
         {scrollIndicatorHeight > 0 && (
           <View style={[styles.scrollTrack, { backgroundColor: textColor }]}>
             <Animated.View style={[styles.scrollThumb, { backgroundColor: textColor, height: scrollIndicatorHeight, transform: [{ translateY: scrollIndicatorPosition }] }]} />
@@ -136,74 +115,59 @@ export default function ListsScreen() {
         )}
       </View>
 
-      {/* Long-press action menu */}
-      <Modal visible={showActionMenu} animationType="none" transparent statusBarTranslucent>
-        <HapticPressable style={styles.menuBackdrop} onPress={() => setShowActionMenu(false)}>
-          <View style={[styles.menuCard, { backgroundColor: bg }]}>
-            <StyledText style={styles.menuListName}>{actionList?.title}</StyledText>
-            {(["rename", "reorder", "delete"] as LongPressAction[]).map((action) => (
-              <HapticPressable key={action} onPress={() => handleAction(action)} style={styles.menuItem}>
-                <StyledText style={[styles.menuItemText, action === "delete" && styles.menuItemDelete]}>
-                  {action.toUpperCase()}
-                </StyledText>
-              </HapticPressable>
-            ))}
-          </View>
-        </HapticPressable>
-      </Modal>
-
-      {/* Add list modal */}
-      <Modal visible={showAddModal} animationType="none" transparent={false} statusBarTranslucent>
-        <View style={[styles.modalFill, { backgroundColor: bg }]}>
-          <KeyboardAvoidingView
-            style={styles.modalFill}
-            behavior="padding"
-          >
-            <SafeAreaView style={styles.modalFill} edges={["top"]}>
-              <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleAddList }} />
-              <View style={styles.inputArea}>
-                <TextInput
-                  autoFocus
-                  value={newListTitle}
-                  onChangeText={setNewListTitle}
-                  placeholder="List name"
-                  placeholderTextColor={dimColor}
-                  onSubmitEditing={handleAddList}
-                  style={[styles.modalInput, { color: textColor }]}
-                  allowFontScaling={false}
-                />
-              </View>
-            </SafeAreaView>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
-
-      {/* Rename modal */}
-      <Modal visible={showRenameModal} animationType="none" transparent={false} statusBarTranslucent>
-        <View style={[styles.modalFill, { backgroundColor: bg }]}>
-          <KeyboardAvoidingView
-            style={styles.modalFill}
-            behavior="padding"
-          >
-            <SafeAreaView style={styles.modalFill} edges={["top"]}>
-              <Header headerTitle="Rename" rightAction={{ icon: "check", onPress: handleRename }} />
-              <View style={styles.inputArea}>
-                <TextInput
-                  autoFocus
-                  value={renameTitle}
-                  onChangeText={setRenameTitle}
-                  onSubmitEditing={handleRename}
-                  placeholder="List name"
-                  placeholderTextColor={dimColor}
-                  style={[styles.modalInput, { color: textColor }]}
-                  allowFontScaling={false}
-                />
-              </View>
-            </SafeAreaView>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
+      <AddListModal
+        visible={showAddList}
+        onDismiss={() => setShowAddList(false)}
+        onSave={(title) => { addList(title); setShowAddList(false); }}
+        invertColors={invertColors}
+      />
     </SafeAreaView>
+  );
+}
+
+// Inline add-list modal — kept simple since we don't have a route for this yet
+import { KeyboardAvoidingView, Modal, TextInput } from "react-native";
+
+function AddListModal({ visible, onDismiss, onSave, invertColors }: {
+  visible: boolean;
+  onDismiss: () => void;
+  onSave: (title: string) => void;
+  invertColors: boolean;
+}) {
+  const bg = invertColors ? "white" : "black";
+  const textColor = invertColors ? "black" : "white";
+  const dimColor = invertColors ? "#AAAAAA" : "#555555";
+  const [title, setTitle] = useState("");
+
+  const handleSave = () => {
+    const t = title.trim();
+    if (!t) return;
+    onSave(t);
+    setTitle("");
+  };
+
+  return (
+    <Modal visible={visible} animationType="none" transparent={false} statusBarTranslucent>
+      <View style={[styles.modalFill, { backgroundColor: bg }]}>
+        <KeyboardAvoidingView style={styles.modalFill} behavior="padding">
+          <SafeAreaView style={styles.modalFill} edges={["top"]}>
+            <Header headerTitle="New List" rightAction={{ icon: "check", onPress: handleSave, show: title.trim().length > 0 }} />
+            <View style={styles.inputArea}>
+              <TextInput
+                autoFocus
+                value={title}
+                onChangeText={setTitle}
+                placeholder="List name"
+                placeholderTextColor={dimColor}
+                onSubmitEditing={handleSave}
+                style={[styles.modalInput, { color: textColor }]}
+                allowFontScaling={false}
+              />
+            </View>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   );
 }
 
@@ -215,12 +179,6 @@ const styles = StyleSheet.create({
   listItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: n(22), paddingVertical: n(16) },
   listTitle: { fontSize: n(30), flex: 1 },
   arrowGroup: { flexDirection: "row", gap: n(4) },
-  menuBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", paddingHorizontal: n(40) },
-  menuCard: { width: "100%" },
-  menuListName: { fontSize: n(20), opacity: 0.5, paddingHorizontal: n(22), paddingVertical: n(16) },
-  menuItem: { paddingHorizontal: n(22), paddingVertical: n(20) },
-  menuItemText: { fontSize: n(24) },
-  menuItemDelete: { opacity: 0.4 },
   modalFill: { flex: 1 },
   inputArea: { paddingHorizontal: n(22), paddingTop: n(24) },
   modalInput: { fontSize: n(30), fontFamily: "PublicSans-Regular", paddingBottom: n(8) },
