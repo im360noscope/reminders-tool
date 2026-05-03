@@ -69,7 +69,5 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: n(30),
   },
-  destructive: {
-    opacity: 0.4,
-  },
+  destructive: {},
 });
