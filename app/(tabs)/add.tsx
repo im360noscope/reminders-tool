@@ -106,6 +106,7 @@ export default function AddScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "android" ? "height" : "padding"}
       >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           overScrollMode="never"
           showsVerticalScrollIndicator={false}
@@ -123,7 +124,7 @@ export default function AddScreen() {
               allowFontScaling={false}
               autoFocus
               returnKeyType="done"
-              onSubmitEditing={handleSave}
+              onSubmitEditing={Keyboard.dismiss}
             />
           </View>
 
@@ -167,6 +168,7 @@ export default function AddScreen() {
             </HapticPressable>
           )}
         </ScrollView>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
       <DatePicker

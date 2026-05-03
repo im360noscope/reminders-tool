@@ -1,7 +1,9 @@
 import { useCallback, useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
+  TouchableWithoutFeedback,
   Platform,
   StyleSheet,
   TextInput as RNTextInput,
@@ -140,7 +142,7 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
               allowFontScaling={false}
               autoFocus
               returnKeyType="done"
-              onSubmitEditing={handleSave}
+              onSubmitEditing={Keyboard.dismiss}
             />
           </View>
 
@@ -182,6 +184,7 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
             </HapticPressable>
           )}
         </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
 
         <DatePicker
           visible={showDatePicker}

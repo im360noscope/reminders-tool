@@ -2,8 +2,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
+  Keyboard,
   Animated,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
   Platform,
   StyleSheet,
   TextInput as RNTextInput,
@@ -140,6 +142,7 @@ export default function TaskScreen() {
         <Header headerTitle="Edit" rightAction={{ icon: "check", onPress: handleSave }} />
 
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "android" ? "height" : "padding"}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.scrollWrapper}>
             <Animated.ScrollView
               onLayout={(e) => setScrollViewHeight(e.nativeEvent.layout.height)}
@@ -152,7 +155,7 @@ export default function TaskScreen() {
               <View onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}>
 
                 <View style={styles.field}>
-                  <RNTextInput value={title} onChangeText={setTitle} placeholder="Task name" placeholderTextColor={dimColor} style={[styles.titleInput, { color: textColor }]} allowFontScaling={false} returnKeyType="done" onSubmitEditing={handleSave} />
+                  <RNTextInput value={title} onChangeText={setTitle} placeholder="Task name" placeholderTextColor={dimColor} style={[styles.titleInput, { color: textColor }]} allowFontScaling={false} returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
                 </View>
 
                 <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
@@ -238,6 +241,7 @@ export default function TaskScreen() {
               </View>
             )}
           </View>
+          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
 
         <DatePicker visible={showDatePicker} value={date} onSelect={(d) => { setDate(d); setShowDatePicker(false); }} onDismiss={() => setShowDatePicker(false)} viewYear={viewYear} viewMonth={viewMonth} onPrevMonth={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); }} onNextMonth={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); }} />
