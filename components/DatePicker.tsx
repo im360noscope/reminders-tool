@@ -70,7 +70,7 @@ export function DatePicker({
         <View style={styles.dayHeaderRow}>
           {DAY_HEADERS.map((d, i) => (
             <View key={`h-${i}`} style={styles.cell}>
-              <StyledText style={styles.dayHeader}>{d}</StyledText>
+              <StyledText style={[styles.dayHeader, { color: textColor }]}>{d}</StyledText>
             </View>
           ))}
         </View>
