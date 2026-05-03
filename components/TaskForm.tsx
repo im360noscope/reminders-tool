@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   flex: { flex: 1 },
   field: { paddingHorizontal: n(22), paddingVertical: n(18) },
-  fieldLabel: { fontSize: n(14), opacity: 0.4, marginBottom: n(4) },
+  fieldLabel: { fontSize: n(14), marginBottom: n(4) },
   fieldValue: { fontSize: n(24), fontFamily: "PublicSans-Regular" },
   fieldValueRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   clearBtn: { fontSize: n(14), opacity: 0.4 },
