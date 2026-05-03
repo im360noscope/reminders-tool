@@ -127,6 +127,7 @@ export function AddTaskModal({ visible, defaultListId, defaultDate, onDismiss }:
           rightAction={{ icon: "check", onPress: handleSave, show: canSave }}
         />
 
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "android" ? "height" : "padding"}
