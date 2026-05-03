@@ -55,13 +55,13 @@ export function DatePicker({
 
         {/* Month/year header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onPrevMonth} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <TouchableOpacity onPress={onPrevMonth} activeOpacity={1} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <MaterialIcons name="chevron-left" size={n(36)} color={textColor} />
           </TouchableOpacity>
           <StyledText style={styles.monthTitle}>
             {MONTH_NAMES[viewMonth]} {viewYear}
           </StyledText>
-          <TouchableOpacity onPress={onNextMonth} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <TouchableOpacity onPress={onNextMonth} activeOpacity={1} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <MaterialIcons name="chevron-right" size={n(36)} color={textColor} />
           </TouchableOpacity>
         </View>
@@ -107,6 +107,7 @@ const isSelected = dateStr === value;
         <View style={styles.footer}>
           <TouchableOpacity
             onPress={onDismiss}
+            activeOpacity={1}
             hitSlop={{ top: 20, bottom: 20, left: 40, right: 40 }}
           >
             <StyledText style={styles.dismissX}>✕</StyledText>

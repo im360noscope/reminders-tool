@@ -150,13 +150,13 @@ export function TaskForm({ defaultListId, defaultDate, onSaved }: TaskFormProps)
 
           {/* List */}
           <HapticPressable onPress={() => setShowListPicker(true)} style={styles.field}>
-            <StyledText style={styles.fieldLabel}>List</StyledText>
+            <StyledText style={[styles.fieldLabel, { color: textColor }]}>List</StyledText>
             <StyledText style={styles.fieldValue}>{selectedList?.title ?? "Inbox"}</StyledText>
           </HapticPressable>
 
           {/* Date */}
           <HapticPressable onPress={() => setShowDatePicker(true)} style={styles.field}>
-            <StyledText style={styles.fieldLabel}>Date</StyledText>
+            <StyledText style={[styles.fieldLabel, { color: textColor }]}>Date</StyledText>
             {date ? (
               <View style={styles.fieldValueRow}>
                 <StyledText style={styles.fieldValue}>{formatDisplayDate(date)}</StyledText>
@@ -172,7 +172,7 @@ export function TaskForm({ defaultListId, defaultDate, onSaved }: TaskFormProps)
           {/* Time — only if date is set */}
           {date && (
             <HapticPressable onPress={() => setShowTimePicker(true)} style={styles.field}>
-              <StyledText style={styles.fieldLabel}>Time</StyledText>
+              <StyledText style={[styles.fieldLabel, { color: textColor }]}>Time</StyledText>
               {confirmedTime ? (
                 <View style={styles.fieldValueRow}>
                   <StyledText style={styles.fieldValue}>{formatDisplayTime(timeDigits, ampm)}</StyledText>
