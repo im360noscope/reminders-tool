@@ -121,5 +121,5 @@ const styles = StyleSheet.create({
   scrollThumb: { width: n(5), position: "absolute", right: n(-2) },
   listItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: n(22), paddingVertical: n(16) },
   listTitle: { fontSize: n(30), flex: 1 },
-  arrowGroup: { flexDirection: "row", gap: n(12), paddingRight: n(24) },
+  arrowGroup: { flexDirection: "row", gap: n(8), paddingRight: n(12) },
 });
