@@ -182,7 +182,7 @@ export default function TaskScreen() {
                       </HapticPressable>
                     </View>
                   ) : (
-                    <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                    <StyledText style={styles.fieldValue}>None</StyledText>
                   )}
                 </HapticPressable>
 
@@ -197,7 +197,7 @@ export default function TaskScreen() {
                         </HapticPressable>
                       </View>
                     ) : (
-                      <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                      <StyledText style={styles.fieldValue}>None</StyledText>
                     )}
                   </HapticPressable>
                 )}

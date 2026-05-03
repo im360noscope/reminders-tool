@@ -165,7 +165,7 @@ export function TaskForm({ defaultListId, defaultDate, onSaved }: TaskFormProps)
                 </HapticPressable>
               </View>
             ) : (
-              <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+              <StyledText style={styles.fieldValue}>None</StyledText>
             )}
           </HapticPressable>
 
@@ -181,7 +181,7 @@ export function TaskForm({ defaultListId, defaultDate, onSaved }: TaskFormProps)
                   </HapticPressable>
                 </View>
               ) : (
-                <StyledText style={[styles.fieldValue, { color: dimColor }]}>None</StyledText>
+                <StyledText style={styles.fieldValue}>None</StyledText>
               )}
             </HapticPressable>
           )}
