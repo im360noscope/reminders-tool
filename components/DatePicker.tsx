@@ -162,9 +162,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "PublicSans-Regular",
   },
-  daySelected: {
-    opacity: 0.4,
-  },
+  daySelected: {},
   todayUnderline: {
     position: "absolute",
     bottom: n(7),
