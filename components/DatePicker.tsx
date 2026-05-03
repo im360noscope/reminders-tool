@@ -31,9 +31,6 @@ export function DatePicker({
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
 
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
   const { rows } = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -85,19 +82,18 @@ export function DatePicker({
               {row.map((day, ci) => {
                 if (!day) return <View key={`e-${ci}`} style={styles.cell} />;
                 const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                const isToday = dateStr === todayStr;
-                const isSelected = dateStr === value;
+const isSelected = dateStr === value;
                 return (
                   <TouchableOpacity
                     key={`d-${day}`}
                     onPress={() => handleDayPress(day)}
                     style={styles.cell}
-                    activeOpacity={0.6}
+                    activeOpacity={1}
                   >
                     <StyledText style={[styles.dayText, isSelected && styles.daySelected]}>
                       {day}
                     </StyledText>
-                    {isToday && (
+                    {isSelected && (
                       <View style={[styles.todayUnderline, { backgroundColor: textColor }]} />
                     )}
                   </TouchableOpacity>
