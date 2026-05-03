@@ -41,8 +41,17 @@ function timeToDisplayParts(time24: string): { digits: string; ampm: "AM" | "PM"
 }
 
 function digitsToTime(digits: string, ampm: "AM" | "PM"): string {
-  let h = parseInt(digits.slice(0, 2), 10);
-  const m = digits.slice(2, 4);
+  // 3 digits: H:MM (e.g. "630" → hour=6, mins="30")
+  // 4 digits: HH:MM (e.g. "1230" → hour=12, mins="30")
+  let h: number;
+  let m: string;
+  if (digits.length === 3) {
+    h = parseInt(digits[0], 10);
+    m = digits.slice(1);
+  } else {
+    h = parseInt(digits.slice(0, 2), 10);
+    m = digits.slice(2, 4);
+  }
   if (ampm === "PM" && h !== 12) h += 12;
   if (ampm === "AM" && h === 12) h = 0;
   return `${String(h).padStart(2, "0")}:${m}`;
@@ -120,7 +129,7 @@ export default function TaskScreen() {
   }, [newSubtask, task, addSubtask]);
 
   const handleTimeConfirm = useCallback(() => {
-    if (timeDigits.length !== 4) return;
+    if (timeDigits.length !== 3 && timeDigits.length !== 4) return;
     setConfirmedTime(digitsToTime(timeDigits, ampm));
     setShowTimePicker(false);
   }, [timeDigits, ampm]);
