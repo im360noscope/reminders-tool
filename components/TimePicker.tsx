@@ -6,57 +6,49 @@ import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
 // ─── Digit validation ─────────────────────────────────────────────────────────
-// Digits fill right-to-left into display slots:
-// 1 digit  "7"    →  "  : 7"   (minutes ones)
-// 2 digits "73"   →  "  :73"   (minutes tens+ones)
-// 3 digits "730"  →  "7:30"    (hour + minutes)
-// 4 digits "1230" →  "12:30"   (hour tens+ones + minutes)
+// Display slots (right-to-left fill):
+// 1 digit  "6"    →  "  : 6"
+// 2 digits "63"   →  "  :63"   ← 6 is future hour, 3 is future minutes-tens
+// 3 digits "630"  →  "6:30"
+// 4 digits "1230" →  "12:30"
 //
-// Validation: only reject a digit if NO valid time could result from it.
+// Validation rules per position:
+// Position 1 (d[0]): could be minutes-ones (0-9) or future hour — always allow
+// Position 2 (d[1]): this will ALWAYS become the minutes-tens digit
+//                    (either in a 3-digit time as d[0]:d[1]d[2],
+//                     or in a 4-digit time as d[0]d[1]:d[2]d[3])
+//                    Minutes tens must be 0-5.
+// Position 3 (d[2]): minutes-ones in 3-digit time → 0-9, always valid
+//                    BUT also check full 3-digit time is valid: h=d[0], m=d[1]d[2]
+// Position 4 (d[3]): check full 4-digit time: h=d[0]d[1], m=d[2]d[3]
 
 function isValidNextDigit(current: string, next: string): boolean {
   const proposed = current + next;
 
   switch (proposed.length) {
     case 1:
-      // Single digit — will eventually become either:
-      //   - minutes-ones (if user stops at 1 digit, but we need 3 min)
-      //   - hour digit in a 3-digit time
-      //   - hour tens digit in a 4-digit time
-      // Any digit 0-9 could be valid (e.g. "9" → "9:XX", "0" → could lead to "01:XX" etc.)
-      // Only reject if it can NEVER form a valid time — all 0-9 can, so always allow.
+      // Always allow — any digit can start a valid time
       return true;
 
     case 2:
-      // Two digits — could be:
-      //   A) Minutes (tens+ones) of a 3-digit time: e.g. "30" in "7:30" — must be 00-59
-      //   B) Hour (tens+ones) start of a 4-digit time: e.g. "12" in "12:30" — must be 01-12
-      // Allow if EITHER interpretation could be valid.
-      {
-        const asMinutes = parseInt(proposed, 10);
-        const asHour = parseInt(proposed, 10);
-        const couldBeMinutes = asMinutes >= 0 && asMinutes <= 59;
-        const couldBeHour = asHour >= 1 && asHour <= 12;
-        return couldBeMinutes || couldBeHour;
-      }
+      // d[1] will always be the minutes-TENS digit regardless of
+      // whether we end up with 3 or 4 digits total.
+      // Minutes tens must be 0-5.
+      return parseInt(next, 10) <= 5;
 
-    case 3:
-      // Three digits → H:MM format
-      // hour = first digit (1-9), minutes = last two (00-59)
-      {
-        const h = parseInt(proposed[0], 10);
-        const m = parseInt(proposed.slice(1), 10);
-        return h >= 1 && h <= 9 && m >= 0 && m <= 59;
-      }
+    case 3: {
+      // 3-digit time: H:MM
+      const h = parseInt(proposed[0], 10);
+      const m = parseInt(proposed.slice(1), 10);
+      return h >= 1 && h <= 9 && m >= 0 && m <= 59;
+    }
 
-    case 4:
-      // Four digits → HH:MM format
-      // hour = first two (01-12), minutes = last two (00-59)
-      {
-        const h = parseInt(proposed.slice(0, 2), 10);
-        const m = parseInt(proposed.slice(2), 10);
-        return h >= 1 && h <= 12 && m >= 0 && m <= 59;
-      }
+    case 4: {
+      // 4-digit time: HH:MM
+      const h = parseInt(proposed.slice(0, 2), 10);
+      const m = parseInt(proposed.slice(2), 10);
+      return h >= 1 && h <= 12 && m >= 0 && m <= 59;
+    }
 
     default:
       return false;
