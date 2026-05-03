@@ -6,57 +6,64 @@ import { useInvertColors } from "@/contexts/InvertColorsContext";
 import { n } from "@/utils/scaling";
 
 // ─── Digit validation ─────────────────────────────────────────────────────────
-// Digits fill right-to-left into fixed slots: [H][H]:[M][M]
-// 1 digit  →  _:_D   (minutes tens)
-// 2 digits →  _:DD   (minutes)
-// 3 digits →  H:DD   (hours single + minutes)
-// 4 digits →  HH:DD  (hours double + minutes)
+// Digits fill right-to-left into display slots:
+// 1 digit  "7"    →  "  : 7"   (minutes ones)
+// 2 digits "73"   →  "  :73"   (minutes tens+ones)
+// 3 digits "730"  →  "7:30"    (hour + minutes)
+// 4 digits "1230" →  "12:30"   (hour tens+ones + minutes)
+//
+// Validation: only reject a digit if NO valid time could result from it.
 
 function isValidNextDigit(current: string, next: string): boolean {
   const proposed = current + next;
-  const len = proposed.length;
 
-  if (len === 1) {
-    // First digit is minutes-tens: must be 0-5
-    // BUT we also allow any digit 0-9 here because with 3 digits
-    // this becomes the hour — validate based on final position.
-    // Actually: this digit ends up as minutes-tens after a 3rd digit is added,
-    // OR as hours-ones if only 3 digits total.
-    // Simplest valid rule: any digit 0-9 is ok at position 1.
-    return true;
+  switch (proposed.length) {
+    case 1:
+      // Single digit — will eventually become either:
+      //   - minutes-ones (if user stops at 1 digit, but we need 3 min)
+      //   - hour digit in a 3-digit time
+      //   - hour tens digit in a 4-digit time
+      // Any digit 0-9 could be valid (e.g. "9" → "9:XX", "0" → could lead to "01:XX" etc.)
+      // Only reject if it can NEVER form a valid time — all 0-9 can, so always allow.
+      return true;
+
+    case 2:
+      // Two digits — could be:
+      //   A) Minutes (tens+ones) of a 3-digit time: e.g. "30" in "7:30" — must be 00-59
+      //   B) Hour (tens+ones) start of a 4-digit time: e.g. "12" in "12:30" — must be 01-12
+      // Allow if EITHER interpretation could be valid.
+      {
+        const asMinutes = parseInt(proposed, 10);
+        const asHour = parseInt(proposed, 10);
+        const couldBeMinutes = asMinutes >= 0 && asMinutes <= 59;
+        const couldBeHour = asHour >= 1 && asHour <= 12;
+        return couldBeMinutes || couldBeHour;
+      }
+
+    case 3:
+      // Three digits → H:MM format
+      // hour = first digit (1-9), minutes = last two (00-59)
+      {
+        const h = parseInt(proposed[0], 10);
+        const m = parseInt(proposed.slice(1), 10);
+        return h >= 1 && h <= 9 && m >= 0 && m <= 59;
+      }
+
+    case 4:
+      // Four digits → HH:MM format
+      // hour = first two (01-12), minutes = last two (00-59)
+      {
+        const h = parseInt(proposed.slice(0, 2), 10);
+        const m = parseInt(proposed.slice(2), 10);
+        return h >= 1 && h <= 12 && m >= 0 && m <= 59;
+      }
+
+    default:
+      return false;
   }
-
-  if (len === 2) {
-    // Two digits = minutes (tens and ones): must be 00-59
-    const mins = parseInt(proposed, 10);
-    return mins >= 0 && mins <= 59;
-  }
-
-  if (len === 3) {
-    // H:MM — first digit is hour (1-9 since leading 0 not shown for single digit)
-    // minutes are last 2
-    const h = parseInt(proposed[0], 10);
-    const m = parseInt(proposed.slice(1), 10);
-    return h >= 1 && h <= 12 && m >= 0 && m <= 59;
-  }
-
-  if (len === 4) {
-    // HH:MM
-    const h = parseInt(proposed.slice(0, 2), 10);
-    const m = parseInt(proposed.slice(2), 10);
-    return h >= 1 && h <= 12 && m >= 0 && m <= 59;
-  }
-
-  return false;
 }
 
 // ─── Display builder ──────────────────────────────────────────────────────────
-// digits="" → "  :  "
-// digits="7" → "  : 7"   (7 in minutes-tens slot)
-// digits="73"→ "  :73"
-// digits="730"→"7:30"
-// digits="1230"→"12:30"
-
 function buildDisplay(digits: string): string {
   switch (digits.length) {
     case 0: return "  :  ";
@@ -82,14 +89,8 @@ interface TimePickerProps {
 }
 
 export function TimePicker({
-  visible,
-  digits,
-  ampm,
-  onDigit,
-  onBackspace,
-  onAmPm,
-  onConfirm,
-  onDismiss,
+  visible, digits, ampm,
+  onDigit, onBackspace, onAmPm, onConfirm, onDismiss,
 }: TimePickerProps) {
   const { invertColors } = useInvertColors();
   const bg = invertColors ? "white" : "black";
@@ -99,9 +100,7 @@ export function TimePicker({
 
   const handleDigit = (d: string) => {
     if (digits.length >= 4) return;
-    if (isValidNextDigit(digits, d)) {
-      onDigit(d);
-    }
+    if (isValidNextDigit(digits, d)) onDigit(d);
   };
 
   const numRows = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]];
@@ -112,11 +111,7 @@ export function TimePicker({
 
         {/* AM/PM + time display */}
         <View style={styles.topSection}>
-          <TouchableOpacity
-            onPress={() => onAmPm("AM")}
-            style={styles.ampmBtn}
-            activeOpacity={1}
-          >
+          <TouchableOpacity onPress={() => onAmPm("AM")} style={styles.ampmBtn} activeOpacity={1}>
             <StyledText style={styles.ampmText}>AM</StyledText>
             {ampm === "AM" && <View style={[styles.ampmUnderline, { backgroundColor: textColor }]} />}
           </TouchableOpacity>
@@ -125,11 +120,7 @@ export function TimePicker({
             {buildDisplay(digits)}
           </StyledText>
 
-          <TouchableOpacity
-            onPress={() => onAmPm("PM")}
-            style={styles.ampmBtn}
-            activeOpacity={1}
-          >
+          <TouchableOpacity onPress={() => onAmPm("PM")} style={styles.ampmBtn} activeOpacity={1}>
             <StyledText style={styles.ampmText}>PM</StyledText>
             {ampm === "PM" && <View style={[styles.ampmUnderline, { backgroundColor: textColor }]} />}
           </TouchableOpacity>
@@ -154,7 +145,6 @@ export function TimePicker({
 
           {/* Bottom row */}
           <View style={styles.numRow}>
-            {/* Left: SAVE when can confirm, × dismiss when no digits, empty otherwise */}
             {canConfirm ? (
               <TouchableOpacity onPress={onConfirm} style={styles.numBtn} activeOpacity={0.6}>
                 <StyledText style={styles.saveText}>SAVE</StyledText>
@@ -167,16 +157,10 @@ export function TimePicker({
               <View style={styles.numBtn} />
             )}
 
-            {/* 0 */}
-            <TouchableOpacity
-              onPress={() => handleDigit("0")}
-              style={styles.numBtn}
-              activeOpacity={0.6}
-            >
+            <TouchableOpacity onPress={() => handleDigit("0")} style={styles.numBtn} activeOpacity={0.6}>
               <StyledText style={styles.numText}>0</StyledText>
             </TouchableOpacity>
 
-            {/* Right: backspace chevron when has digits, empty otherwise */}
             {hasDigits ? (
               <TouchableOpacity onPress={onBackspace} style={styles.numBtn} activeOpacity={0.6}>
                 <MaterialIcons name="chevron-left" size={n(44)} color={textColor} />
@@ -193,10 +177,7 @@ export function TimePicker({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: n(16),
-  },
+  container: { flex: 1, paddingHorizontal: n(16) },
   topSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -205,18 +186,9 @@ const styles = StyleSheet.create({
     paddingBottom: n(24),
     paddingHorizontal: n(8),
   },
-  ampmBtn: {
-    alignItems: "center",
-    minWidth: n(52),
-  },
-  ampmText: {
-    fontSize: n(20),
-  },
-  ampmUnderline: {
-    height: n(1.5),
-    width: "100%",
-    marginTop: n(3),
-  },
+  ampmBtn: { alignItems: "center", minWidth: n(52) },
+  ampmText: { fontSize: n(20) },
+  ampmUnderline: { height: n(1.5), width: "100%", marginTop: n(3) },
   timeDisplay: {
     fontSize: n(72),
     fontWeight: "200",
@@ -224,30 +196,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     includeFontPadding: false,
   },
-  numpad: {
-    flex: 1,
-    justifyContent: "space-evenly",
-    paddingBottom: n(16),
-  },
-  numRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  numBtn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: n(12),
-  },
-  numText: {
-    fontSize: n(36),
-    fontFamily: "PublicSans-Regular",
-  },
-  saveText: {
-    fontSize: n(20),
-    fontFamily: "PublicSans-Regular",
-  },
-  dismissX: {
-    fontSize: n(24),
-  },
+  numpad: { flex: 1, justifyContent: "space-evenly", paddingBottom: n(16) },
+  numRow: { flexDirection: "row", justifyContent: "space-between" },
+  numBtn: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: n(12) },
+  numText: { fontSize: n(36), fontFamily: "PublicSans-Regular" },
+  saveText: { fontSize: n(20), fontFamily: "PublicSans-Regular" },
+  dismissX: { fontSize: n(24) },
 });
