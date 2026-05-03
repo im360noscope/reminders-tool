@@ -18,11 +18,6 @@ export default function ListActionsScreen() {
   const list = lists.find(l => l.id === id);
   const listTitle = list?.title ?? "List";
 
-  const handleReorder = () => {
-    // Go back to lists with reorder mode — pass param
-    router.navigate({ pathname: "/(tabs)/", params: { startReorder: "true" } });
-  };
-
   return (
     <SwipeBackContainer onSwipeBack={() => router.back()}>
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={["top"]}>
@@ -35,7 +30,10 @@ export default function ListActionsScreen() {
           <StyledText style={styles.optionText}>Rename</StyledText>
         </HapticPressable>
 
-        <HapticPressable onPress={handleReorder} style={styles.option}>
+        <HapticPressable
+          onPress={() => router.navigate({ pathname: "/(tabs)/", params: { startReorder: "true" } })}
+          style={styles.option}
+        >
           <StyledText style={styles.optionText}>Reorder</StyledText>
         </HapticPressable>
 
@@ -43,8 +41,22 @@ export default function ListActionsScreen() {
           onPress={() => router.push({
             pathname: "/confirm",
             params: {
-              title: listTitle,
-              message: "Tasks will be moved to your default list.",
+              message: `Are you sure you want to delete all completed tasks in ${listTitle}?`,
+              confirmText: "Clear",
+              action: `clear-completed:${id}`,
+              returnPath: "/(tabs)/",
+            },
+          })}
+          style={styles.option}
+        >
+          <StyledText style={styles.optionText}>Clear Completed</StyledText>
+        </HapticPressable>
+
+        <HapticPressable
+          onPress={() => router.push({
+            pathname: "/confirm",
+            params: {
+              message: `Are you sure you want to delete ${listTitle}? Tasks will be moved to your default list.`,
               confirmText: "Delete",
               action: `delete-list:${id}`,
               returnPath: "/(tabs)/",
@@ -52,7 +64,7 @@ export default function ListActionsScreen() {
           })}
           style={styles.option}
         >
-          <StyledText style={[styles.optionText, styles.destructive]}>Delete</StyledText>
+          <StyledText style={styles.optionText}>Delete</StyledText>
         </HapticPressable>
 
       </SafeAreaView>
@@ -69,5 +81,4 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: n(30),
   },
-  destructive: {},
 });

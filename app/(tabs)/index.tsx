@@ -17,7 +17,7 @@ import { n } from "@/utils/scaling";
 
 export default function ListsScreen() {
   const { invertColors } = useInvertColors();
-  const { lists, deleteList, moveListUp, moveListDown } = useReminders();
+  const { lists, tasks, deleteList, moveListUp, moveListDown, deleteTask } = useReminders();
   const bg = invertColors ? "white" : "black";
   const textColor = invertColors ? "black" : "white";
   const dimColor = invertColors ? "#AAAAAA" : "#555555";
@@ -41,6 +41,12 @@ export default function ListsScreen() {
     if (params.confirmed === "true" && params.action?.startsWith("delete-list:")) {
       const id = params.action.replace("delete-list:", "");
       deleteList(id);
+      router.setParams({ confirmed: undefined, action: undefined });
+    }
+    if (params.confirmed === "true" && params.action?.startsWith("clear-completed:")) {
+      const id = params.action.replace("clear-completed:", "");
+      const completedIds = tasks.filter(t => t.listId === id && t.completed).map(t => t.id);
+      completedIds.forEach(taskId => deleteTask(taskId));
       router.setParams({ confirmed: undefined, action: undefined });
     }
   }, [params.confirmed, params.action]);
