@@ -54,11 +54,15 @@ or sideload onto real LP3 hardware.
 ## Notifications (deferred)
 
 The RN app fired **exact-time** local reminders via `SCHEDULE_EXACT_ALARM`. The SDK's
-permission allow-list excludes `SCHEDULE_EXACT_ALARM` and `RECEIVE_BOOT_COMPLETED`, and
-`LightWork` (its WorkManager wrapper) is ≥15-min and inexact. The only exact path is a
-backend + remote push (UnifiedPush), which would make this offline app networked.
+permission allow-list currently excludes `SCHEDULE_EXACT_ALARM` and `RECEIVE_BOOT_COMPLETED`,
+and `LightWork` (its WorkManager wrapper) is ≥15-min and inexact.
 
-Per project decision, notifications are **deferred** — every other screen is built now;
-the notification story is revisited if/when Light adds exact-alarm support.
+**This is temporary.** Light has confirmed notifications are coming — delivered via
+**UnifiedPush with Light supplying the server** (`LightEntryPoint.onPushNotification` /
+`enablePushNotifications` are already the hooks for it). The SDK is an explicit
+work-in-progress and Light is opening up permissions over time.
+
+Per project decision, notifications are **deferred** — we build every other screen now
+and wire in the push-based notification story once Light ships that side of the SDK.
 
 See `~/Dev/reminders/LIGHT_SDK_MIGRATION.md` for the full per-screen migration audit.

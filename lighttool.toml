@@ -1,5 +1,5 @@
 [tool]
-id = "com.im360noscope.reminders"
+id = "com.zacksimpson.reminders"
 label = "Reminders"
 versionCode = 1
 versionName = "2.0.0"

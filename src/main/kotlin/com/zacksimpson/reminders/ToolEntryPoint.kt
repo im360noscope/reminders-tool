@@ -1,4 +1,4 @@
-package com.im360noscope.reminders
+package com.zacksimpson.reminders
 
 import com.thelightphone.sdk.EntryPoint
 import com.thelightphone.sdk.LightEntryPoint
