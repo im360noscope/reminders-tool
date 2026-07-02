@@ -6,5 +6,6 @@ versionName = "2.0.0"
 # Fully offline task manager — no permissions required.
 # Notifications are deferred (the SDK has no exact-time local alarm yet); see README.
 permissions = []
-# Emulator server package for local testing. Change to "com.lightos" on real LP3 hardware.
-serverPackage = "com.thelightphone.sdk.emulator"
+# LightOS server package on real LP3 hardware.
+# For the local LightOS emulator instead, use "com.thelightphone.sdk.emulator".
+serverPackage = "com.lightos"
