@@ -47,10 +47,29 @@ or sideload onto real LP3 hardware.
 |------|-------|
 | Scaffold (module, entry point, boot screen) | ✅ compiles |
 | Theme (black/white + invert) | ⏳ next |
-| Fonts | ✅ automatic — SDK provides **Akkurat** via `LightTheme` (system font on LP3/emulator; no bundling) |
+| Fonts | ✅ automatic — SDK provides **Akkurat**; we bundle nothing (see below) |
 | Data layer (Task/List/Settings + DataStore) | ⏳ |
 | Screens (19) + components (27) | ⏳ |
 | Notifications | ⛔ deferred — SDK has no exact-time local alarm (see below) |
+
+## Fonts (Akkurat — handled by the SDK)
+
+The Light Phone uses **Akkurat**, and the SDK applies it for us automatically:
+`LightTheme` calls `rememberLightTypography()` → `lightFontFamily(context)`
+(`sdk/ui/.../LightFont.kt`), and every `LightText` reads its typography from the theme.
+So any composable wrapped in `LightTheme { }` renders in Akkurat with no work from us.
+
+Resolution order in `lightFontFamily()`:
+1. **System Akkurat** — on real LP3 / the LightOS emulator, read from the OS font set.
+2. **Bundled Akkurat** — `akkuratll_light` / `akkuratll_regular` / `akkuratpro_bold` ship
+   inside the `light-keyboard` AAR, which `sdk:ui` re-exports (`api`). They merge into our
+   APK transitively, so Akkurat also renders on a **plain non-LightOS emulator**.
+3. `FontFamily.Default` — last-resort fallback (not normally hit).
+
+We do **not** (and legally can't) bundle Akkurat ourselves — it's a licensed Lineto
+typeface. The old RN app's PublicSans has been removed. Weight mapping for the old
+"Thin" numeric displays (time-picker digits, recurrence interval): use Akkurat
+`FontWeight.Light`.
 
 ## Notifications (deferred)
 
