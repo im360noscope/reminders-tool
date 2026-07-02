@@ -1,4 +1,4 @@
-package com.im360noscope.reminders
+package com.zacksimpson.reminders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
