@@ -46,7 +46,7 @@ or sideload onto real LP3 hardware.
 | Area | State |
 |------|-------|
 | Scaffold (module, entry point, boot screen) | ✅ compiles |
-| Theme (black/white + invert) | ⏳ next |
+| Theme (black/white) | ⏳ next |
 | Fonts | ✅ automatic — SDK provides **Akkurat**; we bundle nothing (see below) |
 | Data layer (Task/List/Settings + DataStore) | ⏳ |
 | Screens (19) + components (27) | ⏳ |
