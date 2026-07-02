@@ -1,0 +1,64 @@
+# Reminders — Native (light-sdk) rewrite
+
+Native Kotlin/Jetpack Compose rewrite of the Reminders tool for the **Light Phone III**,
+built on the official [`light-sdk`](https://github.com/lightphone/light-sdk).
+
+This branch (`native-sdk`) supersedes the React Native / Expo app that lives on `main`.
+It is a ground-up rebuild — no source is shared with the RN app.
+
+## How this builds
+
+A Light tool is **not** a standalone Gradle project; it must be built as a module
+*inside* the `light-sdk` multi-project build (it depends on `project(":sdk:client")`,
+the repo-local signing key, and the composite `light-sdk` Gradle plugin). There is no
+published-artifact standalone path yet.
+
+So this directory contains **only the tool module**. To build it, it is wired into a
+local clone of `light-sdk` via one line in that repo's `settings.gradle.kts`:
+
+```kotlin
+include(":reminders")
+project(":reminders").projectDir = file("/Users/zacksimpson/Dev/reminders-native")
+```
+
+The SDK clone lives at `~/Dev/light/light-sdk` and is **not** tracked by this repo —
+keep it up to date with `git pull` as the SDK evolves (it changes fast).
+
+### Build the debug APK
+
+```bash
+cd ~/Dev/light/light-sdk
+./gradlew :reminders:assembleDebug
+# APK: ~/Dev/reminders-native/build/outputs/apk/debug/
+```
+
+### Install on device / emulator
+
+```bash
+adb install -r ~/Dev/reminders-native/build/outputs/apk/debug/reminders-debug.apk
+```
+
+Test on an Android emulator running the [LightOS emulator system app](https://github.com/lightphone/light-sdk/tree/main/docs/system_app),
+or sideload onto real LP3 hardware.
+
+## Status
+
+| Area | State |
+|------|-------|
+| Scaffold (module, entry point, boot screen) | ✅ compiles |
+| Theme / fonts (PublicSans, black/white, invert) | ⏳ next |
+| Data layer (Task/List/Settings + DataStore) | ⏳ |
+| Screens (19) + components (27) | ⏳ |
+| Notifications | ⛔ deferred — SDK has no exact-time local alarm (see below) |
+
+## Notifications (deferred)
+
+The RN app fired **exact-time** local reminders via `SCHEDULE_EXACT_ALARM`. The SDK's
+permission allow-list excludes `SCHEDULE_EXACT_ALARM` and `RECEIVE_BOOT_COMPLETED`, and
+`LightWork` (its WorkManager wrapper) is ≥15-min and inexact. The only exact path is a
+backend + remote push (UnifiedPush), which would make this offline app networked.
+
+Per project decision, notifications are **deferred** — every other screen is built now;
+the notification story is revisited if/when Light adds exact-alarm support.
+
+See `~/Dev/reminders/LIGHT_SDK_MIGRATION.md` for the full per-screen migration audit.
