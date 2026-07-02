@@ -46,7 +46,8 @@ or sideload onto real LP3 hardware.
 | Area | State |
 |------|-------|
 | Scaffold (module, entry point, boot screen) | ✅ compiles |
-| Theme / fonts (PublicSans, black/white, invert) | ⏳ next |
+| Theme (black/white + invert) | ⏳ next |
+| Fonts | ✅ automatic — SDK provides **Akkurat** via `LightTheme` (system font on LP3/emulator; no bundling) |
 | Data layer (Task/List/Settings + DataStore) | ⏳ |
 | Screens (19) + components (27) | ⏳ |
 | Notifications | ⛔ deferred — SDK has no exact-time local alarm (see below) |
