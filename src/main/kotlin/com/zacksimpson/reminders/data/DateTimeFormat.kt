@@ -15,6 +15,13 @@ fun formatDate(dateStr: String): String {
     return "${MONTHS[mo - 1]} $d"
 }
 
+/** "YYYY-MM-DD" -> "Jan 5, 2024" — used in field rows (vs. the shorter [formatDate] used
+ *  in task-row meta lines). */
+fun formatDisplayDate(dateStr: String): String {
+    val (y, mo, d) = dateStr.split("-").map(String::toInt)
+    return "${MONTHS[mo - 1]} $d, $y"
+}
+
 /** "HH:MM" 24h -> "h:mm AM/PM" (or unchanged when use24Hour is true).
  *  TODO: use24Hour should read the device's clock format, but the SDK has no sanctioned
  *  API for it yet (android.text.format.DateFormat.is24HourFormat needs a Context, and

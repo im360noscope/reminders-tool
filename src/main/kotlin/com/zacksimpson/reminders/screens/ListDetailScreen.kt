@@ -52,10 +52,9 @@ class ListDetailViewModel(
 
 /**
  * A single list's tasks: active (sorted by order) then a collapsible completed section
- * (sorted newest-completed-first), matching the RN list-detail screen. Tapping a task row
- * toggles completion via the checkbox/overdue-asterisk; opening the task for full editing
- * isn't built yet (Task Detail is its own, larger screen — see project notes) so the row's
- * content area is a no-op tap for now. Reorder mode is deferred alongside list actions.
+ * (sorted newest-completed-first), matching the RN list-detail screen. Tapping a task row's
+ * checkbox/overdue-asterisk toggles completion; tapping its content opens TaskDetailScreen
+ * for full editing. Reorder mode is deferred alongside list long-press actions.
  */
 class ListDetailScreen(
     sealedActivity: SealedLightActivity,
@@ -119,7 +118,9 @@ class ListDetailScreen(
                                         task = task,
                                         listTitle = listTitle,
                                         onToggle = { viewModel.toggleTask(task.id) },
-                                        onPress = {},
+                                        onPress = {
+                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                                        },
                                     )
                                 }
 
@@ -142,7 +143,9 @@ class ListDetailScreen(
                                                 task = task,
                                                 listTitle = listTitle,
                                                 onToggle = { viewModel.toggleTask(task.id) },
-                                                onPress = {},
+                                                onPress = {
+                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                                        },
                                                 dimmed = true,
                                             )
                                         }

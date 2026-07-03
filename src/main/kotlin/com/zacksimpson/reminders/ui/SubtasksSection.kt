@@ -1,0 +1,90 @@
+package com.zacksimpson.reminders.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.dp
+import com.thelightphone.sdk.ui.LightText
+import com.thelightphone.sdk.ui.LightTextVariant
+import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.zacksimpson.reminders.data.Subtask
+
+/** Subtasks list + "Add subtask…" row. Shared by Add Task and Task Detail — the caller
+ *  decides whether mutations are draft (Add) or immediate (Edit). */
+@Composable
+fun SubtasksSection(
+    subtasks: List<Subtask>,
+    onAdd: () -> Unit,
+    onRename: (Subtask) -> Unit,
+    onToggle: (String) -> Unit,
+    onDelete: (String) -> Unit,
+) {
+    Column {
+        LightText(
+            text = "Subtasks",
+            variant = LightTextVariant.Superfine,
+            modifier = Modifier.padding(
+                start = 1.5f.gridUnitsAsDp(),
+                top = 1.5f.gridUnitsAsDp(),
+                bottom = 0.5f.gridUnitsAsDp(),
+            ),
+        )
+        subtasks.forEach { subtask ->
+            SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
+        }
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onAdd)
+                .padding(start = 1f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PlusCircleIcon(size = 20.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
+            LightText(text = "Add subtask…", variant = LightTextVariant.Paragraph)
+        }
+    }
+}
+
+@Composable
+private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 0.5f.gridUnitsAsDp(), end = 1.5f.gridUnitsAsDp()),
+        verticalAlignment = Alignment.Top,
+    ) {
+        // Size/position tuned to match TaskRowView's checkbox (see ui/TaskRow.kt).
+        TaskCheckboxIcon(
+            checked = subtask.completed,
+            size = 17.dp,
+            modifier = Modifier
+                .clickable(onClick = onToggle)
+                .padding(
+                    start = 0.9f.gridUnitsAsDp(),
+                    end = 0.9f.gridUnitsAsDp(),
+                    top = 0.95f.gridUnitsAsDp(),
+                    bottom = 0.1f.gridUnitsAsDp(),
+                ),
+        )
+        LightText(
+            text = subtask.title,
+            variant = LightTextVariant.Paragraph,
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onRename)
+                .padding(vertical = 0.65f.gridUnitsAsDp())
+                .alpha(if (subtask.completed) 0.4f else 1f),
+        )
+        DeleteIcon(
+            size = 14.dp,
+            modifier = Modifier
+                .clickable(onClick = onDelete)
+                .padding(start = 0.5f.gridUnitsAsDp(), top = 0.75f.gridUnitsAsDp(), bottom = 0.6f.gridUnitsAsDp()),
+        )
+    }
+}
