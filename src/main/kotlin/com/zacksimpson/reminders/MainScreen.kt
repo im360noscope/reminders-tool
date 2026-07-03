@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.InitialScreen
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
@@ -21,20 +22,32 @@ import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
+import com.zacksimpson.reminders.data.RemindersRepository
+import com.zacksimpson.reminders.screens.ListDetailScreen
+import com.zacksimpson.reminders.screens.ListsTab
 import com.zacksimpson.reminders.ui.RemindersTheme
+import com.zacksimpson.reminders.ui.TextEditorRequest
+import com.zacksimpson.reminders.ui.TextEditorScreen
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 enum class Tab { LISTS, TODAY, ADD, SETTINGS }
 
-class MainViewModel : LightViewModel<Unit>() {
+class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit>() {
     val selectedTab = MutableStateFlow(Tab.LISTS)
+    val state = repo.dataStateIn(viewModelScope)
+
     fun select(tab: Tab) {
         selectedTab.value = tab
     }
+
+    fun addList(title: String) {
+        viewModelScope.launch { repo.addList(title) }
+    }
 }
 
-/** Boot screen: the four-tab host. Each tab's body is a placeholder until its real
- *  screen is built. */
+/** Boot screen: the four-tab host. Lists is wired to real data; the others are
+ *  placeholders until their screens are built. */
 @InitialScreen
 class MainScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, MainViewModel>(sealedActivity) {
@@ -42,12 +55,13 @@ class MainScreen(sealedActivity: SealedLightActivity) :
     override val viewModelClass: Class<MainViewModel>
         get() = MainViewModel::class.java
 
-    override fun createViewModel() = MainViewModel()
+    override fun createViewModel() = MainViewModel(RemindersRepository(lightContext.dataStore))
 
     @Composable
     override fun Content() {
         RemindersTheme {
             val tab by viewModel.selectedTab.collectAsState()
+            val dataState by viewModel.state.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -55,7 +69,21 @@ class MainScreen(sealedActivity: SealedLightActivity) :
             ) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     when (tab) {
-                        Tab.LISTS -> PlaceholderTab("Lists")
+                        Tab.LISTS -> ListsTab(
+                            state = dataState,
+                            onAddList = {
+                                navigateTo(
+                                    screenFactory = { TextEditorScreen(it, TextEditorRequest("New list")) },
+                                    resultCallback = { name ->
+                                        name.trim().takeIf(String::isNotEmpty)?.let(viewModel::addList)
+                                    },
+                                )
+                            },
+                            onOpenList = { list ->
+                                navigateTo(screenFactory = { ListDetailScreen(it, list.id, list.title) })
+                            },
+                        )
+
                         Tab.TODAY -> PlaceholderTab("Today")
                         Tab.ADD -> PlaceholderTab("Add")
                         Tab.SETTINGS -> PlaceholderTab("Settings")

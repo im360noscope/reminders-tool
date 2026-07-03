@@ -1,0 +1,70 @@
+package com.zacksimpson.reminders.screens
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightIcons
+import com.thelightphone.sdk.ui.LightText
+import com.thelightphone.sdk.ui.LightTextVariant
+import com.thelightphone.sdk.ui.LightTopBar
+import com.thelightphone.sdk.ui.LightTopBarCenter
+import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.data.ReminderList
+
+/**
+ * Lists tab: the header plus every list, sorted by order. Tap a list to open it, `+` to
+ * add one. (List detail and long-press actions are wired in later increments.)
+ */
+@Composable
+fun ListsTab(
+    state: DataState,
+    onAddList: () -> Unit,
+    onOpenList: (ReminderList) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        LightTopBar(
+            leftButton = null,
+            center = LightTopBarCenter.Text("Lists"),
+            rightButton = LightBarButton.LightIcon(LightIcons.ADD, onClick = onAddList),
+            modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
+        )
+
+        when (state) {
+            is DataState.Loading -> Unit
+
+            is DataState.Corrupt -> LightText(
+                text = state.message,
+                variant = LightTextVariant.Copy,
+                modifier = Modifier.padding(horizontal = 1f.gridUnitsAsDp()),
+            )
+
+            is DataState.Ready -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                state.data.lists.sortedBy { it.order }.forEach { list ->
+                    LightText(
+                        text = list.title,
+                        variant = LightTextVariant.Copy,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenList(list) }
+                            .padding(
+                                horizontal = 1f.gridUnitsAsDp(),
+                                vertical = 0.5f.gridUnitsAsDp(),
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
