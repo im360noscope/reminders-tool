@@ -32,28 +32,6 @@ Built with [vandamd's light-template](https://github.com/vandamd/light-template)
 
 ---
 
-## Building
-
-This project uses [Expo](https://expo.dev) and [EAS Build](https://docs.expo.dev/build/introduction/).
-
-### Prerequisites
-
-* [Bun](https://bun.sh)
-* [EAS CLI](https://docs.expo.dev/build/setup/)
-* An Expo account
-
-### Steps
-
-```
-bun install
-eas login
-eas build --platform android --profile preview
-```
-
-EAS will build the APK in the cloud and provide a download link.
-
----
-
 ## Support
 
 If any of my tools have been useful to you, I'd love to hear from you! Feel free to reach out [here](mailto:zacksimpson24@gmail.com). Another way to support is to [consider sponsoring](https://github.com/sponsors/zacksimpson). Either way, it means a lot!
