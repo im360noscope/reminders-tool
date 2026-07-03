@@ -18,12 +18,7 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 
 class HomeScreenViewModel : LightViewModel<Unit>()
 
-/**
- * Boot screen for the native Reminders rewrite.
- *
- * Placeholder scaffold — proves the LightScreen pipeline compiles and renders.
- * The real Lists / Today / Add / Settings tab structure lands in the next phase.
- */
+/** Boot screen. Placeholder until the tab structure lands. */
 @InitialScreen
 class HomeScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, HomeScreenViewModel>(sealedActivity) {

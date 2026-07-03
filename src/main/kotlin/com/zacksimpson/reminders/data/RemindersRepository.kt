@@ -11,42 +11,25 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import java.time.LocalDate
 
-/** Immutable snapshot of everything the app persists. */
+/** Snapshot of everything the app persists. */
 data class AppData(
     val lists: List<ReminderList>,
     val tasks: List<Task>,
     val settings: Settings,
 )
 
-/** Raised when a stored value exists but cannot be parsed. Signals that data was
- *  *preserved, not overwritten* — the caller should surface an error, never reset. */
+/** Thrown when a stored value exists but can't be parsed. The bad data is left on disk
+ *  untouched — callers should surface an error, not reset. */
 class DataCorruptionException(key: String, cause: Throwable) :
     Exception("Stored data for '$key' is unreadable; it was preserved, not overwritten.", cause)
 
 /**
- * The single source of truth for all persisted data, backed by the SDK's shared
- * `DataStore<Preferences>` (`lightContext.dataStore`).
+ * Single source of truth for persisted data, backed by the SDK's shared DataStore.
  *
- * Corruption / data-loss safety — the whole point of this class:
- *
- *  1. **No shadow state.** All state lives in [dataStore]. There is no in-memory cache
- *     that could drift from disk or clobber newer data with a stale copy. Reads derive
- *     from `dataStore.data` (always the latest persisted value); the UI observes it live.
- *
- *  2. **Atomic, serialized writes.** Every mutation is one `dataStore.edit { }`
- *     transaction. DataStore runs all edits through a single actor and writes atomically
- *     (temp file + rename), so there are no torn writes and no lost updates from
- *     concurrent edits — even across different screens. Multi-key changes (e.g.
- *     [deleteList]) commit together, so there's never a half-applied state on disk.
- *
- *  3. **Fail loud on corruption; never silently wipe.** Decoding distinguishes an ABSENT
- *     key (→ documented default, e.g. seed Inbox / empty tasks) from a PRESENT-BUT-CORRUPT
- *     value (→ [DataCorruptionException]). Because a mutation first reads current state, a
- *     corrupt read aborts the edit before any write — the bad bytes stay on disk for
- *     recovery instead of being overwritten with an empty collection.
- *
- * Instances are cheap and stateless; every screen may construct its own around the same
- * process-wide `dataStore` without any coordination.
+ * All state lives in DataStore — no in-memory cache. Every mutation is one atomic
+ * edit(), so writes can't tear or race across screens, and multi-key changes commit
+ * together. Reads treat an absent key as a default; a corrupt key throws and aborts the
+ * edit before any write, so bad data is never overwritten. Instances are stateless.
  */
 class RemindersRepository(private val dataStore: DataStore<Preferences>) {
 
@@ -55,8 +38,8 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
 
     // ── Reads ────────────────────────────────────────────────────────────────
 
-    /** Live snapshot; re-emits on every persisted change. Propagates a
-     *  [DataCorruptionException] to collectors if any stored value is unparseable. */
+    /** Live snapshot; re-emits on every change. Throws [DataCorruptionException] to
+     *  collectors if a stored value is unparseable. */
     val appData: Flow<AppData> = dataStore.data.map { it.toAppData() }
 
     private fun Preferences.toAppData() = AppData(
@@ -74,8 +57,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     private fun Preferences.readSettings(): Settings =
         decode(this[SETTINGS_KEY], SETTINGS_KEY, Settings.serializer()) ?: Settings()
 
-    /** absent key → null (caller applies its default); present but unparseable →
-     *  [DataCorruptionException] (so the surrounding read/edit fails without overwriting). */
+    /** Absent key → null (caller applies a default); present but unparseable → throw. */
     private fun <T> decode(raw: String?, key: Preferences.Key<String>, serializer: KSerializer<T>): T? {
         if (raw == null) return null
         return try {
@@ -132,7 +114,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
             val idx = sorted.indexOfFirst { it.id == id }
             val target = idx + direction
             if (idx < 0 || target < 0 || target >= sorted.size) return@edit
-            // Swap the two neighbours' order values, matching the RN index-based reassignment.
+            // Swap the two neighbours' order values.
             p.writeLists(
                 sorted.mapIndexed { i, l ->
                     when (i) {
@@ -177,11 +159,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         return created
     }
 
-    /**
-     * Apply [transform] to the task with [id]. `id` and `createdAt` are always preserved
-     * (mirrors the RN `Omit<Task, "id" | "createdAt">` update contract), so a caller's
-     * `copy(...)` can't accidentally rewrite identity.
-     */
+    /** Apply [transform] to the task with [id]. `id` and `createdAt` are always preserved. */
     suspend fun updateTask(id: String, transform: (Task) -> Task) {
         dataStore.edit { p ->
             p.writeTasks(
@@ -301,7 +279,6 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     private fun now(): Long = System.currentTimeMillis()
 
     private companion object {
-        // Same key strings the RN app used, for consistency (no cross-app migration implied).
         val LISTS_KEY = stringPreferencesKey("reminders:lists")
         val TASKS_KEY = stringPreferencesKey("reminders:tasks")
         val SETTINGS_KEY = stringPreferencesKey("reminders:settings")

@@ -3,15 +3,13 @@ package com.zacksimpson.reminders.data
 import java.time.LocalDate
 
 /**
- * Pure, side-effect-free domain logic — no storage, no Android, no ambient clock
- * (callers pass the date / id-generator / clock in). Split out of [RemindersRepository]
- * so the fiddly bits (task ordering, recurrence advancement) can be unit-tested in
- * isolation. See `src/test/.../RemindersLogicTest.kt`.
+ * Pure domain logic — no storage, no Android, no clock (callers pass date/id/clock in).
+ * Split out so ordering and recurrence can be unit-tested in isolation.
  */
 internal object RemindersLogic {
 
     /**
-     * Order value for a newly added task, ported exactly from the RN reducer:
+     * Order value for a new task:
      *  - TOP    → (min of 0 and the list's existing orders) − 1
      *  - BOTTOM → (max of −1 and the list's existing orders) + 1
      */
@@ -25,11 +23,8 @@ internal object RemindersLogic {
     }
 
     /**
-     * Advance a date by one recurrence interval.
-     *
-     * Note: `plusMonths`/`plusYears` clamp end-of-month (e.g. Jan 31 + 1 month → Feb 28)
-     * rather than overflowing into the next month like JS `Date.setMonth` did. This is the
-     * intentional, saner behavior for a recurring reminder.
+     * Advance a date by one recurrence interval. `plusMonths`/`plusYears` clamp
+     * end-of-month (Jan 31 + 1 month → Feb 28) rather than overflowing.
      */
     fun addInterval(date: LocalDate, r: Recurrence): LocalDate = when (r.unit) {
         RecurrenceUnit.DAY -> date.plusDays(r.interval.toLong())
@@ -39,9 +34,8 @@ internal object RemindersLogic {
     }
 
     /**
-     * The next occurrence date, as ISO "YYYY-MM-DD". Mirrors the RN do-while: advances at
-     * least one interval past [dateStr], then keeps advancing until the result is >= [today]
-     * (so completing a long-overdue recurring task skips forward to the next future slot).
+     * Next occurrence date as ISO "YYYY-MM-DD". Advances at least one interval past
+     * [dateStr], then keeps going until the result is >= [today].
      */
     fun nextOccurrenceDate(dateStr: String, recurrence: Recurrence, today: LocalDate): String {
         var next = addInterval(LocalDate.parse(dateStr), recurrence)
@@ -50,9 +44,8 @@ internal object RemindersLogic {
     }
 
     /**
-     * The follow-up task spawned when a recurring, dated task is completed — or null if the
-     * task isn't a dated recurring task. Carries over title/list/time/recurrence and all
-     * subtasks (reset to incomplete), with a fresh id and the next occurrence date.
+     * Follow-up task spawned when a dated recurring task is completed, or null if it isn't
+     * one. Carries over title/list/time/recurrence and subtasks (reset to incomplete).
      */
     fun spawnNextOccurrence(
         task: Task,
