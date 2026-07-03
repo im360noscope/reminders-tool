@@ -8,12 +8,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Unit tests for the pure data-layer logic and serialization contract. These cover the
- * fiddly, correctness-critical bits that don't touch DataStore: task ordering, recurrence
- * advancement, and round-trip JSON stability (the things a corruption/data-loss bug would
- * hide in).
- */
+/** Unit tests for the pure data-layer logic and serialization: ordering, recurrence,
+ *  and JSON round-trip. */
 class RemindersLogicTest {
 
     private fun task(id: String, listId: String, order: Int) =

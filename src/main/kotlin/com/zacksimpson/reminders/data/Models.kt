@@ -5,8 +5,7 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 // ─── Enums ──────────────────────────────────────────────────────────────────
-// @SerialName values match the exact strings the RN app used, so JSON stays stable
-// and human-readable (and future backup files interchange cleanly).
+// @SerialName values are the JSON strings — stable and human-readable.
 
 @Serializable
 enum class RecurrenceUnit {
@@ -29,8 +28,7 @@ enum class AddPosition {
 }
 
 // ─── Models ─────────────────────────────────────────────────────────────────
-// Direct translation of contexts/RemindersContext.tsx. Every optional field has a
-// default so partial/older JSON always decodes (schema-evolution safety).
+// Every optional field has a default so partial/older JSON still decodes.
 
 @Serializable
 data class Recurrence(
@@ -79,16 +77,12 @@ data class Settings(
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 
-/**
- * Shown in-memory when no lists have ever been persisted (mirrors the RN DEFAULT_LIST
- * seed). `createdAt` is a stable placeholder — a real timestamp is only ever written
- * once the user actually mutates the list collection.
- */
+/** Default list, shown until the user first mutates lists. `createdAt` is a placeholder
+ *  until a real value is persisted. */
 val SEED_INBOX = ReminderList(id = "inbox", title = "Inbox", createdAt = 0L, order = 0)
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Collision-resistant id. Nothing in the app parses id structure, so a UUID is fine. */
 fun generateId(): String = UUID.randomUUID().toString()
 
 /** "Every 1 day" / "Every 3 weeks" — matches the RN formatRecurrence output. */
