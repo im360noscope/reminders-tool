@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
@@ -31,6 +32,7 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.RemindersTheme
@@ -81,8 +83,8 @@ class ListDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text(listTitle),
-                    rightButton = LightBarButton.LightIcon(
-                        LightIcons.ADD,
+                    rightButton = LightBarButton.Icon(
+                        painterResource(R.drawable.ic_plus),
                         onClick = { navigateTo(screenFactory = { AddTaskScreen(it, listId) }) },
                     ),
                     modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
