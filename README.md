@@ -48,8 +48,8 @@ or sideload onto real LP3 hardware.
 | Scaffold (module, entry point, boot screen) | ✅ compiles |
 | Theme | ✅ single-mode white-on-black via `RemindersTheme` wrapper (no invert) |
 | Fonts | ✅ automatic — SDK provides **Akkurat**; we bundle nothing (see below) |
-| Data layer (Task/List/Settings + DataStore) | ⏳ |
-| Screens (19) + components (27) | ⏳ |
+| Data layer (Task/List/Settings + DataStore) | ✅ repository + 15 passing unit tests |
+| Screens (19) + components (27) | ⏳ next (tab shell first) |
 | Notifications | ⛔ deferred — SDK has no exact-time local alarm (see below) |
 
 ## Fonts (Akkurat — handled by the SDK)
