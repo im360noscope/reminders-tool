@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.InitialScreen
@@ -15,9 +13,8 @@ import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
-import com.thelightphone.sdk.ui.LightTheme
-import com.thelightphone.sdk.ui.LightThemeController
 import com.thelightphone.sdk.ui.LightThemeTokens
+import com.zacksimpson.reminders.ui.RemindersTheme
 
 class HomeScreenViewModel : LightViewModel<Unit>()
 
@@ -38,9 +35,7 @@ class HomeScreen(sealedActivity: SealedLightActivity) :
 
     @Composable
     override fun Content() {
-        val themeColors by LightThemeController.colors.collectAsState()
-
-        LightTheme(colors = themeColors) {
+        RemindersTheme {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
