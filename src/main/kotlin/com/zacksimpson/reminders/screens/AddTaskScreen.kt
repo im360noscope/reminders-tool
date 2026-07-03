@@ -1,29 +1,21 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightText
-import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
@@ -33,11 +25,9 @@ import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Subtask
 import com.zacksimpson.reminders.data.generateId
 import com.zacksimpson.reminders.dataStateIn
-import com.zacksimpson.reminders.ui.DeleteIcon
-import com.zacksimpson.reminders.ui.PlusCircleIcon
 import com.zacksimpson.reminders.ui.RemindersTheme
+import com.zacksimpson.reminders.ui.SubtasksSection
 import com.zacksimpson.reminders.ui.TapField
-import com.zacksimpson.reminders.ui.TaskCheckboxIcon
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
 import com.zacksimpson.reminders.ui.TitleField
@@ -192,71 +182,5 @@ class AddTaskScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SubtasksSection(
-    subtasks: List<Subtask>,
-    onAdd: () -> Unit,
-    onRename: (Subtask) -> Unit,
-    onToggle: (String) -> Unit,
-    onDelete: (String) -> Unit,
-) {
-    Column {
-        LightText(
-            text = "Subtasks",
-            variant = LightTextVariant.Superfine,
-            modifier = Modifier.padding(
-                start = 1.5f.gridUnitsAsDp(),
-                top = 1.5f.gridUnitsAsDp(),
-                bottom = 0.5f.gridUnitsAsDp(),
-            ),
-        )
-        subtasks.forEach { subtask ->
-            SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
-        }
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onAdd)
-                .padding(start = 1f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            PlusCircleIcon(size = 20.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
-            LightText(text = "Add subtask…", variant = LightTextVariant.Paragraph)
-        }
-    }
-}
-
-@Composable
-private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 0.5f.gridUnitsAsDp(), end = 1.5f.gridUnitsAsDp()),
-        verticalAlignment = Alignment.Top,
-    ) {
-        TaskCheckboxIcon(
-            checked = subtask.completed,
-            size = 20.dp,
-            modifier = Modifier
-                .clickable(onClick = onToggle)
-                .padding(horizontal = 0.9f.gridUnitsAsDp(), vertical = 0.6f.gridUnitsAsDp()),
-        )
-        LightText(
-            text = subtask.title,
-            variant = LightTextVariant.Paragraph,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onRename)
-                .padding(vertical = 0.65f.gridUnitsAsDp())
-                .alpha(if (subtask.completed) 0.4f else 1f),
-        )
-        DeleteIcon(
-            size = 14.dp,
-            modifier = Modifier
-                .clickable(onClick = onDelete)
-                .padding(start = 0.5f.gridUnitsAsDp(), top = 0.75f.gridUnitsAsDp(), bottom = 0.6f.gridUnitsAsDp()),
-        )
     }
 }
