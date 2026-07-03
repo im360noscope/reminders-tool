@@ -68,12 +68,20 @@ fun TaskRowView(
                     .padding(horizontal = 0.9f.gridUnitsAsDp(), vertical = 0.55f.gridUnitsAsDp()),
             )
         } else {
+            // Same artwork RN used, but at this size next to Akkurat text it read too big —
+            // shrunk as a first pass; top padding matches the text column's own top inset
+            // as a starting alignment reference (not yet true first-line-center alignment).
             TaskCheckboxIcon(
                 checked = task.completed,
-                size = 20.dp,
+                size = 17.dp,
                 modifier = Modifier
                     .clickable(onClick = onToggle)
-                    .padding(horizontal = 0.9f.gridUnitsAsDp(), vertical = 0.55f.gridUnitsAsDp()),
+                    .padding(
+                        start = 0.9f.gridUnitsAsDp(),
+                        end = 0.9f.gridUnitsAsDp(),
+                        top = 0.95f.gridUnitsAsDp(),
+                        bottom = 0.1f.gridUnitsAsDp(),
+                    ),
             )
         }
 
