@@ -54,7 +54,7 @@ fun ListsTab(
                 state.data.lists.sortedBy { it.order }.forEach { list ->
                     LightText(
                         text = list.title,
-                        variant = LightTextVariant.Copy,
+                        variant = LightTextVariant.Heading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onOpenList(list) }
