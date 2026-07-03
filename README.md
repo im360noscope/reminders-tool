@@ -3,7 +3,7 @@
 Native Kotlin/Jetpack Compose rewrite of the Reminders tool for the **Light Phone III**,
 built on the official [`light-sdk`](https://github.com/lightphone/light-sdk).
 
-This branch (`native-sdk`) supersedes the React Native / Expo app that lives on `main`.
+This branch (`native-rewrite`) supersedes the React Native / Expo app that lives on `main`.
 It is a ground-up rebuild — no source is shared with the RN app.
 
 ## How this builds
