@@ -59,7 +59,7 @@ fun ListsTab(
                             .fillMaxWidth()
                             .clickable { onOpenList(list) }
                             .padding(
-                                horizontal = 1f.gridUnitsAsDp(),
+                                horizontal = 1.5f.gridUnitsAsDp(),
                                 vertical = 0.5f.gridUnitsAsDp(),
                             ),
                     )
