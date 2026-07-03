@@ -83,9 +83,12 @@ class ListDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text(listTitle),
+                    // sizeUnits reduced — ic_plus's artwork fills its box edge-to-edge,
+                    // unlike LightIcons' own icons, so the default size reads too big.
                     rightButton = LightBarButton.Icon(
                         painterResource(R.drawable.ic_plus),
                         onClick = { navigateTo(screenFactory = { AddTaskScreen(it, listId) }) },
+                        sizeUnits = 1.2f,
                     ),
                     modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
                 )

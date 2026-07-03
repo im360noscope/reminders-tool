@@ -34,7 +34,9 @@ fun ListsTab(
         LightTopBar(
             leftButton = null,
             center = LightTopBarCenter.Text("Lists"),
-            rightButton = LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList),
+            // ic_plus's artwork fills its box edge-to-edge (unlike LightIcons' own icons,
+            // which have built-in padding) — sizeUnits is reduced to match BACK's visual weight.
+            rightButton = LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f),
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
         )
 
