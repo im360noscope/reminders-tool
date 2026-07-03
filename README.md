@@ -1,88 +1,67 @@
-# Reminders — Native (light-sdk) rewrite
+# Reminders
 
-Native Kotlin/Jetpack Compose rewrite of the Reminders tool for the **Light Phone III**,
-built on the official [`light-sdk`](https://github.com/lightphone/light-sdk).
+A reminders app for the Light Phone III.
 
-This branch (`native-rewrite`) supersedes the React Native / Expo app that lives on `main`.
-It is a ground-up rebuild — no source is shared with the RN app.
+Organize tasks into lists, add due dates and times, check things off as you go, and get notified when it matters.
 
-## How this builds
+Built with [vandamd's light-template](https://github.com/vandamd/light-template) — a community-made Expo template for building LightOS-style apps for the Light Phone III.
 
-A Light tool is **not** a standalone Gradle project; it must be built as a module
-*inside* the `light-sdk` multi-project build (it depends on `project(":sdk:client")`,
-the repo-local signing key, and the composite `light-sdk` Gradle plugin). There is no
-published-artifact standalone path yet.
+![Reminders screenshots](assets/images/example.png)
+---
 
-So this directory contains **only the tool module**. To build it, it is wired into a
-local clone of `light-sdk` via one line in that repo's `settings.gradle.kts`:
+## Features
 
-```kotlin
-include(":reminders")
-project(":reminders").projectDir = file("/Users/zacksimpson/Dev/reminders-native")
+* Organize tasks into multiple lists
+* Add due dates and times to any task
+* Today view shows only tasks due today
+* Subtasks on any task, including when adding a new task
+* Check off tasks and subtasks with a tap
+* Completed tasks move to a collapsible group at the bottom
+* Long-press a list to rename, reorder, clear completed, or delete it
+* Notifications for tasks with a set time
+* Daily bundled notification for today's untimed tasks
+* Custom LightOS-style date and time pickers
+* Respects LightOS theme (black/white mode)
+
+---
+
+## Installing on Light Phone III
+
+* Highly recommend using [Obtainium](https://github.com/ImranR98/Obtainium) to ensure you receive future updates and new features automatically. Just add [the repo URL](https://github.com/zacksimpson/reminders-tool/), make sure you're able to install apps from unknown sources, and you're all set.
+* Alternatively, you can download the latest APK from the Releases tab.
+
+---
+
+## Building
+
+This project uses [Expo](https://expo.dev) and [EAS Build](https://docs.expo.dev/build/introduction/).
+
+### Prerequisites
+
+* [Bun](https://bun.sh)
+* [EAS CLI](https://docs.expo.dev/build/setup/)
+* An Expo account
+
+### Steps
+
+```
+bun install
+eas login
+eas build --platform android --profile preview
 ```
 
-The SDK clone lives at `~/Dev/light/light-sdk` and is **not** tracked by this repo —
-keep it up to date with `git pull` as the SDK evolves (it changes fast).
+EAS will build the APK in the cloud and provide a download link.
 
-### Build the debug APK
+---
 
-```bash
-cd ~/Dev/light/light-sdk
-./gradlew :reminders:assembleDebug
-# APK: ~/Dev/reminders-native/build/outputs/apk/debug/
-```
+## Support
 
-### Install on device / emulator
+If any of my tools have been useful to you, I'd love to hear from you! Feel free to reach out [here](mailto:zacksimpson24@gmail.com). Another way to support is to [consider sponsoring](https://github.com/sponsors/zacksimpson). Either way, it means a lot!
 
-```bash
-adb install -r ~/Dev/reminders-native/build/outputs/apk/debug/reminders-debug.apk
-```
+---
 
-Test on an Android emulator running the [LightOS emulator system app](https://github.com/lightphone/light-sdk/tree/main/docs/system_app),
-or sideload onto real LP3 hardware.
+## Credits
 
-## Status
-
-| Area | State |
-|------|-------|
-| Scaffold (module, entry point, boot screen) | ✅ compiles |
-| Theme | ✅ single-mode white-on-black via `RemindersTheme` wrapper (no invert) |
-| Fonts | ✅ automatic — SDK provides **Akkurat**; we bundle nothing (see below) |
-| Data layer (Task/List/Settings + DataStore) | ✅ repository + 15 passing unit tests |
-| Screens (19) + components (27) | ⏳ next (tab shell first) |
-| Notifications | ⛔ deferred — SDK has no exact-time local alarm (see below) |
-
-## Fonts (Akkurat — handled by the SDK)
-
-The Light Phone uses **Akkurat**, and the SDK applies it for us automatically:
-`LightTheme` calls `rememberLightTypography()` → `lightFontFamily(context)`
-(`sdk/ui/.../LightFont.kt`), and every `LightText` reads its typography from the theme.
-So any composable wrapped in `LightTheme { }` renders in Akkurat with no work from us.
-
-Resolution order in `lightFontFamily()`:
-1. **System Akkurat** — on real LP3 / the LightOS emulator, read from the OS font set.
-2. **Bundled Akkurat** — `akkuratll_light` / `akkuratll_regular` / `akkuratpro_bold` ship
-   inside the `light-keyboard` AAR, which `sdk:ui` re-exports (`api`). They merge into our
-   APK transitively, so Akkurat also renders on a **plain non-LightOS emulator**.
-3. `FontFamily.Default` — last-resort fallback (not normally hit).
-
-We do **not** (and legally can't) bundle Akkurat ourselves — it's a licensed Lineto
-typeface. The old RN app's PublicSans has been removed. Weight mapping for the old
-"Thin" numeric displays (time-picker digits, recurrence interval): use Akkurat
-`FontWeight.Light`.
-
-## Notifications (deferred)
-
-The RN app fired **exact-time** local reminders via `SCHEDULE_EXACT_ALARM`. The SDK's
-permission allow-list currently excludes `SCHEDULE_EXACT_ALARM` and `RECEIVE_BOOT_COMPLETED`,
-and `LightWork` (its WorkManager wrapper) is ≥15-min and inexact.
-
-**This is temporary.** Light has confirmed notifications are coming — delivered via
-**UnifiedPush with Light supplying the server** (`LightEntryPoint.onPushNotification` /
-`enablePushNotifications` are already the hooks for it). The SDK is an explicit
-work-in-progress and Light is opening up permissions over time.
-
-Per project decision, notifications are **deferred** — we build every other screen now
-and wire in the push-based notification story once Light ships that side of the SDK.
-
-See `~/Dev/reminders/LIGHT_SDK_MIGRATION.md` for the full per-screen migration audit.
+* [vandamd](https://github.com/vandamd) — [light-template](https://github.com/vandamd/light-template), the community Expo template this app is built on
+* [iamkory](https://www.reddit.com/user/iamkory/) — [LighterOS Figma design toolkit](https://www.figma.com/design/1k2PkAjOSet8f9jjVdhM2L/LighterOS?node-id=65-2018&t=3Qd2sXdySZCzTVtK-1) excellent reference for recreating the LightOS aesthetic
+* [The Light Phone](https://www.thelightphone.com) — for building a phone worth making apps for
