@@ -9,14 +9,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import com.thelightphone.sdk.ui.LightBarButton
-import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.ReminderList
 
 /**
@@ -33,7 +34,7 @@ fun ListsTab(
         LightTopBar(
             leftButton = null,
             center = LightTopBarCenter.Text("Lists"),
-            rightButton = LightBarButton.LightIcon(LightIcons.ADD, onClick = onAddList),
+            rightButton = LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList),
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
         )
 
