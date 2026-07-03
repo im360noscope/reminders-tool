@@ -33,6 +33,15 @@ fun DeleteIcon(size: Dp, modifier: Modifier = Modifier) {
     )
 }
 
+@Composable
+fun OverdueAsteriskIcon(size: Dp, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.ic_overdue_asterisk),
+        contentDescription = null,
+        modifier = modifier.size(size),
+    )
+}
+
 /** Ring when unchecked; ring + filled center when checked (matches TaskCheckbox.tsx). */
 @Composable
 fun TaskCheckboxIcon(checked: Boolean, size: Dp, modifier: Modifier = Modifier) {
