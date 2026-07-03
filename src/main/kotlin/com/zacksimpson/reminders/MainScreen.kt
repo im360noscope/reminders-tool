@@ -28,6 +28,7 @@ import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Settings
 import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
 import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
+import com.zacksimpson.reminders.screens.AddTaskScreen
 import com.zacksimpson.reminders.screens.ListDetailScreen
 import com.zacksimpson.reminders.screens.ListsTab
 import com.zacksimpson.reminders.screens.OptionPickerScreen
@@ -41,7 +42,7 @@ import com.zacksimpson.reminders.ui.TextEditorScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-enum class Tab { LISTS, TODAY, ADD, SETTINGS }
+enum class Tab { LISTS, TODAY, SETTINGS }
 
 class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit>() {
     val selectedTab = MutableStateFlow(Tab.LISTS)
@@ -109,7 +110,6 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                         )
 
                         Tab.TODAY -> PlaceholderTab("Today")
-                        Tab.ADD -> PlaceholderTab("Add")
                         Tab.SETTINGS -> SettingsTab(
                             state = dataState,
                             onOpenDefaultList = {
@@ -165,7 +165,12 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                         LightBarButton.LightIcon(LightIcons.LIST, onClick = { viewModel.select(Tab.LISTS) }),
                         // No calendar/"today" icon in the SDK set yet — ALARM is a placeholder.
                         LightBarButton.LightIcon(LightIcons.ALARM, onClick = { viewModel.select(Tab.TODAY) }),
-                        LightBarButton.LightIcon(LightIcons.ADD, onClick = { viewModel.select(Tab.ADD) }),
+                        // Add is an action, not a tab — it opens the New Task screen.
+                        LightBarButton.LightIcon(LightIcons.ADD, onClick = {
+                            val defaultListId =
+                                (viewModel.state.value as? DataState.Ready)?.data?.settings?.defaultListId ?: "inbox"
+                            navigateTo(screenFactory = { AddTaskScreen(it, defaultListId) })
+                        }),
                         LightBarButton.LightIcon(LightIcons.SETTINGS, onClick = { viewModel.select(Tab.SETTINGS) }),
                     ),
                 )
