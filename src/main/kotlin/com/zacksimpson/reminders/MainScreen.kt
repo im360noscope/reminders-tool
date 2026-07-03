@@ -22,9 +22,19 @@ import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
+import com.zacksimpson.reminders.data.AddPosition
+import com.zacksimpson.reminders.data.AfterAddBehavior
 import com.zacksimpson.reminders.data.RemindersRepository
+import com.zacksimpson.reminders.data.Settings
+import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
+import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
 import com.zacksimpson.reminders.screens.ListDetailScreen
 import com.zacksimpson.reminders.screens.ListsTab
+import com.zacksimpson.reminders.screens.OptionPickerScreen
+import com.zacksimpson.reminders.screens.PickerOption
+import com.zacksimpson.reminders.screens.SettingsTab
+import com.zacksimpson.reminders.screens.addPositionKey
+import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
@@ -43,6 +53,20 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
 
     fun addList(title: String) {
         viewModelScope.launch { repo.addList(title) }
+    }
+
+    fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
+
+    fun setAfterAdd(key: String) = update {
+        it.copy(afterAddBehavior = if (key == "go-to-list") AfterAddBehavior.GO_TO_LIST else AfterAddBehavior.TOAST)
+    }
+
+    fun setAddPosition(key: String) = update {
+        it.copy(addPosition = if (key == "top") AddPosition.TOP else AddPosition.BOTTOM)
+    }
+
+    private fun update(transform: (Settings) -> Settings) {
+        viewModelScope.launch { repo.updateSettings(transform) }
     }
 }
 
@@ -86,7 +110,54 @@ class MainScreen(sealedActivity: SealedLightActivity) :
 
                         Tab.TODAY -> PlaceholderTab("Today")
                         Tab.ADD -> PlaceholderTab("Add")
-                        Tab.SETTINGS -> PlaceholderTab("Settings")
+                        Tab.SETTINGS -> SettingsTab(
+                            state = dataState,
+                            onOpenDefaultList = {
+                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
+                                    navigateTo(
+                                        screenFactory = { activity ->
+                                            OptionPickerScreen(
+                                                activity,
+                                                "Default List",
+                                                d.lists.sortedBy { it.order }.map { PickerOption(it.id, it.title) },
+                                                d.settings.defaultListId,
+                                            )
+                                        },
+                                        resultCallback = { key -> viewModel.setDefaultList(key) },
+                                    )
+                                }
+                            },
+                            onOpenAfterQuickAdd = {
+                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
+                                    navigateTo(
+                                        screenFactory = { activity ->
+                                            OptionPickerScreen(
+                                                activity,
+                                                "After Quick Add",
+                                                AFTER_ADD_OPTIONS,
+                                                afterAddKey(d.settings.afterAddBehavior),
+                                            )
+                                        },
+                                        resultCallback = { key -> viewModel.setAfterAdd(key) },
+                                    )
+                                }
+                            },
+                            onOpenAddPosition = {
+                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
+                                    navigateTo(
+                                        screenFactory = { activity ->
+                                            OptionPickerScreen(
+                                                activity,
+                                                "Add New Tasks",
+                                                ADD_POSITION_OPTIONS,
+                                                addPositionKey(d.settings.addPosition),
+                                            )
+                                        },
+                                        resultCallback = { key -> viewModel.setAddPosition(key) },
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
                 LightBottomBar(
