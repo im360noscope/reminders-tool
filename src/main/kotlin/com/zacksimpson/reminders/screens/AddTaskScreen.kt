@@ -32,6 +32,7 @@ import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.ClearableField
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SubtasksSection
+import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TapField
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
@@ -152,6 +153,7 @@ class AddTaskScreen(
             val lists = (state as? DataState.Ready)?.data?.lists.orEmpty()
             val selectedListTitle = lists.firstOrNull { it.id == listId }?.title ?: "Inbox"
 
+            SwipeBackContainer(onSwipeBack = { goBack(null) }) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -260,6 +262,7 @@ class AddTaskScreen(
                         onDelete = { viewModel.removeSubtask(it) },
                     )
                 }
+            }
             }
         }
     }
