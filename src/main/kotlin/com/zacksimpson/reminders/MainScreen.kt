@@ -31,6 +31,8 @@ import com.zacksimpson.reminders.screens.ListsTab
 import com.zacksimpson.reminders.screens.OptionPickerScreen
 import com.zacksimpson.reminders.screens.PickerOption
 import com.zacksimpson.reminders.screens.SettingsTab
+import com.zacksimpson.reminders.screens.TaskAction
+import com.zacksimpson.reminders.screens.TaskActionsScreen
 import com.zacksimpson.reminders.screens.TaskDetailScreen
 import com.zacksimpson.reminders.screens.TodayTab
 import com.zacksimpson.reminders.screens.addPositionKey
@@ -38,6 +40,7 @@ import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
+import com.zacksimpson.reminders.ui.ToastScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -150,6 +153,29 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             },
                             onOpenTask = { task ->
                                 navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                            },
+                            onLongPressTask = { task ->
+                                navigateTo(
+                                    screenFactory = { TaskActionsScreen(it, task.id) },
+                                    resultCallback = { result ->
+                                        when (result) {
+                                            TaskAction.DELETED ->
+                                                navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                            // Reordering only makes sense within a single list, so
+                                            // Today hands off to that task's own List Detail screen
+                                            // already in reorder mode — matches RN's router.replace.
+                                            TaskAction.START_REORDER -> {
+                                                val listTitle = (viewModel.state.value as? DataState.Ready)
+                                                    ?.data?.lists?.firstOrNull { it.id == task.listId }?.title ?: "List"
+                                                navigateTo(
+                                                    screenFactory = {
+                                                        ListDetailScreen(it, task.listId, listTitle, startInReorderMode = true)
+                                                    },
+                                                )
+                                            }
+                                        }
+                                    },
+                                )
                             },
                             onToggle = { viewModel.toggleTask(it) },
                         )

@@ -174,6 +174,32 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { p -> p.writeTasks(p.readTasks().filter { it.id != id }) }
     }
 
+    suspend fun moveTaskUp(id: String, listId: String) = reorderTask(id, listId, -1)
+    suspend fun moveTaskDown(id: String, listId: String) = reorderTask(id, listId, +1)
+
+    /** Reorders within [listId]'s active (incomplete) tasks only — matches the ordering
+     *  the reorder UI shows. Mirrors [reorderList]'s swap-the-neighbours'-order approach. */
+    private suspend fun reorderTask(id: String, listId: String, direction: Int) {
+        dataStore.edit { p ->
+            val all = p.readTasks()
+            val sorted = all.filter { it.listId == listId && !it.completed }.sortedBy { it.order }
+            val idx = sorted.indexOfFirst { it.id == id }
+            val target = idx + direction
+            if (idx < 0 || target < 0 || target >= sorted.size) return@edit
+            val taskA = sorted[idx]
+            val taskB = sorted[target]
+            p.writeTasks(
+                all.map { t ->
+                    when (t.id) {
+                        taskA.id -> t.copy(order = taskB.order)
+                        taskB.id -> t.copy(order = taskA.order)
+                        else -> t
+                    }
+                },
+            )
+        }
+    }
+
     suspend fun clearCompletedTasks(listId: String) {
         dataStore.edit { p ->
             p.writeTasks(p.readTasks().filterNot { it.listId == listId && it.completed })

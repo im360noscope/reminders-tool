@@ -58,7 +58,9 @@ class ConfirmScreen(
                 ) {
                     LightText(
                         text = message,
-                        variant = LightTextVariant.Paragraph,
+                        // Bumped from Paragraph (24.5) — RN's n(22) message text read
+                        // small at that size; Copy (30) matches better.
+                        variant = LightTextVariant.Copy,
                         align = TextAlign.Center,
                     )
                 }

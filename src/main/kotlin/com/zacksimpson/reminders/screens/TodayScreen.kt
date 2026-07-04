@@ -46,6 +46,7 @@ fun TodayTab(
     refreshTick: Int,
     onAddTask: () -> Unit,
     onOpenTask: (Task) -> Unit,
+    onLongPressTask: (Task) -> Unit,
     onToggle: (String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -101,6 +102,7 @@ fun TodayTab(
                                 listTitle = listTitle(task.listId),
                                 onToggle = { onToggle(task.id) },
                                 onPress = { onOpenTask(task) },
+                                onLongPress = { onLongPressTask(task) },
                             )
                         }
                         activeTasks.forEach { task ->
@@ -109,6 +111,7 @@ fun TodayTab(
                                 listTitle = listTitle(task.listId),
                                 onToggle = { onToggle(task.id) },
                                 onPress = { onOpenTask(task) },
+                                onLongPress = { onLongPressTask(task) },
                             )
                         }
 
@@ -129,6 +132,7 @@ fun TodayTab(
                                         listTitle = listTitle(task.listId),
                                         onToggle = { onToggle(task.id) },
                                         onPress = { onOpenTask(task) },
+                                        onLongPress = { onLongPressTask(task) },
                                         dimmed = true,
                                     )
                                 }

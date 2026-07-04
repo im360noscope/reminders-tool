@@ -1,6 +1,8 @@
 package com.zacksimpson.reminders.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import com.thelightphone.sdk.ui.LightIcon
+import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
@@ -36,9 +40,11 @@ private fun buildMeta(task: Task, listTitle: String): String {
 
 /**
  * Shared task row: checkbox (or overdue asterisk in place of it), title, meta line
- * (list · date · time · subtask count), and recurrence line. Used by list detail and,
- * later, the Today tab. Reorder-mode arrows aren't built yet (no entry point to trigger
- * reorder mode without the task-actions screen) — deferred alongside it.
+ * (list · date · time · subtask count), and recurrence line. Used by list detail and the
+ * Today tab. Long-pressing the title/meta column opens TaskActionsScreen — matches RN's
+ * TaskRow, which attached onLongPress to the same pressable as onPress. In reorder mode
+ * the checkbox/asterisk is hidden and up/down arrows appear instead, and tap/long-press
+ * are disabled — matches RN's isReordering behavior exactly.
  */
 @Composable
 fun TaskRowView(
@@ -46,7 +52,13 @@ fun TaskRowView(
     listTitle: String,
     onToggle: () -> Unit,
     onPress: () -> Unit,
+    onLongPress: (() -> Unit)? = null,
     dimmed: Boolean = false,
+    isReordering: Boolean = false,
+    isFirst: Boolean = false,
+    isLast: Boolean = false,
+    onMoveUp: () -> Unit = {},
+    onMoveDown: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val overdue = isOverdue(task.date, task.time) && !task.completed
@@ -63,7 +75,10 @@ fun TaskRowView(
             .padding(end = 2f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
-        if (overdue) {
+        if (isReordering) {
+            // No checkbox/asterisk while reordering — matches RN, which omits leftControl
+            // entirely in this mode.
+        } else if (overdue) {
             OverdueAsteriskIcon(
                 // Matches TaskCheckboxIcon's size exactly, since they occupy the same
                 // row slot as alternates of each other.
@@ -100,8 +115,21 @@ fun TaskRowView(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .clickable(onClick = onPress)
-                .padding(vertical = 0.7f.gridUnitsAsDp()),
+                // Disabled while reordering — matches RN, which guards onPress/onLongPress
+                // with `if (isReordering) return;` at the call site.
+                .combinedClickable(
+                    onClick = { if (!isReordering) onPress() },
+                    onLongClick = if (isReordering) null else onLongPress,
+                )
+                .padding(
+                    // Replaces the left margin the checkbox/asterisk normally provides,
+                    // since it's hidden in this mode — matches RN's taskContentReordering
+                    // style (paddingLeft: n(22)), without which the row loses its left
+                    // margin entirely while reordering.
+                    start = if (isReordering) 1.5f.gridUnitsAsDp() else 0.dp,
+                    top = 0.7f.gridUnitsAsDp(),
+                    bottom = 0.7f.gridUnitsAsDp(),
+                ),
         ) {
             // LightTextVariant.Copy bakes in lineHeight = fontSize * 1.50, which reads
             // much looser across wraps than RN's title (no explicit line-height at all).
@@ -123,5 +151,39 @@ fun TaskRowView(
                 )
             }
         }
+
+        if (isReordering) {
+            ReorderArrows(isFirst = isFirst, isLast = isLast, onMoveUp = onMoveUp, onMoveDown = onMoveDown)
+        }
+    }
+}
+
+@Composable
+private fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMoveDown: () -> Unit) {
+    Row(
+        modifier = Modifier.padding(top = 0.75f.gridUnitsAsDp(), end = 0.5f.gridUnitsAsDp()),
+        horizontalArrangement = Arrangement.spacedBy(0.6f.gridUnitsAsDp()),
+    ) {
+        LightIcon(
+            icon = LightIcons.UP,
+            size = 1.6f,
+            // LightIcons.UP/DOWN are both the BACK chevron's path rotated ±90°, and that
+            // path isn't vertically centered in its own box — after rotation, UP's ink
+            // sits high in its box and DOWN's sits low, so at the same nominal position
+            // they read visibly offset from each other. The previous top-padding
+            // correction (0.22f) was half of what the geometry actually calls for at
+            // this icon size — bumped to the full calculated offset.
+            modifier = Modifier
+                .padding(top = 0.58f.gridUnitsAsDp())
+                .alpha(if (isFirst) 0.3f else 1f)
+                .clickable(enabled = !isFirst, onClick = onMoveUp),
+        )
+        LightIcon(
+            icon = LightIcons.DOWN,
+            size = 1.6f,
+            modifier = Modifier
+                .alpha(if (isLast) 0.3f else 1f)
+                .clickable(enabled = !isLast, onClick = onMoveDown),
+        )
     }
 }
