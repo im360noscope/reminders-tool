@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -47,11 +44,12 @@ class ListDetailViewModel(
     startInReorderMode: Boolean = false,
 ) : LightViewModel<Unit>() {
     val state = repo.dataStateIn(viewModelScope)
-    // Lives here rather than as Composable remember state: the SDK recomposes this
+    // Both live here rather than as Composable remember state: the SDK recomposes this
     // screen's Content() fresh every time a pushed screen (like TaskActionsScreen) pops
     // back to it, which silently discards remember-based state — the ViewModel survives
     // that round trip since only the popped screen gets destroyed, not this one.
     val isReordering = MutableStateFlow(startInReorderMode)
+    val showCompleted = MutableStateFlow(false)
 
     fun toggleTask(id: String) {
         viewModelScope.launch { repo.toggleTask(id) }
@@ -71,6 +69,10 @@ class ListDetailViewModel(
 
     fun stopReordering() {
         isReordering.value = false
+    }
+
+    fun toggleShowCompleted() {
+        showCompleted.value = !showCompleted.value
     }
 }
 
@@ -98,7 +100,7 @@ class ListDetailScreen(
     override fun Content() {
         RemindersTheme {
             val state by viewModel.state.collectAsState()
-            var showCompleted by remember { mutableStateOf(false) }
+            val showCompleted by viewModel.showCompleted.collectAsState()
             val isReordering by viewModel.isReordering.collectAsState()
 
             SwipeBackContainer(onSwipeBack = { goBack(null) }) {
@@ -182,7 +184,7 @@ class ListDetailScreen(
                                         variant = LightTextVariant.Paragraph,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable { showCompleted = !showCompleted }
+                                            .clickable { viewModel.toggleShowCompleted() }
                                             .alpha(0.5f)
                                             .padding(
                                                 horizontal = 1.5f.gridUnitsAsDp(),

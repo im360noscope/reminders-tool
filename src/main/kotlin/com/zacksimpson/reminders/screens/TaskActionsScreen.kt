@@ -29,7 +29,9 @@ import com.zacksimpson.reminders.ui.ConfirmScreen
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.ToastScreen
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Signals what happened back to whichever screen opened this one. */
 enum class TaskAction { DELETED, START_REORDER }
@@ -46,7 +48,13 @@ class TaskActionsViewModel(
 
     fun delete(onDeleted: () -> Unit) {
         viewModelScope.launch {
-            repo.deleteTask(taskId)
+            // NonCancellable so the write itself always finishes even if this screen is
+            // destroyed mid-delete (e.g. rapid back-navigation) — viewModelScope is
+            // cancelled on destroy, and without this the in-flight DataStore write would
+            // be cancelled too, not just the onDeleted callback that follows it.
+            withContext(NonCancellable) {
+                repo.deleteTask(taskId)
+            }
             onDeleted()
         }
     }

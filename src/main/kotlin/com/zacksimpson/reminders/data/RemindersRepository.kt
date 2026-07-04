@@ -178,7 +178,10 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun moveTaskDown(id: String, listId: String) = reorderTask(id, listId, +1)
 
     /** Reorders within [listId]'s active (incomplete) tasks only — matches the ordering
-     *  the reorder UI shows. Mirrors [reorderList]'s swap-the-neighbours'-order approach. */
+     *  the reorder UI shows. Finds the neighbour to swap with, then shares
+     *  [swapTaskOrderValues] with [swapTaskOrder] for the actual swap (can't just call
+     *  swapTaskOrder directly — nesting a second dataStore.edit inside this one isn't
+     *  safe). */
     private suspend fun reorderTask(id: String, listId: String, direction: Int) {
         dataStore.edit { p ->
             val all = p.readTasks()
@@ -186,17 +189,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
             val idx = sorted.indexOfFirst { it.id == id }
             val target = idx + direction
             if (idx < 0 || target < 0 || target >= sorted.size) return@edit
-            val taskA = sorted[idx]
-            val taskB = sorted[target]
-            p.writeTasks(
-                all.map { t ->
-                    when (t.id) {
-                        taskA.id -> t.copy(order = taskB.order)
-                        taskB.id -> t.copy(order = taskA.order)
-                        else -> t
-                    }
-                },
-            )
+            p.writeTasks(swapTaskOrderValues(all, sorted[idx], sorted[target]))
         }
     }
 
@@ -270,17 +263,22 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
             val tasks = p.readTasks()
             val a = tasks.firstOrNull { it.id == idA } ?: return@edit
             val b = tasks.firstOrNull { it.id == idB } ?: return@edit
-            p.writeTasks(
-                tasks.map { t ->
-                    when (t.id) {
-                        idA -> t.copy(order = b.order)
-                        idB -> t.copy(order = a.order)
-                        else -> t
-                    }
-                },
-            )
+            p.writeTasks(swapTaskOrderValues(tasks, a, b))
         }
     }
+
+    /** Pure swap step shared by [swapTaskOrder] and [reorderTask] — writeTasks always
+     *  needs the full task list (it overwrites the whole stored collection), so both
+     *  callers pass their own already-loaded list in and get it back with just [a] and
+     *  [b]'s order values exchanged. */
+    private fun swapTaskOrderValues(tasks: List<Task>, a: Task, b: Task): List<Task> =
+        tasks.map { t ->
+            when (t.id) {
+                a.id -> t.copy(order = b.order)
+                b.id -> t.copy(order = a.order)
+                else -> t
+            }
+        }
 
     // ── Settings ─────────────────────────────────────────────────────────────────
 
