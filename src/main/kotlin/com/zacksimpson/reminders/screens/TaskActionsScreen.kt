@@ -28,6 +28,7 @@ import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.ConfirmScreen
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
+import com.zacksimpson.reminders.ui.ToastScreen
 import kotlinx.coroutines.launch
 
 /** Signals what happened back to whichever screen opened this one. */
@@ -111,7 +112,19 @@ class TaskActionsScreen(
                         navigateTo(
                             screenFactory = { ConfirmScreen(it, message, "Delete") },
                             resultCallback = { confirmed ->
-                                if (confirmed == true) viewModel.delete { goBack(TaskAction.DELETED) }
+                                if (confirmed == true) {
+                                    viewModel.delete {
+                                        // Pushed from here (rather than shown by the caller
+                                        // after this screen pops) so there's a single
+                                        // transition straight into the toast, instead of a
+                                        // pop-then-push that let the underlying list flash
+                                        // on screen for a frame in between.
+                                        navigateTo(
+                                            screenFactory = { ToastScreen(it, "deleted") },
+                                            resultCallback = { goBack(TaskAction.DELETED) },
+                                        )
+                                    }
+                                }
                             },
                         )
                     },
