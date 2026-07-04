@@ -38,7 +38,6 @@ import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TaskRowView
-import com.zacksimpson.reminders.ui.ToastScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -159,10 +158,11 @@ class ListDetailScreen(
                                                 // deliverResult() only invokes this when goBack
                                                 // passed a non-null result, so every other exit
                                                 // (back/swipe/mark-complete/edit) never calls it.
+                                                // TaskActionsScreen already shows the
+                                                // "deleted" toast itself before returning.
                                                 resultCallback = { result ->
                                                     when (result) {
-                                                        TaskAction.DELETED ->
-                                                            navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                                        TaskAction.DELETED -> Unit
                                                         TaskAction.START_REORDER -> viewModel.startReordering()
                                                     }
                                                 },
@@ -203,8 +203,7 @@ class ListDetailScreen(
                                                         screenFactory = { TaskActionsScreen(it, task.id) },
                                                         resultCallback = { result ->
                                                             when (result) {
-                                                                TaskAction.DELETED ->
-                                                                    navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                                                TaskAction.DELETED -> Unit
                                                                 TaskAction.START_REORDER -> viewModel.startReordering()
                                                             }
                                                         },

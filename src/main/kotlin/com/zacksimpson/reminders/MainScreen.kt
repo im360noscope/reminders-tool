@@ -40,7 +40,6 @@ import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
-import com.zacksimpson.reminders.ui.ToastScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -157,10 +156,11 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             onLongPressTask = { task ->
                                 navigateTo(
                                     screenFactory = { TaskActionsScreen(it, task.id) },
+                                    // TaskActionsScreen already shows the "deleted" toast
+                                    // itself before returning.
                                     resultCallback = { result ->
                                         when (result) {
-                                            TaskAction.DELETED ->
-                                                navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                            TaskAction.DELETED -> Unit
                                             // Reordering only makes sense within a single list, so
                                             // Today hands off to that task's own List Detail screen
                                             // already in reorder mode — matches RN's router.replace.
