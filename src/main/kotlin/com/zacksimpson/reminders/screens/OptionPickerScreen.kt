@@ -21,6 +21,7 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.ui.RemindersTheme
+import com.zacksimpson.reminders.ui.SwipeBackContainer
 
 data class PickerOption(val key: String, val label: String)
 
@@ -38,6 +39,7 @@ class OptionPickerScreen(
     @Composable
     override fun Content() {
         RemindersTheme {
+            SwipeBackContainer(onSwipeBack = { goBack(null) }) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -68,6 +70,7 @@ class OptionPickerScreen(
                         )
                     }
                 }
+            }
             }
         }
     }
