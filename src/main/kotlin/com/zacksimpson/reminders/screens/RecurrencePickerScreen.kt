@@ -86,13 +86,13 @@ class RecurrencePickerScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 0.65f.gridUnitsAsDp()),
+                            .padding(vertical = 1.1f.gridUnitsAsDp()),
                         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         LightIcon(
                             icon = LightIcons.DOWN,
-                            size = 3.4f,
+                            size = 2.6f,
                             modifier = Modifier
                                 .padding(horizontal = 2f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp())
                                 .clickable { decrement() },
@@ -100,14 +100,15 @@ class RecurrencePickerScreen(
                         Box(modifier = Modifier.width(120.dp), contentAlignment = Alignment.Center) {
                             AkkuratText(
                                 text = interval.toString(),
-                                fontSizeDesignPx = 100f,
+                                // Matches TimePickerScreen's time display size.
+                                fontSizeDesignPx = 115f,
                                 fontWeight = FontWeight.Light,
                                 align = TextAlign.Center,
                             )
                         }
                         LightIcon(
                             icon = LightIcons.UP,
-                            size = 3.4f,
+                            size = 2.6f,
                             modifier = Modifier
                                 .padding(horizontal = 2f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp())
                                 .clickable { increment() },
@@ -136,7 +137,8 @@ class RecurrencePickerScreen(
                     Box(modifier = Modifier.weight(1f))
                     LightIcon(
                         icon = LightIcons.CLOSE,
-                        size = 1.6f,
+                        // Matches TimePickerScreen's dismiss X.
+                        size = 2.2f,
                         modifier = Modifier
                             .padding(0.5f.gridUnitsAsDp())
                             .clickable { goBack(null) },

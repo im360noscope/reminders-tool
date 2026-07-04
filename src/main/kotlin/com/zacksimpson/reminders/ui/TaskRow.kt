@@ -62,10 +62,19 @@ fun TaskRowView(
     ) {
         if (overdue) {
             OverdueAsteriskIcon(
-                size = 22.dp,
+                // Matches TaskCheckboxIcon's size exactly, since they occupy the same
+                // row slot as alternates of each other.
+                size = 17.dp,
+                // Same top-inset alignment treatment as TaskCheckboxIcon below, so it
+                // lines up with the first line of the title instead of sitting high.
                 modifier = Modifier
                     .clickable(onClick = onToggle)
-                    .padding(horizontal = 0.9f.gridUnitsAsDp(), vertical = 0.55f.gridUnitsAsDp()),
+                    .padding(
+                        start = 0.9f.gridUnitsAsDp(),
+                        end = 0.9f.gridUnitsAsDp(),
+                        top = 0.95f.gridUnitsAsDp(),
+                        bottom = 0.1f.gridUnitsAsDp(),
+                    ),
             )
         } else {
             // Same artwork RN used, but at this size next to Akkurat text it read too big —
@@ -91,7 +100,11 @@ fun TaskRowView(
                 .clickable(onClick = onPress)
                 .padding(vertical = 0.7f.gridUnitsAsDp()),
         ) {
-            LightText(text = task.title, variant = LightTextVariant.Copy)
+            // LightTextVariant.Copy bakes in lineHeight = fontSize * 1.50, which reads
+            // much looser across wraps than RN's title (no explicit line-height at all).
+            // AkkuratText at the same 30 design-px size lets the font's own natural line
+            // height apply instead.
+            AkkuratText(text = task.title, fontSizeDesignPx = 30f)
             if (meta.isNotEmpty()) {
                 LightText(
                     text = meta,
