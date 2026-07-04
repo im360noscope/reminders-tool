@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
@@ -31,9 +32,14 @@ import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.zacksimpson.reminders.ui.AkkuratText
 import com.zacksimpson.reminders.ui.RemindersTheme
 import java.time.LocalDate
 import java.time.YearMonth
+
+// Matches Copy/Subheading's 30 design-px size — LightTextVariant has no per-call size
+// override, so this goes through AkkuratText like the Time/Recurrence picker digits.
+private const val DAY_NUMBER_DESIGN_PX = 30f
 
 private val MONTH_NAMES = listOf(
     "January", "February", "March", "April", "May", "June",
@@ -96,13 +102,13 @@ class DatePickerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 1f.gridUnitsAsDp()),
             ) {
-                // Month/year header
+                // Month/year header. Chevron size/inset intentionally match LightTopBar's
+                // back button exactly (2f sizeUnits, no extra horizontal inset beyond the
+                // screen's shared 1f gridUnitsAsDp() padding) rather than a bespoke size.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            start = 0.25f.gridUnitsAsDp(),
-                            end = 0.25f.gridUnitsAsDp(),
                             top = 0.65f.gridUnitsAsDp(),
                             bottom = 1f.gridUnitsAsDp(),
                         ),
@@ -111,25 +117,26 @@ class DatePickerScreen(
                 ) {
                     LightIcon(
                         icon = LightIcons.BACK,
-                        size = 2.9f,
+                        size = 2f,
                         modifier = Modifier.clickable { prevMonth() },
                     )
                     LightText(text = "${MONTH_NAMES[viewMonth - 1]} $viewYear", variant = LightTextVariant.Paragraph)
                     LightIcon(
                         icon = LightIcons.ARROW_RIGHT,
-                        size = 2.9f,
+                        size = 2f,
                         modifier = Modifier.clickable { nextMonth() },
                     )
                 }
 
-                // Day-of-week headers
+                // Day-of-week headers — same size as the day-of-month digits, bolded to
+                // read as a header rather than another row of dates.
                 Row(modifier = Modifier.fillMaxWidth()) {
                     DAY_HEADERS.forEach { d ->
                         Box(
                             modifier = Modifier.weight(1f).padding(vertical = 0.5f.gridUnitsAsDp()),
                             contentAlignment = Alignment.Center,
                         ) {
-                            LightText(text = d, variant = LightTextVariant.Paragraph)
+                            AkkuratText(text = d, fontSizeDesignPx = DAY_NUMBER_DESIGN_PX, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -165,7 +172,7 @@ class DatePickerScreen(
                                         val isSelected = dateStr == initialValue
                                         val showUnderline = isSelected || (initialValue == null && dateStr == today.toString())
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            LightText(text = day.toString(), variant = LightTextVariant.Paragraph)
+                                            AkkuratText(text = day.toString(), fontSizeDesignPx = DAY_NUMBER_DESIGN_PX)
                                             Box(
                                                 modifier = Modifier
                                                     .padding(top = 0.2f.gridUnitsAsDp())
