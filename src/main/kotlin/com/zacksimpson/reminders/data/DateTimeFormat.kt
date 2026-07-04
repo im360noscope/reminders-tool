@@ -36,6 +36,38 @@ fun formatTime(time24: String, use24Hour: Boolean = false): String {
     return "$h12:$mStr $ampm"
 }
 
+/**
+ * TimePicker digits ("HMM" or "HHMM") + AM/PM -> "HH:MM" 24h for storage. Always applies
+ * the 12h->24h hour adjustment when [use24Hour] is false, regardless of digit count.
+ */
+fun digitsToTime(digits: String, ampm: String, use24Hour: Boolean = false): String {
+    var h: Int
+    val m: String
+    if (digits.length == 3) {
+        h = digits[0].digitToInt()
+        m = digits.substring(1)
+    } else {
+        h = digits.substring(0, 2).toInt()
+        m = digits.substring(2, 4)
+    }
+    if (!use24Hour) {
+        if (ampm == "PM" && h != 12) h += 12
+        if (ampm == "AM" && h == 12) h = 0
+    }
+    return "${h.toString().padStart(2, '0')}:$m"
+}
+
+/** "HH:MM" 24h -> TimePicker digits + AM/PM, for seeding the picker from an existing time. */
+fun timeToDisplayParts(time24: String, use24Hour: Boolean = false): Pair<String, String> {
+    val (hStr, mStr) = time24.split(":")
+    if (use24Hour) return Pair("$hStr$mStr", "AM")
+    var h = hStr.toInt()
+    val ampm = if (h >= 12) "PM" else "AM"
+    if (h > 12) h -= 12
+    if (h == 0) h = 12
+    return Pair("${h.toString().padStart(2, '0')}$mStr", ampm)
+}
+
 /** True if the task's date/time is in the past. */
 fun isOverdue(date: String?, time: String?): Boolean {
     if (date == null) return false
@@ -46,4 +78,25 @@ fun isOverdue(date: String?, time: String?): Boolean {
         return LocalDateTime.of(y, mo, d, h, m).isBefore(LocalDateTime.now())
     }
     return LocalDate.parse(date).isBefore(today)
+}
+
+/**
+ * Sort order for same-day tasks. Ported literally from RN's dateTime.ts: when only one of
+ * the two has a time set, the untimed one sorts first (this is what the code actually does
+ * — note the RN source's own doc comment claims the opposite, "timed before untimed", which
+ * doesn't match its own logic; ported the executable behavior, not the comment). When
+ * neither has a time, falls back to the manual `order` field; when both have a time,
+ * compares the "HH:MM" strings directly.
+ */
+fun compareTasksByDateTime(a: Task, b: Task): Int {
+    if (a.time == null && b.time == null) return a.order - b.order
+    if (a.time == null) return -1
+    if (b.time == null) return 1
+    return a.time.compareTo(b.time)
+}
+
+/** Sort order across dates, then by [compareTasksByDateTime] within the same date. */
+fun compareTasksByDateThenTime(a: Task, b: Task): Int {
+    if (a.date != b.date) return (a.date ?: "").compareTo(b.date ?: "")
+    return compareTasksByDateTime(a, b)
 }

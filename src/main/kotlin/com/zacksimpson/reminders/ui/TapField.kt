@@ -2,7 +2,9 @@ package com.zacksimpson.reminders.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
@@ -82,6 +85,41 @@ fun TapField(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
+        )
+    }
+}
+
+/**
+ * Field row with a value that can be cleared (Date / Time / Recurring once set) — shows
+ * "None" with a no-op tap when [value] is null, otherwise the value plus a [ClearIcon]
+ * button. Shared by Add Task and Task Detail.
+ */
+@Composable
+fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: () -> Unit) {
+    if (value == null) {
+        TapField(label = label, value = "None", onClick = onClick)
+        return
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            LightText(text = label, variant = LightTextVariant.Superfine)
+            LightText(
+                text = value,
+                variant = LightTextVariant.Copy,
+                modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
+            )
+        }
+        ClearIcon(
+            size = 24.dp,
+            modifier = Modifier
+                .clickable(onClick = onClear)
+                .padding(top = 0.6f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),
         )
     }
 }
