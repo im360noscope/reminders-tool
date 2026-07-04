@@ -36,17 +36,42 @@ import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.RemindersTheme
+import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TaskRowView
+import com.zacksimpson.reminders.ui.ToastScreen
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class ListDetailViewModel(
     private val repo: RemindersRepository,
     val listId: String,
+    startInReorderMode: Boolean = false,
 ) : LightViewModel<Unit>() {
     val state = repo.dataStateIn(viewModelScope)
+    // Lives here rather than as Composable remember state: the SDK recomposes this
+    // screen's Content() fresh every time a pushed screen (like TaskActionsScreen) pops
+    // back to it, which silently discards remember-based state — the ViewModel survives
+    // that round trip since only the popped screen gets destroyed, not this one.
+    val isReordering = MutableStateFlow(startInReorderMode)
 
     fun toggleTask(id: String) {
         viewModelScope.launch { repo.toggleTask(id) }
+    }
+
+    fun moveTaskUp(id: String) {
+        viewModelScope.launch { repo.moveTaskUp(id, listId) }
+    }
+
+    fun moveTaskDown(id: String) {
+        viewModelScope.launch { repo.moveTaskDown(id, listId) }
+    }
+
+    fun startReordering() {
+        isReordering.value = true
+    }
+
+    fun stopReordering() {
+        isReordering.value = false
     }
 }
 
@@ -54,26 +79,30 @@ class ListDetailViewModel(
  * A single list's tasks: active (sorted by order) then a collapsible completed section
  * (sorted newest-completed-first), matching the RN list-detail screen. Tapping a task row's
  * checkbox/overdue-asterisk toggles completion; tapping its content opens TaskDetailScreen
- * for full editing. Reorder mode is deferred alongside list long-press actions.
+ * for full editing. [startInReorderMode] lets Today's task-actions flow land here already
+ * reordering, since reordering only makes sense within a single list.
  */
 class ListDetailScreen(
     sealedActivity: SealedLightActivity,
     private val listId: String,
     private val listTitle: String,
+    private val startInReorderMode: Boolean = false,
 ) : LightScreen<Unit, ListDetailViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<ListDetailViewModel>
         get() = ListDetailViewModel::class.java
 
     override fun createViewModel() =
-        ListDetailViewModel(RemindersRepository(lightContext.dataStore), listId)
+        ListDetailViewModel(RemindersRepository(lightContext.dataStore), listId, startInReorderMode)
 
     @Composable
     override fun Content() {
         RemindersTheme {
             val state by viewModel.state.collectAsState()
             var showCompleted by remember { mutableStateOf(false) }
+            val isReordering by viewModel.isReordering.collectAsState()
 
+            SwipeBackContainer(onSwipeBack = { goBack(null) }) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -82,13 +111,17 @@ class ListDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text(listTitle),
-                    // sizeUnits reduced — ic_plus's artwork fills its box edge-to-edge,
-                    // unlike LightIcons' own icons, so the default size reads too big.
-                    rightButton = LightBarButton.Icon(
-                        painterResource(R.drawable.ic_plus),
-                        onClick = { navigateTo(screenFactory = { AddTaskScreen(it, listId) }) },
-                        sizeUnits = 1.2f,
-                    ),
+                    rightButton = if (isReordering) {
+                        LightBarButton.Text("DONE", onClick = { viewModel.stopReordering() })
+                    } else {
+                        // sizeUnits reduced — ic_plus's artwork fills its box edge-to-edge,
+                        // unlike LightIcons' own icons, so the default size reads too big.
+                        LightBarButton.Icon(
+                            painterResource(R.drawable.ic_plus),
+                            onClick = { navigateTo(screenFactory = { AddTaskScreen(it, listId) }) },
+                            sizeUnits = 1.2f,
+                        )
+                    },
                     modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
                 )
 
@@ -112,7 +145,7 @@ class ListDetailScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 scrollBarPosition = LightScrollBarPosition.Inside,
                             ) {
-                                active.forEach { task ->
+                                active.forEachIndexed { index, task ->
                                     TaskRowView(
                                         task = task,
                                         listTitle = listTitle,
@@ -120,6 +153,26 @@ class ListDetailScreen(
                                         onPress = {
                                             navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
                                         },
+                                        onLongPress = {
+                                            navigateTo(
+                                                screenFactory = { TaskActionsScreen(it, task.id) },
+                                                // deliverResult() only invokes this when goBack
+                                                // passed a non-null result, so every other exit
+                                                // (back/swipe/mark-complete/edit) never calls it.
+                                                resultCallback = { result ->
+                                                    when (result) {
+                                                        TaskAction.DELETED ->
+                                                            navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                                        TaskAction.START_REORDER -> viewModel.startReordering()
+                                                    }
+                                                },
+                                            )
+                                        },
+                                        isReordering = isReordering,
+                                        isFirst = index == 0,
+                                        isLast = index == active.lastIndex,
+                                        onMoveUp = { viewModel.moveTaskUp(task.id) },
+                                        onMoveDown = { viewModel.moveTaskDown(task.id) },
                                     )
                                 }
 
@@ -145,6 +198,18 @@ class ListDetailScreen(
                                                 onPress = {
                                             navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
                                         },
+                                                onLongPress = {
+                                                    navigateTo(
+                                                        screenFactory = { TaskActionsScreen(it, task.id) },
+                                                        resultCallback = { result ->
+                                                            when (result) {
+                                                                TaskAction.DELETED ->
+                                                                    navigateTo(screenFactory = { ToastScreen(it, "deleted") })
+                                                                TaskAction.START_REORDER -> viewModel.startReordering()
+                                                            }
+                                                        },
+                                                    )
+                                                },
                                                 dimmed = true,
                                             )
                                         }
@@ -154,6 +219,7 @@ class ListDetailScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
