@@ -53,6 +53,9 @@ fun TaskRowView(
     val meta = buildMeta(task, listTitle)
     val recurrenceLabel = task.recurrence?.let(::formatRecurrence)
 
+    // The scroll indicator overlays on top of content (LightScrollBarPosition.Inside)
+    // rather than reserving its own column, so this row leaves its own room to avoid
+    // overlap — matching RN's rows, which needed extra paddingRight for the same reason.
     Row(
         modifier = modifier
             .fillMaxWidth()
