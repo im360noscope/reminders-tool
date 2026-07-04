@@ -59,6 +59,12 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
      *  platform lifecycle observation isn't an option here. */
     val refreshTick = MutableStateFlow(0)
 
+    // Lives here rather than as Composable remember state inside TodayTab: MainScreen's
+    // Content() (and everything inside it, including TodayTab) gets recomposed fresh
+    // whenever a pushed screen (e.g. TaskActionsScreen) pops back to it, which silently
+    // discards remember-based state — the ViewModel survives that round trip.
+    val todayShowCompleted = MutableStateFlow(false)
+
     init {
         viewModelScope.launch {
             while (true) {
@@ -83,6 +89,10 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
 
     fun toggleTask(id: String) {
         viewModelScope.launch { repo.toggleTask(id) }
+    }
+
+    fun toggleTodayShowCompleted() {
+        todayShowCompleted.value = !todayShowCompleted.value
     }
 
     fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
@@ -117,6 +127,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
             val tab by viewModel.selectedTab.collectAsState()
             val dataState by viewModel.state.collectAsState()
             val refreshTick by viewModel.refreshTick.collectAsState()
+            val todayShowCompleted by viewModel.todayShowCompleted.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -143,6 +154,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             state = dataState,
                             showOverdue = (dataState as? DataState.Ready)?.data?.settings?.showOverdue ?: true,
                             refreshTick = refreshTick,
+                            showCompleted = todayShowCompleted,
+                            onToggleShowCompleted = { viewModel.toggleTodayShowCompleted() },
                             onAddTask = {
                                 val defaultListId =
                                     (viewModel.state.value as? DataState.Ready)?.data?.settings?.defaultListId ?: "inbox"
@@ -163,7 +176,14 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                             TaskAction.DELETED -> Unit
                                             // Reordering only makes sense within a single list, so
                                             // Today hands off to that task's own List Detail screen
-                                            // already in reorder mode — matches RN's router.replace.
+                                            // already in reorder mode. This is a push, not RN's
+                                            // router.replace — the SDK has no replace primitive —
+                                            // but that's the right shape here anyway: List Detail
+                                            // doesn't already exist to hand off to (unlike within
+                                            // List Detail's own reorder flow, where TaskActionsScreen
+                                            // just pops back to the existing instance instead of
+                                            // creating a new one), and a single back-press from it
+                                            // correctly lands back on Today underneath.
                                             TaskAction.START_REORDER -> {
                                                 val listTitle = (viewModel.state.value as? DataState.Ready)
                                                     ?.data?.lists?.firstOrNull { it.id == task.listId }?.title ?: "List"

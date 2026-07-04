@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,6 +41,8 @@ fun TodayTab(
     state: DataState,
     showOverdue: Boolean,
     refreshTick: Int,
+    showCompleted: Boolean,
+    onToggleShowCompleted: () -> Unit,
     onAddTask: () -> Unit,
     onOpenTask: (Task) -> Unit,
     onLongPressTask: (Task) -> Unit,
@@ -85,8 +84,6 @@ fun TodayTab(
                     .filter { it.completed && (it.date == todayStr || (showOverdue && isOverdue(it.date, it.time))) }
                     .sortedByDescending { it.completedAt ?: 0L }
 
-                var showCompleted by remember { mutableStateOf(false) }
-
                 if (overdueTasks.isEmpty() && activeTasks.isEmpty() && completedTasks.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         LightText(text = "no tasks today", variant = LightTextVariant.Paragraph)
@@ -121,7 +118,7 @@ fun TodayTab(
                                 variant = LightTextVariant.Paragraph,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { showCompleted = !showCompleted }
+                                    .clickable { onToggleShowCompleted() }
                                     .alpha(0.5f)
                                     .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
                             )

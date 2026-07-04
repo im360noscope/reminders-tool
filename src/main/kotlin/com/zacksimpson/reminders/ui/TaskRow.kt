@@ -83,15 +83,16 @@ fun TaskRowView(
                 // Matches TaskCheckboxIcon's size exactly, since they occupy the same
                 // row slot as alternates of each other.
                 size = 17.dp,
-                // Same top-inset alignment treatment as TaskCheckboxIcon below, so it
-                // lines up with the first line of the title instead of sitting high.
+                // Top-biased to line up with the first line of the title. Bottom stays
+                // as-is (not shrunk to compensate) so the enlarged bottom tap area from
+                // the mis-tap fix isn't undone by this vertical-centering correction.
                 modifier = Modifier
                     .clickable(onClick = onToggle)
                     .padding(
                         start = 0.9f.gridUnitsAsDp(),
                         end = 0.9f.gridUnitsAsDp(),
-                        top = 0.95f.gridUnitsAsDp(),
-                        bottom = 0.1f.gridUnitsAsDp(),
+                        top = 1f.gridUnitsAsDp(),
+                        bottom = 0.3f.gridUnitsAsDp(),
                     ),
             )
         } else {
@@ -106,8 +107,8 @@ fun TaskRowView(
                     .padding(
                         start = 0.9f.gridUnitsAsDp(),
                         end = 0.9f.gridUnitsAsDp(),
-                        top = 0.95f.gridUnitsAsDp(),
-                        bottom = 0.1f.gridUnitsAsDp(),
+                        top = 1f.gridUnitsAsDp(),
+                        bottom = 0.3f.gridUnitsAsDp(),
                     ),
             )
         }
@@ -160,9 +161,12 @@ fun TaskRowView(
 
 @Composable
 private fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMoveDown: () -> Unit) {
+    // spacedBy trimmed from 0.6f: the enlarged clickable padding below now adds its own
+    // gap between the two icons' tap zones, so the old value would have pushed them
+    // further apart than intended once combined.
     Row(
         modifier = Modifier.padding(top = 0.75f.gridUnitsAsDp(), end = 0.5f.gridUnitsAsDp()),
-        horizontalArrangement = Arrangement.spacedBy(0.6f.gridUnitsAsDp()),
+        horizontalArrangement = Arrangement.spacedBy(0.2f.gridUnitsAsDp()),
     ) {
         LightIcon(
             icon = LightIcons.UP,
@@ -172,18 +176,23 @@ private fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Uni
             // sits high in its box and DOWN's sits low, so at the same nominal position
             // they read visibly offset from each other. The previous top-padding
             // correction (0.22f) was half of what the geometry actually calls for at
-            // this icon size — bumped to the full calculated offset.
+            // this icon size — bumped to the full calculated offset. Applied before
+            // .clickable() since it's a visual-position offset, not part of the tap area.
             modifier = Modifier
                 .padding(top = 0.58f.gridUnitsAsDp())
                 .alpha(if (isFirst) 0.3f else 1f)
-                .clickable(enabled = !isFirst, onClick = onMoveUp),
+                .clickable(enabled = !isFirst, onClick = onMoveUp)
+                // Enlarges the tap target beyond the glyph, matching the checkbox/asterisk
+                // treatment — previously these had no hit-area padding at all.
+                .padding(horizontal = 0.4f.gridUnitsAsDp(), vertical = 0.35f.gridUnitsAsDp()),
         )
         LightIcon(
             icon = LightIcons.DOWN,
             size = 1.6f,
             modifier = Modifier
                 .alpha(if (isLast) 0.3f else 1f)
-                .clickable(enabled = !isLast, onClick = onMoveDown),
+                .clickable(enabled = !isLast, onClick = onMoveDown)
+                .padding(horizontal = 0.4f.gridUnitsAsDp(), vertical = 0.35f.gridUnitsAsDp()),
         )
     }
 }
