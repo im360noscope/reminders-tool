@@ -22,7 +22,8 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 /**
  * Big tap-to-edit title input: the value (or placeholder) at Heading size with a full
  * underline beneath and no label. Mirrors the RN title field. The right inset leaves room
- * for the scroll indicator.
+ * for the scroll indicator, which overlays on top of content (LightScrollBarPosition.Inside)
+ * rather than reserving its own column.
  */
 @Composable
 fun TitleField(

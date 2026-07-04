@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightScrollBarPosition
+import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTopBar
@@ -49,10 +49,9 @@ fun ListsTab(
                 modifier = Modifier.padding(horizontal = 1f.gridUnitsAsDp()),
             )
 
-            is DataState.Ready -> Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+            is DataState.Ready -> LightScrollView(
+                modifier = Modifier.fillMaxSize(),
+                scrollBarPosition = LightScrollBarPosition.Inside,
             ) {
                 state.data.lists.sortedBy { it.order }.forEach { list ->
                     LightText(
