@@ -212,9 +212,13 @@ class TaskDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("Edit"),
+                    // ACCEPT's own artwork fills its box edge-to-edge (unlike BACK's,
+                    // which has generous built-in padding), so it reads much bigger at
+                    // the same default sizeUnits — sized down to match BACK's weight.
                     rightButton = LightBarButton.LightIcon(
                         LightIcons.ACCEPT,
                         onClick = { viewModel.save { goBack(null) } },
+                        sizeUnits = 1.5f,
                     ),
                     modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
                 )

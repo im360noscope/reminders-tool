@@ -161,7 +161,10 @@ class AddTaskScreen(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("New Task"),
                     rightButton = if (title.isNotBlank()) {
-                        LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = { viewModel.save { goBack(null) } })
+                        // ACCEPT's own artwork fills its box edge-to-edge (unlike BACK's,
+                        // which has generous built-in padding), so it reads much bigger at
+                        // the same default sizeUnits — sized down to match BACK's weight.
+                        LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = { viewModel.save { goBack(null) } }, sizeUnits = 1.5f)
                     } else {
                         null
                     },
