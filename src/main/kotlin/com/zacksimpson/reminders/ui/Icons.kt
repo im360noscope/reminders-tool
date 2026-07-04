@@ -33,6 +33,17 @@ fun DeleteIcon(size: Dp, modifier: Modifier = Modifier) {
     )
 }
 
+/** Circular-outline ✕ — distinct from [DeleteIcon] (RN's ClearIcon.tsx vs DeleteIcon.tsx),
+ *  used for "clear this field" buttons rather than subtask-row deletion. */
+@Composable
+fun ClearIcon(size: Dp, modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(R.drawable.ic_clear),
+        contentDescription = null,
+        modifier = modifier.size(size),
+    )
+}
+
 @Composable
 fun OverdueAsteriskIcon(size: Dp, modifier: Modifier = Modifier) {
     Image(

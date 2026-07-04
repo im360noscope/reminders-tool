@@ -47,6 +47,17 @@ internal object RemindersLogic {
      * Follow-up task spawned when a dated recurring task is completed, or null if it isn't
      * one. Carries over title/list/time/recurrence and subtasks (reset to incomplete).
      */
+    /** Interval wraps 1<->30 rather than clamping-and-stopping. */
+    fun decrementInterval(interval: Int): Int = if (interval <= 1) 30 else interval - 1
+
+    fun incrementInterval(interval: Int): Int = if (interval >= 30) 1 else interval + 1
+
+    /** day -> week -> month -> year -> day. */
+    fun nextRecurrenceUnit(unit: RecurrenceUnit): RecurrenceUnit {
+        val units = RecurrenceUnit.entries
+        return units[(units.indexOf(unit) + 1) % units.size]
+    }
+
     fun spawnNextOccurrence(
         task: Task,
         today: LocalDate,

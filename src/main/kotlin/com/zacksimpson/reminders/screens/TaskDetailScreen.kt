@@ -2,10 +2,8 @@ package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
@@ -38,8 +35,8 @@ import com.zacksimpson.reminders.data.formatDisplayDate
 import com.zacksimpson.reminders.data.formatRecurrence
 import com.zacksimpson.reminders.data.formatTime
 import com.zacksimpson.reminders.dataStateIn
+import com.zacksimpson.reminders.ui.ClearableField
 import com.zacksimpson.reminders.ui.ConfirmScreen
-import com.zacksimpson.reminders.ui.DeleteIcon
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SubtasksSection
 import com.zacksimpson.reminders.ui.TapField
@@ -92,14 +89,26 @@ class TaskDetailViewModel(
         selectedListId.value = id
     }
 
+    fun setDate(value: String) {
+        date.value = value
+    }
+
     fun clearDate() {
         date.value = null
         time.value = null
         recurrence.value = null
     }
 
+    fun setTime(value: String) {
+        time.value = value
+    }
+
     fun clearTime() {
         time.value = null
+    }
+
+    fun setRecurrence(value: Recurrence) {
+        recurrence.value = value
     }
 
     fun clearRecurrence() {
@@ -251,16 +260,44 @@ class TaskDetailScreen(
                             },
                         )
 
-                        // Date/Time/Recurring: display + clear are wired for forward-compat,
-                        // but there's no picker yet, so tapping the value is a no-op — same
-                        // placeholder state as Add Task until those pickers exist.
-                        ClearableField(label = "Date", value = date?.let(::formatDisplayDate), onClear = { viewModel.clearDate() })
-                        ClearableField(label = "Time", value = time?.let { formatTime(it) }, onClear = { viewModel.clearTime() })
                         ClearableField(
-                            label = "Recurring",
-                            value = recurrence?.let(::formatRecurrence),
-                            onClear = { viewModel.clearRecurrence() },
+                            label = "Date",
+                            value = date?.let(::formatDisplayDate),
+                            onClick = {
+                                navigateTo(
+                                    screenFactory = { DatePickerScreen(it, date) },
+                                    resultCallback = { result -> result?.let { viewModel.setDate(it) } },
+                                )
+                            },
+                            onClear = { viewModel.clearDate() },
                         )
+                        // Time/Recurring only shown once a date is set, matching RN — they're
+                        // meaningless without one. Still placeholders: no Time/Recurrence
+                        // picker yet.
+                        if (date != null) {
+                            ClearableField(
+                                label = "Time",
+                                value = time?.let { formatTime(it) },
+                                onClick = {
+                                    navigateTo(
+                                        screenFactory = { TimePickerScreen(it, time) },
+                                        resultCallback = { result -> result?.let { viewModel.setTime(it) } },
+                                    )
+                                },
+                                onClear = { viewModel.clearTime() },
+                            )
+                            ClearableField(
+                                label = "Recurring",
+                                value = recurrence?.let(::formatRecurrence),
+                                onClick = {
+                                    navigateTo(
+                                        screenFactory = { RecurrencePickerScreen(it, recurrence) },
+                                        resultCallback = { result -> result?.let { viewModel.setRecurrence(it) } },
+                                    )
+                                },
+                                onClear = { viewModel.clearRecurrence() },
+                            )
+                        }
 
                         SubtasksSection(
                             subtasks = liveTask?.subtasks.orEmpty(),
@@ -283,35 +320,6 @@ class TaskDetailScreen(
                         DeleteRow(task = liveTask, onDeleted = { viewModel.delete { goBack(null) } })
                     }
                 }
-            }
-        }
-    }
-
-    @Composable
-    private fun ClearableField(label: String, value: String?, onClear: () -> Unit) {
-        if (value == null) {
-            TapField(label = label, value = "None", onClick = {})
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
-                    LightText(text = label, variant = LightTextVariant.Superfine)
-                    LightText(
-                        text = value,
-                        variant = LightTextVariant.Copy,
-                        modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
-                    )
-                }
-                DeleteIcon(
-                    size = 14.dp,
-                    modifier = Modifier
-                        .clickable(onClick = onClear)
-                        .padding(top = 0.9f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),
-                )
             }
         }
     }

@@ -5,22 +5,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.InitialScreen
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
+import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightText
-import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
@@ -34,13 +31,17 @@ import com.zacksimpson.reminders.screens.ListsTab
 import com.zacksimpson.reminders.screens.OptionPickerScreen
 import com.zacksimpson.reminders.screens.PickerOption
 import com.zacksimpson.reminders.screens.SettingsTab
+import com.zacksimpson.reminders.screens.TaskDetailScreen
+import com.zacksimpson.reminders.screens.TodayTab
 import com.zacksimpson.reminders.screens.addPositionKey
 import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 enum class Tab { LISTS, TODAY, SETTINGS }
 
@@ -48,12 +49,38 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
     val selectedTab = MutableStateFlow(Tab.LISTS)
     val state = repo.dataStateIn(viewModelScope)
 
+    /** Forces the Today tab's date/overdue math to re-run: once a minute while visible,
+     *  and immediately whenever this screen is (re)shown (e.g. app resumed from
+     *  background overnight) — RN used a 60s interval plus an AppState listener for the
+     *  same two reasons. onScreenShow is the SDK-sanctioned hook for the latter;
+     *  androidx.compose.ui.platform.LocalLifecycleOwner is a blocked import, so raw
+     *  platform lifecycle observation isn't an option here. */
+    val refreshTick = MutableStateFlow(0)
+
+    init {
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                refreshTick.value++
+            }
+        }
+    }
+
+    override fun onScreenShow(screen: SimpleLightScreen<Unit>) {
+        super.onScreenShow(screen)
+        refreshTick.value++
+    }
+
     fun select(tab: Tab) {
         selectedTab.value = tab
     }
 
     fun addList(title: String) {
         viewModelScope.launch { repo.addList(title) }
+    }
+
+    fun toggleTask(id: String) {
+        viewModelScope.launch { repo.toggleTask(id) }
     }
 
     fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
@@ -87,6 +114,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
         RemindersTheme {
             val tab by viewModel.selectedTab.collectAsState()
             val dataState by viewModel.state.collectAsState()
+            val refreshTick by viewModel.refreshTick.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -109,7 +137,22 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             },
                         )
 
-                        Tab.TODAY -> PlaceholderTab("Today")
+                        Tab.TODAY -> TodayTab(
+                            state = dataState,
+                            showOverdue = (dataState as? DataState.Ready)?.data?.settings?.showOverdue ?: true,
+                            refreshTick = refreshTick,
+                            onAddTask = {
+                                val defaultListId =
+                                    (viewModel.state.value as? DataState.Ready)?.data?.settings?.defaultListId ?: "inbox"
+                                navigateTo(
+                                    screenFactory = { AddTaskScreen(it, defaultListId, LocalDate.now().toString()) },
+                                )
+                            },
+                            onOpenTask = { task ->
+                                navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                            },
+                            onToggle = { viewModel.toggleTask(it) },
+                        )
                         Tab.SETTINGS -> SettingsTab(
                             state = dataState,
                             onOpenDefaultList = {
@@ -176,13 +219,5 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                 )
             }
         }
-    }
-}
-
-/** Placeholder tab body — replaced by the real screen in a later phase. */
-@Composable
-private fun PlaceholderTab(name: String) {
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp)) {
-        LightText(text = name, variant = LightTextVariant.Title)
     }
 }

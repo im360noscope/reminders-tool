@@ -120,6 +120,37 @@ class RemindersLogicTest {
         assertEquals(listOf(Subtask("s1", "kitchen", completed = false, createdAt = 1L)), next.subtasks)
     }
 
+    // ── Recurrence picker stepper ────────────────────────────────────────────────
+
+    @Test
+    fun `interval decrements normally and wraps from 1 to 30`() {
+        assertEquals(4, RemindersLogic.decrementInterval(5))
+        assertEquals(30, RemindersLogic.decrementInterval(1))
+    }
+
+    @Test
+    fun `interval increments normally and wraps from 30 to 1`() {
+        assertEquals(6, RemindersLogic.incrementInterval(5))
+        assertEquals(1, RemindersLogic.incrementInterval(30))
+    }
+
+    @Test
+    fun `interval never leaves the 1 to 30 range across a full wrap cycle`() {
+        var interval = 1
+        repeat(60) {
+            interval = RemindersLogic.incrementInterval(interval)
+            assertTrue(interval in 1..30)
+        }
+    }
+
+    @Test
+    fun `recurrence unit cycles day to week to month to year to day`() {
+        assertEquals(RecurrenceUnit.WEEK, RemindersLogic.nextRecurrenceUnit(RecurrenceUnit.DAY))
+        assertEquals(RecurrenceUnit.MONTH, RemindersLogic.nextRecurrenceUnit(RecurrenceUnit.WEEK))
+        assertEquals(RecurrenceUnit.YEAR, RemindersLogic.nextRecurrenceUnit(RecurrenceUnit.MONTH))
+        assertEquals(RecurrenceUnit.DAY, RemindersLogic.nextRecurrenceUnit(RecurrenceUnit.YEAR))
+    }
+
     // ── Serialization contract ──────────────────────────────────────────────────
 
     @Test
