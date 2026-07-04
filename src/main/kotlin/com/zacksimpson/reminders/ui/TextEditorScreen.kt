@@ -34,6 +34,16 @@ class TextEditorScreen(
                 keyboardOptionsFlow = keyboardOptions,
                 onSubmit = { goBack(it.toString()) },
                 onBack = { goBack(null) },
+                // LightTextInputEditor's editorKey defaults to `title`, which it uses to key
+                // a viewModel() call for the embedded keyboard. Since this screen is a
+                // SimpleLightScreen (no per-screen ViewModelStoreOwner), that viewModel()
+                // resolves against the single Activity-wide store — so a fixed key like
+                // "Task name" reused across separate pushes (add one task, then another)
+                // hands back the *first* push's cached keyboard view-model, still wired to
+                // that first push's (now-abandoned) TextFieldState. The keyboard renders and
+                // responds, but keystrokes go nowhere visible. `this` is a fresh instance
+                // per push, so it keys each editor uniquely.
+                editorKey = this,
                 modifier = Modifier.background(LightThemeTokens.colors.background),
             )
         }
