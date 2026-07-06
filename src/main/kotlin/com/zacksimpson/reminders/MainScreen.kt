@@ -26,6 +26,8 @@ import com.zacksimpson.reminders.data.Settings
 import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
 import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
 import com.zacksimpson.reminders.screens.AddTaskScreen
+import com.zacksimpson.reminders.screens.ListAction
+import com.zacksimpson.reminders.screens.ListActionsScreen
 import com.zacksimpson.reminders.screens.ListDetailScreen
 import com.zacksimpson.reminders.screens.ListsTab
 import com.zacksimpson.reminders.screens.OptionPickerScreen
@@ -35,6 +37,7 @@ import com.zacksimpson.reminders.screens.TaskAction
 import com.zacksimpson.reminders.screens.TaskActionsScreen
 import com.zacksimpson.reminders.screens.TaskDetailScreen
 import com.zacksimpson.reminders.screens.TodayTab
+import com.zacksimpson.reminders.screens.TodayViewScreen
 import com.zacksimpson.reminders.screens.addPositionKey
 import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
@@ -65,6 +68,10 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
     // discards remember-based state — the ViewModel survives that round trip.
     val todayShowCompleted = MutableStateFlow(false)
 
+    // Same reasoning as todayShowCompleted: ListActionsScreen pops back to this same
+    // screen instance, so reorder-mode state can't live in ListsTab's own remember.
+    val listsReordering = MutableStateFlow(false)
+
     init {
         viewModelScope.launch {
             while (true) {
@@ -93,6 +100,22 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
 
     fun toggleTodayShowCompleted() {
         todayShowCompleted.value = !todayShowCompleted.value
+    }
+
+    fun startListsReordering() {
+        listsReordering.value = true
+    }
+
+    fun stopListsReordering() {
+        listsReordering.value = false
+    }
+
+    fun moveListUp(id: String) {
+        viewModelScope.launch { repo.moveListUp(id) }
+    }
+
+    fun moveListDown(id: String) {
+        viewModelScope.launch { repo.moveListDown(id) }
     }
 
     fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
@@ -128,6 +151,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
             val dataState by viewModel.state.collectAsState()
             val refreshTick by viewModel.refreshTick.collectAsState()
             val todayShowCompleted by viewModel.todayShowCompleted.collectAsState()
+            val listsReordering by viewModel.listsReordering.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -137,6 +161,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                     when (tab) {
                         Tab.LISTS -> ListsTab(
                             state = dataState,
+                            isReordering = listsReordering,
                             onAddList = {
                                 navigateTo(
                                     screenFactory = { TextEditorScreen(it, TextEditorRequest("New list")) },
@@ -148,6 +173,19 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             onOpenList = { list ->
                                 navigateTo(screenFactory = { ListDetailScreen(it, list.id, list.title) })
                             },
+                            onLongPressList = { list ->
+                                navigateTo(
+                                    screenFactory = { ListActionsScreen(it, list.id) },
+                                    resultCallback = { result ->
+                                        when (result) {
+                                            ListAction.START_REORDER -> viewModel.startListsReordering()
+                                        }
+                                    },
+                                )
+                            },
+                            onStopReordering = { viewModel.stopListsReordering() },
+                            onMoveListUp = { viewModel.moveListUp(it) },
+                            onMoveListDown = { viewModel.moveListDown(it) },
                         )
 
                         Tab.TODAY -> TodayTab(
@@ -245,6 +283,9 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                         resultCallback = { key -> viewModel.setAddPosition(key) },
                                     )
                                 }
+                            },
+                            onOpenTodayView = {
+                                navigateTo(screenFactory = { TodayViewScreen(it) })
                             },
                         )
                     }

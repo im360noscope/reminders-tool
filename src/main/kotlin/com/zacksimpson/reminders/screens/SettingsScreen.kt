@@ -35,7 +35,7 @@ private fun addPositionLabel(v: AddPosition) = ADD_POSITION_OPTIONS.first { it.k
 
 /**
  * Settings tab: each row shows a small label over its current value and opens a picker.
- * Notifications / Today View / Backup rows arrive with those features.
+ * Notifications / Backup rows arrive with those features.
  */
 @Composable
 fun SettingsTab(
@@ -43,6 +43,7 @@ fun SettingsTab(
     onOpenDefaultList: () -> Unit,
     onOpenAfterQuickAdd: () -> Unit,
     onOpenAddPosition: () -> Unit,
+    onOpenTodayView: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LightTopBar(
@@ -68,6 +69,7 @@ fun SettingsTab(
                     modifier = Modifier.fillMaxSize(),
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
+                    SettingsLinkRow("Today View", onOpenTodayView)
                     SettingsRow("Default List", defaultTitle, onOpenDefaultList)
                     SettingsRow("After Quick Add", afterAddLabel(s.afterAddBehavior), onOpenAfterQuickAdd)
                     SettingsRow("Add New Tasks", addPositionLabel(s.addPosition), onOpenAddPosition)
@@ -88,4 +90,17 @@ private fun SettingsRow(label: String, value: String, onClick: () -> Unit) {
         LightText(text = label, variant = LightTextVariant.Paragraph)
         LightText(text = value, variant = LightTextVariant.Heading)
     }
+}
+
+/** A settings row that's just a label leading to another screen — no current-value line. */
+@Composable
+private fun SettingsLinkRow(label: String, onClick: () -> Unit) {
+    LightText(
+        text = label,
+        variant = LightTextVariant.Heading,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+    )
 }
