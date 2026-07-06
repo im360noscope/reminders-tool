@@ -1,11 +1,13 @@
 package com.zacksimpson.reminders.screens
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.thelightphone.sdk.ui.LightBarButton
@@ -19,24 +21,35 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.ReminderList
+import com.zacksimpson.reminders.ui.ReorderArrows
 
 /**
- * Lists tab: the header plus every list, sorted by order. Tap a list to open it, `+` to
- * add one. (List detail and long-press actions are wired in later increments.)
+ * Lists tab: the header plus every list, sorted by order. Tap a list to open it, long-press
+ * for Rename/Reorder/Clear Completed/Delete, `+` to add one. In reorder mode, tap/long-press
+ * are disabled and up/down arrows appear instead — matches RN's isReordering behavior.
  */
 @Composable
 fun ListsTab(
     state: DataState,
+    isReordering: Boolean,
     onAddList: () -> Unit,
     onOpenList: (ReminderList) -> Unit,
+    onLongPressList: (ReminderList) -> Unit,
+    onStopReordering: () -> Unit,
+    onMoveListUp: (String) -> Unit,
+    onMoveListDown: (String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LightTopBar(
             leftButton = null,
             center = LightTopBarCenter.Text("Lists"),
-            // ic_plus's artwork fills its box edge-to-edge (unlike LightIcons' own icons,
-            // which have built-in padding) — sizeUnits is reduced to match BACK's visual weight.
-            rightButton = LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f),
+            rightButton = if (isReordering) {
+                LightBarButton.Text("DONE", onClick = onStopReordering)
+            } else {
+                // ic_plus's artwork fills its box edge-to-edge (unlike LightIcons' own icons,
+                // which have built-in padding) — sizeUnits is reduced to match BACK's visual weight.
+                LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f)
+            },
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
         )
 
@@ -53,18 +66,35 @@ fun ListsTab(
                 modifier = Modifier.fillMaxSize(),
                 scrollBarPosition = LightScrollBarPosition.Inside,
             ) {
-                state.data.lists.sortedBy { it.order }.forEach { list ->
-                    LightText(
-                        text = list.title,
-                        variant = LightTextVariant.Heading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpenList(list) }
-                            .padding(
-                                horizontal = 1.5f.gridUnitsAsDp(),
-                                vertical = 0.5f.gridUnitsAsDp(),
-                            ),
-                    )
+                val sorted = state.data.lists.sortedBy { it.order }
+                sorted.forEachIndexed { index, list ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        LightText(
+                            text = list.title,
+                            variant = LightTextVariant.Heading,
+                            modifier = Modifier
+                                .weight(1f)
+                                .combinedClickable(
+                                    onClick = { if (!isReordering) onOpenList(list) },
+                                    onLongClick = if (isReordering) null else { { onLongPressList(list) } },
+                                )
+                                .padding(
+                                    horizontal = 1.5f.gridUnitsAsDp(),
+                                    vertical = 0.5f.gridUnitsAsDp(),
+                                ),
+                        )
+                        if (isReordering) {
+                            ReorderArrows(
+                                isFirst = index == 0,
+                                isLast = index == sorted.lastIndex,
+                                onMoveUp = { onMoveListUp(list.id) },
+                                onMoveDown = { onMoveListDown(list.id) },
+                            )
+                        }
+                    }
                 }
             }
         }
