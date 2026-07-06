@@ -37,6 +37,7 @@ class ConfirmScreen(
     @Composable
     override fun Content() {
         RemindersTheme {
+            SwipeBackContainer(onSwipeBack = { goBack(false) }) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -77,6 +78,7 @@ class ConfirmScreen(
                         modifier = Modifier.clickable { goBack(true) },
                     )
                 }
+            }
             }
         }
     }
