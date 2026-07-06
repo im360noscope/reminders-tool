@@ -28,6 +28,7 @@ class TextEditorScreen(
         val textState = rememberTextFieldState(request.initialValue)
         val keyboardOptions = rememberKeyboardOptions()
         RemindersTheme {
+            SwipeBackContainer(onSwipeBack = { goBack(null) }) {
             LightTextInputEditor(
                 title = request.title,
                 state = textState,
@@ -43,9 +44,12 @@ class TextEditorScreen(
                 // that first push's (now-abandoned) TextFieldState. The keyboard renders and
                 // responds, but keystrokes go nowhere visible. `this` is a fresh instance
                 // per push, so it keys each editor uniquely.
-                editorKey = this,
+                // Qualified: inside SwipeBackContainer's content lambda, unqualified `this`
+                // would resolve to its BoxScope receiver instead of this screen.
+                editorKey = this@TextEditorScreen,
                 modifier = Modifier.background(LightThemeTokens.colors.background),
             )
+            }
         }
     }
 }
