@@ -105,7 +105,15 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
+            .padding(
+                // end bumped to match TaskRowView/TitleField's scroll-indicator clearance
+                // (LightScrollBarPosition.Inside overlays rather than reserving its own
+                // column) — otherwise ClearIcon sits right under the indicator.
+                start = 1.5f.gridUnitsAsDp(),
+                top = 0.75f.gridUnitsAsDp(),
+                end = 2f.gridUnitsAsDp(),
+                bottom = 0.75f.gridUnitsAsDp(),
+            ),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
