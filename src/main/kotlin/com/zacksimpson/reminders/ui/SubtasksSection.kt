@@ -55,7 +55,10 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 0.5f.gridUnitsAsDp(), end = 1.5f.gridUnitsAsDp()),
+            // end bumped to match TaskRowView/TitleField's scroll-indicator clearance
+            // (LightScrollBarPosition.Inside overlays rather than reserving its own
+            // column) — otherwise DeleteIcon sits right under the indicator.
+            .padding(start = 0.5f.gridUnitsAsDp(), end = 2f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
         // Size/position tuned to match TaskRowView's checkbox (see ui/TaskRow.kt).
