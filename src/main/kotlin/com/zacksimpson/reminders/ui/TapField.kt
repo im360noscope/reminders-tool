@@ -79,7 +79,7 @@ fun TapField(
             .clickable(onClick = onClick)
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
     ) {
-        LightText(text = label, variant = LightTextVariant.Superfine)
+        LightText(text = label, variant = LightTextVariant.Detail)
         LightText(
             text = value,
             variant = LightTextVariant.Copy,
@@ -117,7 +117,7 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
-            LightText(text = label, variant = LightTextVariant.Superfine)
+            LightText(text = label, variant = LightTextVariant.Detail)
             LightText(
                 text = value,
                 variant = LightTextVariant.Copy,

@@ -28,7 +28,7 @@ fun SubtasksSection(
     Column {
         LightText(
             text = "Subtasks",
-            variant = LightTextVariant.Superfine,
+            variant = LightTextVariant.Detail,
             modifier = Modifier.padding(
                 start = 1.5f.gridUnitsAsDp(),
                 top = 1.5f.gridUnitsAsDp(),
@@ -41,10 +41,14 @@ fun SubtasksSection(
         Row(
             modifier = Modifier
                 .clickable(onClick = onAdd)
-                .padding(start = 1f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
+                // start matches SubtaskRow's own row start (0.5f) so the plus icon lines
+                // up under the checkbox above instead of sitting further right.
+                .padding(start = 0.5f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PlusCircleIcon(size = 20.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
+            // Matches TaskCheckboxIcon's size (see SubtaskRow below) so the two circles read
+            // as the same size stacked on top of each other.
+            PlusCircleIcon(size = 17.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
             LightText(text = "Add subtask…", variant = LightTextVariant.Paragraph)
         }
     }
@@ -61,7 +65,9 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
             .padding(start = 0.5f.gridUnitsAsDp(), end = 2f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
-        // Size/position tuned to match TaskRowView's checkbox (see ui/TaskRow.kt).
+        // Top measured against the subtask text's first-line center (0.95f sat ~16px /
+        // 0.4 grid units too low) rather than copied from TaskRowView's checkbox, since
+        // this row uses Paragraph text, not AkkuratText — different line metrics.
         TaskCheckboxIcon(
             checked = subtask.completed,
             size = 17.dp,
@@ -70,7 +76,7 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
                 .padding(
                     start = 0.9f.gridUnitsAsDp(),
                     end = 0.9f.gridUnitsAsDp(),
-                    top = 0.95f.gridUnitsAsDp(),
+                    top = 0.55f.gridUnitsAsDp(),
                     bottom = 0.1f.gridUnitsAsDp(),
                 ),
         )
