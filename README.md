@@ -12,13 +12,13 @@ Organize tasks into lists, add due dates and times, check things off as you go, 
 * Add due dates and times to any task
 * Today view shows only tasks due today
 * Subtasks on any task, including when adding a new task
-* Check off tasks and subtasks with a tap
 * Completed tasks move to a collapsible group at the bottom
 * Long-press a list to rename, reorder, clear completed, or delete it
 * Notifications for tasks with a set time
-* Daily bundled notification for today's untimed tasks
+* Daily bundled notification for today's tasks
+* Set recurring reminders for routine tasks
 * Custom LightOS-style date and time pickers
-* Respects LightOS theme (black/white mode)
+
 
 ---
 
