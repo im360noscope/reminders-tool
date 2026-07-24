@@ -12,7 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
+import com.thelightphone.sdk.ui.LightIcon
+import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
@@ -82,7 +83,7 @@ fun TapField(
         LightText(text = label, variant = LightTextVariant.Detail)
         LightText(
             text = value,
-            variant = LightTextVariant.Copy,
+            variant = LightTextVariant.Heading,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
@@ -92,7 +93,7 @@ fun TapField(
 
 /**
  * Field row with a value that can be cleared (Date / Time / Recurring once set) — shows
- * "None" with a no-op tap when [value] is null, otherwise the value plus a [ClearIcon]
+ * "None" with a no-op tap when [value] is null, otherwise the value plus a DELETE icon
  * button. Shared by Add Task and Task Detail.
  */
 @Composable
@@ -120,12 +121,12 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
             LightText(text = label, variant = LightTextVariant.Detail)
             LightText(
                 text = value,
-                variant = LightTextVariant.Copy,
+                variant = LightTextVariant.Heading,
                 modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
             )
         }
-        ClearIcon(
-            size = 24.dp,
+        LightIcon(
+            icon = LightIcons.DELETE,
             modifier = Modifier
                 .clickable(onClick = onClear)
                 .padding(top = 0.6f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),

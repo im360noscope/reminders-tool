@@ -87,7 +87,7 @@ private fun SettingsRow(label: String, value: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
     ) {
-        LightText(text = label, variant = LightTextVariant.Paragraph)
+        LightText(text = label, variant = LightTextVariant.Detail)
         LightText(text = value, variant = LightTextVariant.Heading)
     }
 }
