@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.LightJobState
@@ -155,6 +156,7 @@ class AccountScreen(
                         isSyncing = isSyncing,
                         onSyncNow = { viewModel.syncNow() },
                         onSignOut = { viewModel.signOut() },
+                        modifier = Modifier.weight(1f),
                     )
 
                     AuthState.SignedOut -> {
@@ -211,40 +213,55 @@ class AccountScreen(
         isSyncing: Boolean,
         onSyncNow: () -> Unit,
         onSignOut: () -> Unit,
+        modifier: Modifier = Modifier,
     ) {
-        Column {
-            LightText(
-                text = "Signed in",
-                variant = LightTextVariant.Detail,
-                modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp()),
-            )
-            LightText(
-                text = email,
-                variant = LightTextVariant.Heading,
-                modifier = Modifier.padding(
-                    start = 1.5f.gridUnitsAsDp(),
-                    top = 0.25f.gridUnitsAsDp(),
-                    end = 1.5f.gridUnitsAsDp(),
-                    bottom = 1.5f.gridUnitsAsDp(),
-                ),
-            )
-            TapField(
-                label = "Sync",
-                value = when {
-                    isSyncing -> "Syncing…"
-                    lastSyncedAt != null -> "Last synced ${formatLastSyncedAt(lastSyncedAt)}"
-                    else -> "Never synced — tap to sync now"
-                },
-                onClick = onSyncNow,
-                singleLine = false,
-            )
-            LightText(
-                text = "SIGN OUT",
-                variant = LightTextVariant.Button,
+        Column(modifier = modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.weight(1f)) {
+                LightText(
+                    text = "Signed in",
+                    variant = LightTextVariant.Detail,
+                    modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp()),
+                )
+                LightText(
+                    text = email,
+                    // Copy, not Heading — long email addresses need to fit on one line.
+                    variant = LightTextVariant.Copy,
+                    modifier = Modifier.padding(
+                        start = 1.5f.gridUnitsAsDp(),
+                        top = 0.25f.gridUnitsAsDp(),
+                        end = 1.5f.gridUnitsAsDp(),
+                        bottom = 1.5f.gridUnitsAsDp(),
+                    ),
+                )
+                TapField(
+                    label = "Last synced",
+                    value = when {
+                        isSyncing -> "Syncing…"
+                        lastSyncedAt != null -> formatLastSyncedAt(lastSyncedAt)
+                        else -> "Never — tap to sync now"
+                    },
+                    onClick = onSyncNow,
+                    singleLine = false,
+                )
+            }
+            // Pinned to the bottom and centered, same shape as ConfirmScreen's confirm
+            // action (ui/ConfirmScreen.kt) — a weighted content block above pushes this
+            // plain, centered Column to the true bottom of the screen. Deliberately not
+            // LightBottomBar: per an earlier project decision, LightBottomBar.Text forces
+            // its own Fine-variant styling, which would visually regress this button's
+            // established Button-variant look (wide tracking, larger size).
+            Column(
                 modifier = Modifier
-                    .padding(horizontal = 1.5f.gridUnitsAsDp())
-                    .clickable(onClick = onSignOut),
-            )
+                    .fillMaxWidth()
+                    .padding(bottom = 1.8f.gridUnitsAsDp()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                LightText(
+                    text = "SIGN OUT",
+                    variant = LightTextVariant.Button,
+                    modifier = Modifier.clickable(onClick = onSignOut),
+                )
+            }
         }
     }
 }
