@@ -43,6 +43,8 @@ class SyncEngine(
         if (settingsResult.needsPush) {
             pushDocument(uid, "settings", "singleton", Settings.serializer(), settingsResult.merged)
         }
+
+        authRepo.recordSyncSuccess()
     }
 
     private suspend fun <T> fetchCollection(uid: String, collection: String, serializer: KSerializer<T>): List<T> =

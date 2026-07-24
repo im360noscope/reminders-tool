@@ -1,7 +1,9 @@
 package com.zacksimpson.reminders.data
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 private val MONTHS = listOf(
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -20,6 +22,14 @@ fun formatDate(dateStr: String): String {
 fun formatDisplayDate(dateStr: String): String {
     val (y, mo, d) = dateStr.split("-").map(String::toInt)
     return "${MONTHS[mo - 1]} $d, $y"
+}
+
+/** Epoch millis -> "Jan 5, 2:30 PM", for the Settings "last synced" row. */
+fun formatLastSyncedAt(epochMillis: Long): String {
+    val dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
+    val dateStr = "%04d-%02d-%02d".format(dt.year, dt.monthValue, dt.dayOfMonth)
+    val timeStr = "%02d:%02d".format(dt.hour, dt.minute)
+    return "${formatDate(dateStr)}, ${formatTime(timeStr)}"
 }
 
 /** "HH:MM" 24h -> "h:mm AM/PM" (or unchanged when use24Hour is true).

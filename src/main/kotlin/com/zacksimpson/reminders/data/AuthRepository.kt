@@ -37,6 +37,10 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         if (uid != null && email != null) AuthState.SignedIn(uid, email) else AuthState.SignedOut
     }
 
+    /** Epoch millis of the last successful [SyncEngine.sync] call, or null if this
+     *  account has never synced. Drives the Settings "last synced" row. */
+    val lastSyncedAt: Flow<Long?> = dataStore.data.map { it[LAST_SYNCED_KEY] }
+
     suspend fun signIn(email: String, password: String) {
         val tokens = client.signInWithPassword(email, password)
         persist(tokens, email)
@@ -51,7 +55,13 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
             p.remove(ID_TOKEN_KEY)
             p.remove(REFRESH_TOKEN_KEY)
             p.remove(EXPIRES_AT_KEY)
+            p.remove(LAST_SYNCED_KEY)
         }
+    }
+
+    /** Called by [SyncEngine] after a sync pass completes without error. */
+    suspend fun recordSyncSuccess() {
+        dataStore.edit { p -> p[LAST_SYNCED_KEY] = System.currentTimeMillis() }
     }
 
     /** A valid ID token for authenticated Firestore REST calls (Phase 3), refreshing
@@ -86,6 +96,7 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         val ID_TOKEN_KEY = stringPreferencesKey("auth:idToken")
         val REFRESH_TOKEN_KEY = stringPreferencesKey("auth:refreshToken")
         val EXPIRES_AT_KEY = longPreferencesKey("auth:expiresAt")
+        val LAST_SYNCED_KEY = longPreferencesKey("auth:lastSyncedAt")
 
         // Refresh a bit before actual expiry so a call made right at the boundary
         // doesn't get rejected by Firestore for using a token that expired mid-flight.

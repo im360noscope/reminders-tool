@@ -17,6 +17,7 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
+import com.zacksimpson.reminders.data.formatLastSyncedAt
 
 val AFTER_ADD_OPTIONS = listOf(
     PickerOption("toast", "Add Next"),
@@ -45,6 +46,10 @@ fun SettingsTab(
     onOpenAddPosition: () -> Unit,
     onOpenTodayView: () -> Unit,
     onOpenAccount: () -> Unit,
+    isSignedIn: Boolean,
+    lastSyncedAt: Long?,
+    isSyncing: Boolean,
+    onSyncNow: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LightTopBar(
@@ -71,6 +76,17 @@ fun SettingsTab(
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     SettingsLinkRow("Account", onOpenAccount)
+                    if (isSignedIn) {
+                        SettingsRow(
+                            label = "Sync",
+                            value = when {
+                                isSyncing -> "Syncing…"
+                                lastSyncedAt != null -> "Last synced ${formatLastSyncedAt(lastSyncedAt)}"
+                                else -> "Never synced — tap to sync now"
+                            },
+                            onClick = onSyncNow,
+                        )
+                    }
                     SettingsLinkRow("Today View", onOpenTodayView)
                     SettingsRow("Default List", defaultTitle, onOpenDefaultList)
                     SettingsRow("After Quick Add", afterAddLabel(s.afterAddBehavior), onOpenAfterQuickAdd)

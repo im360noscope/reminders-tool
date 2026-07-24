@@ -11,10 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.InitialScreen
+import com.thelightphone.sdk.LightJobState
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.LightWork
 import com.thelightphone.sdk.SealedLightActivity
+import com.thelightphone.sdk.SealedLightContext
 import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
@@ -22,9 +24,12 @@ import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
+import com.zacksimpson.reminders.data.AuthRepository
+import com.zacksimpson.reminders.data.AuthState
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.SYNC_JOB_KEY
 import com.zacksimpson.reminders.data.Settings
+import com.zacksimpson.reminders.data.authStateIn
 import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
 import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
 import com.zacksimpson.reminders.screens.AccountScreen
@@ -48,15 +53,36 @@ import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.minutes
 
 enum class Tab { LISTS, TODAY, SETTINGS }
 
-class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit>() {
+/** WorkManager tag for the manual "Sync now" one-shot — distinct from [SYNC_JOB_KEY]
+ *  itself (the periodic schedule's own uniqueness slot) so triggering one doesn't
+ *  replace/cancel the other; both run the same registered job handler regardless. */
+private const val SYNC_NOW_TAG = "$SYNC_JOB_KEY-now"
+
+class MainViewModel(
+    private val repo: RemindersRepository,
+    private val authRepo: AuthRepository,
+    private val lightContext: SealedLightContext,
+) : LightViewModel<Unit>() {
     val selectedTab = MutableStateFlow(Tab.LISTS)
     val state = repo.dataStateIn(viewModelScope)
+    val authState = authRepo.authStateIn(viewModelScope)
+    val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Reflects the immediate one-shot's WorkManager state (shared between the
+     *  on-open poke MainScreen.willShow() fires and the manual Sync row below) — not
+     *  the periodic schedule's, which runs invisibly in the background regardless. */
+    val isSyncing = LightWork.observe(lightContext, SYNC_NOW_TAG)
+        .map { it is LightJobState.Enqueued || it is LightJobState.Running }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     /** Forces the Today tab's date/overdue math to re-run: once a minute while visible,
      *  and immediately whenever this screen is (re)shown (e.g. app resumed from
@@ -88,6 +114,14 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
     override fun onScreenShow(screen: SimpleLightScreen<Unit>) {
         super.onScreenShow(screen)
         refreshTick.value++
+    }
+
+    override fun onCleared() {
+        authRepo.close()
+    }
+
+    fun syncNow() {
+        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = SYNC_NOW_TAG)
     }
 
     fun select(tab: Tab) {
@@ -146,7 +180,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
     override val viewModelClass: Class<MainViewModel>
         get() = MainViewModel::class.java
 
-    override fun createViewModel() = MainViewModel(RemindersRepository(lightContext.dataStore))
+    override fun createViewModel() =
+        MainViewModel(RemindersRepository(lightContext.dataStore), AuthRepository(lightContext.dataStore), lightContext)
 
     // Scheduling lives here, on the Screen, not in MainViewModel's own onScreenShow: a
     // SealedLightContext is only reachable via LightScreen's protected lightContext —
@@ -158,7 +193,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
     override fun willShow() {
         super.willShow()
         LightWork.enqueuePeriodic(lightContext, SYNC_JOB_KEY, repeatInterval = 15.minutes)
-        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = "$SYNC_JOB_KEY-now")
+        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = SYNC_NOW_TAG)
     }
 
     @Composable
@@ -169,6 +204,9 @@ class MainScreen(sealedActivity: SealedLightActivity) :
             val refreshTick by viewModel.refreshTick.collectAsState()
             val todayShowCompleted by viewModel.todayShowCompleted.collectAsState()
             val listsReordering by viewModel.listsReordering.collectAsState()
+            val authState by viewModel.authState.collectAsState()
+            val lastSyncedAt by viewModel.lastSyncedAt.collectAsState()
+            val isSyncing by viewModel.isSyncing.collectAsState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -307,6 +345,10 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             onOpenAccount = {
                                 navigateTo(screenFactory = { AccountScreen(it) })
                             },
+                            isSignedIn = authState is AuthState.SignedIn,
+                            lastSyncedAt = lastSyncedAt,
+                            isSyncing = isSyncing,
+                            onSyncNow = { viewModel.syncNow() },
                         )
                     }
                 }
