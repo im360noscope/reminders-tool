@@ -234,7 +234,7 @@ class AccountScreen(
                     ),
                 )
                 TapField(
-                    label = "Last synced",
+                    label = "Last Synced",
                     value = when {
                         isSyncing -> "Syncing…"
                         lastSyncedAt != null -> formatLastSyncedAt(lastSyncedAt)
