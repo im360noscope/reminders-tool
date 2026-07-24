@@ -11,9 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
+import com.thelightphone.sdk.LightJobState
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
+import com.thelightphone.sdk.LightWork
 import com.thelightphone.sdk.SealedLightActivity
+import com.thelightphone.sdk.SealedLightContext
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightText
@@ -25,21 +28,42 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.data.AuthException
 import com.zacksimpson.reminders.data.AuthRepository
 import com.zacksimpson.reminders.data.AuthState
+import com.zacksimpson.reminders.data.SYNC_JOB_KEY
+import com.zacksimpson.reminders.data.SYNC_NOW_TAG
 import com.zacksimpson.reminders.data.authStateIn
+import com.zacksimpson.reminders.data.formatLastSyncedAt
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TapField
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class AccountViewModel(private val authRepo: AuthRepository) : LightViewModel<Unit>() {
+class AccountViewModel(
+    private val authRepo: AuthRepository,
+    private val lightContext: SealedLightContext,
+) : LightViewModel<Unit>() {
     val authState = authRepo.authStateIn(viewModelScope)
     val email = MutableStateFlow("")
     val password = MutableStateFlow("")
     val error = MutableStateFlow<String?>(null)
     val isBusy = MutableStateFlow(false)
+    val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Reflects the immediate one-shot's WorkManager state — shared with
+     *  MainScreen.willShow()'s on-open poke under the same [SYNC_NOW_TAG], so this also
+     *  shows "Syncing…" for that automatic trigger, not just a tap on the row below. */
+    val isSyncing = LightWork.observe(lightContext, SYNC_NOW_TAG)
+        .map { it is LightJobState.Enqueued || it is LightJobState.Running }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun syncNow() {
+        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = SYNC_NOW_TAG)
+    }
 
     fun setEmail(value: String) {
         email.value = value
@@ -96,7 +120,7 @@ class AccountScreen(
         get() = AccountViewModel::class.java
 
     override fun createViewModel() =
-        AccountViewModel(AuthRepository(lightContext.dataStore))
+        AccountViewModel(AuthRepository(lightContext.dataStore), lightContext)
 
     @Composable
     override fun Content() {
@@ -107,6 +131,8 @@ class AccountScreen(
             val password by viewModel.password.collectAsState()
             val error by viewModel.error.collectAsState()
             val isBusy by viewModel.isBusy.collectAsState()
+            val lastSyncedAt by viewModel.lastSyncedAt.collectAsState()
+            val isSyncing by viewModel.isSyncing.collectAsState()
 
             Column(
                 modifier = Modifier
@@ -123,7 +149,13 @@ class AccountScreen(
                 when (val s = authState) {
                     AuthState.Loading -> Unit
 
-                    is AuthState.SignedIn -> SignedIn(email = s.email, onSignOut = { viewModel.signOut() })
+                    is AuthState.SignedIn -> SignedIn(
+                        email = s.email,
+                        lastSyncedAt = lastSyncedAt,
+                        isSyncing = isSyncing,
+                        onSyncNow = { viewModel.syncNow() },
+                        onSignOut = { viewModel.signOut() },
+                    )
 
                     AuthState.SignedOut -> {
                         TapField(
@@ -173,18 +205,45 @@ class AccountScreen(
     }
 
     @Composable
-    private fun SignedIn(email: String, onSignOut: () -> Unit) {
-        Column(modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp())) {
-            LightText(text = "Signed in", variant = LightTextVariant.Detail)
+    private fun SignedIn(
+        email: String,
+        lastSyncedAt: Long?,
+        isSyncing: Boolean,
+        onSyncNow: () -> Unit,
+        onSignOut: () -> Unit,
+    ) {
+        Column {
+            LightText(
+                text = "Signed in",
+                variant = LightTextVariant.Detail,
+                modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp()),
+            )
             LightText(
                 text = email,
                 variant = LightTextVariant.Heading,
-                modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp(), bottom = 1.5f.gridUnitsAsDp()),
+                modifier = Modifier.padding(
+                    start = 1.5f.gridUnitsAsDp(),
+                    top = 0.25f.gridUnitsAsDp(),
+                    end = 1.5f.gridUnitsAsDp(),
+                    bottom = 1.5f.gridUnitsAsDp(),
+                ),
+            )
+            TapField(
+                label = "Sync",
+                value = when {
+                    isSyncing -> "Syncing…"
+                    lastSyncedAt != null -> "Last synced ${formatLastSyncedAt(lastSyncedAt)}"
+                    else -> "Never synced — tap to sync now"
+                },
+                onClick = onSyncNow,
+                singleLine = false,
             )
             LightText(
                 text = "SIGN OUT",
                 variant = LightTextVariant.Button,
-                modifier = Modifier.clickable(onClick = onSignOut),
+                modifier = Modifier
+                    .padding(horizontal = 1.5f.gridUnitsAsDp())
+                    .clickable(onClick = onSignOut),
             )
         }
     }
