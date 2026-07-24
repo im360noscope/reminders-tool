@@ -25,6 +25,7 @@ import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Settings
 import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
 import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
+import com.zacksimpson.reminders.screens.AccountScreen
 import com.zacksimpson.reminders.screens.AddTaskScreen
 import com.zacksimpson.reminders.screens.ListAction
 import com.zacksimpson.reminders.screens.ListActionsScreen
@@ -286,6 +287,9 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             },
                             onOpenTodayView = {
                                 navigateTo(screenFactory = { TodayViewScreen(it) })
+                            },
+                            onOpenAccount = {
+                                navigateTo(screenFactory = { AccountScreen(it) })
                             },
                         )
                     }
