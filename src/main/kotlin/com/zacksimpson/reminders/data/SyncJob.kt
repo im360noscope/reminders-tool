@@ -12,6 +12,13 @@ private const val TAG = "SyncJob"
  *  see [com.zacksimpson.reminders.MainScreen] for where both get enqueued. */
 const val SYNC_JOB_KEY = "sync-reminders"
 
+/** Uniqueness slot for the immediate one-shot specifically — distinct from
+ *  [SYNC_JOB_KEY] itself (the periodic schedule's own slot) so triggering one doesn't
+ *  replace/cancel the other; both run this same job handler regardless. Shared between
+ *  [com.zacksimpson.reminders.MainScreen]'s on-open poke and the Account screen's
+ *  manual "Sync now" row, so both observe and enqueue under the same WorkManager work. */
+const val SYNC_NOW_TAG = "$SYNC_JOB_KEY-now"
+
 /**
  * Background sync (SYNC_PLAN.md §3 step 5). A no-op success when signed out — this job
  * is scheduled unconditionally (there's no signed-out-aware way to cancel/reschedule
