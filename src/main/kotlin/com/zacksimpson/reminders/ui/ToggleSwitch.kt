@@ -34,7 +34,7 @@ fun ToggleSwitch(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LightIcon(
-            icon = if (value) LightIcons.TOGGLE_ON else LightIcons.TOGGLE_OFF,
+            icon = if (value) LightIcons.TOGGLE_STATE_ON else LightIcons.TOGGLE_STATE_OFF,
             size = 1.8f,
             modifier = Modifier.padding(end = 1f.gridUnitsAsDp()),
         )
