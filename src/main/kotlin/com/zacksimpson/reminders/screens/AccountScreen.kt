@@ -147,6 +147,15 @@ class AccountScreen(
                     modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
                 )
 
+                LightText(
+                    text = "About Desktop Sync",
+                    variant = LightTextVariant.Heading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = { navigateTo(screenFactory = { AboutDesktopSyncScreen(it) }) })
+                        .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+                )
+
                 when (val s = authState) {
                     AuthState.Loading -> Unit
 
