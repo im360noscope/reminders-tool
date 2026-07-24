@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.InitialScreen
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
+import com.thelightphone.sdk.LightWork
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
@@ -22,6 +23,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
 import com.zacksimpson.reminders.data.RemindersRepository
+import com.zacksimpson.reminders.data.SYNC_JOB_KEY
 import com.zacksimpson.reminders.data.Settings
 import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
 import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
@@ -48,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlin.time.Duration.Companion.minutes
 
 enum class Tab { LISTS, TODAY, SETTINGS }
 
@@ -144,6 +147,19 @@ class MainScreen(sealedActivity: SealedLightActivity) :
         get() = MainViewModel::class.java
 
     override fun createViewModel() = MainViewModel(RemindersRepository(lightContext.dataStore))
+
+    // Scheduling lives here, on the Screen, not in MainViewModel's own onScreenShow: a
+    // SealedLightContext is only reachable via LightScreen's protected lightContext —
+    // LightViewModel.onScreenShow(screen) can't reach it (protected isn't visible across
+    // that class boundary), so SYNC_PLAN.md §3 step 5's "trigger from onScreenShow" has
+    // to mean this hook instead. enqueuePeriodic/enqueue are both safe to call every
+    // time this screen appears — REPLACE/UPDATE policies make them idempotent, not
+    // duplicate schedules.
+    override fun willShow() {
+        super.willShow()
+        LightWork.enqueuePeriodic(lightContext, SYNC_JOB_KEY, repeatInterval = 15.minutes)
+        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = "$SYNC_JOB_KEY-now")
+    }
 
     @Composable
     override fun Content() {
