@@ -153,7 +153,16 @@ class AccountScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = { navigateTo(screenFactory = { AboutDesktopSyncScreen(it) }) })
-                        .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+                        .padding(
+                            start = 1.5f.gridUnitsAsDp(),
+                            top = 1f.gridUnitsAsDp(),
+                            end = 1.5f.gridUnitsAsDp(),
+                            // Matches the email row's own bottom margin below it (see
+                            // SignedIn()) so the gap before "Signed in"/Email is roughly
+                            // consistent with the gap before "Last Synced", not noticeably
+                            // tighter — that row has no top padding of its own to compensate.
+                            bottom = 1.5f.gridUnitsAsDp(),
+                        ),
                 )
 
                 when (val s = authState) {
