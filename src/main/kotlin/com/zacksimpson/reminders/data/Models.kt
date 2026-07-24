@@ -57,6 +57,11 @@ data class Task(
     val completedAt: Long? = null,
     val createdAt: Long,
     val order: Int,
+    // Sync bookkeeping (matches reminders-web's Task shape) — default to
+    // createdAt/false so tasks persisted before this field existed still
+    // decode, treated as "unmodified since creation."
+    val updatedAt: Long = createdAt,
+    val deleted: Boolean = false,
 )
 
 @Serializable
@@ -65,6 +70,10 @@ data class ReminderList(
     val title: String,
     val createdAt: Long,
     val order: Int,
+    // Sync bookkeeping (matches reminders-web's ReminderList shape) — same
+    // backward-compatible defaulting as Task.
+    val updatedAt: Long = createdAt,
+    val deleted: Boolean = false,
 )
 
 @Serializable
@@ -73,6 +82,11 @@ data class Settings(
     val afterAddBehavior: AfterAddBehavior = AfterAddBehavior.TOAST,
     val addPosition: AddPosition = AddPosition.BOTTOM,
     val showOverdue: Boolean = true,
+    // Sync bookkeeping (matches reminders-web's Settings shape). No natural
+    // anchor timestamp to default to like Task/ReminderList have via
+    // createdAt, so pre-existing settings just default to "oldest possible" —
+    // superseded by the first real sync without needing a migration.
+    val updatedAt: Long = 0L,
 )
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
