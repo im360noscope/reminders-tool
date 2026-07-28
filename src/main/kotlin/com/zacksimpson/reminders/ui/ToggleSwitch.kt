@@ -34,7 +34,8 @@ fun ToggleSwitch(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LightIcon(
-            icon = if (value) LightIcons.TOGGLE_STATE_ON else LightIcons.TOGGLE_STATE_OFF,
+            // Swapped on purpose: the SDK's own ON/OFF glyphs render backwards.
+            icon = if (value) LightIcons.TOGGLE_STATE_OFF else LightIcons.TOGGLE_STATE_ON,
             size = 1.8f,
             modifier = Modifier.padding(end = 1f.gridUnitsAsDp()),
         )
