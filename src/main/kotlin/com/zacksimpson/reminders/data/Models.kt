@@ -27,6 +27,15 @@ enum class AddPosition {
     @SerialName("bottom") BOTTOM,
 }
 
+// ─── Sync ───────────────────────────────────────────────────────────────────
+
+/** An id-keyed, soft-deletable row that can be reconciled by [SyncLogic.mergeCollection]
+ *  — `updatedAt` alone decides which side wins a merge (see that file). */
+interface SyncableDocument {
+    val id: String
+    val updatedAt: Long
+}
+
 // ─── Models ─────────────────────────────────────────────────────────────────
 // Every optional field has a default so partial/older JSON still decodes.
 
@@ -46,7 +55,7 @@ data class Subtask(
 
 @Serializable
 data class Task(
-    val id: String,
+    override val id: String,
     val title: String,
     val listId: String,
     val date: String? = null,          // "YYYY-MM-DD"
@@ -57,15 +66,24 @@ data class Task(
     val completedAt: Long? = null,
     val createdAt: Long,
     val order: Int,
-)
+    // Sync bookkeeping (matches reminders-web's Task shape) — default to
+    // createdAt/false so tasks persisted before this field existed still
+    // decode, treated as "unmodified since creation."
+    override val updatedAt: Long = createdAt,
+    val deleted: Boolean = false,
+) : SyncableDocument
 
 @Serializable
 data class ReminderList(
-    val id: String,
+    override val id: String,
     val title: String,
     val createdAt: Long,
     val order: Int,
-)
+    // Sync bookkeeping (matches reminders-web's ReminderList shape) — same
+    // backward-compatible defaulting as Task.
+    override val updatedAt: Long = createdAt,
+    val deleted: Boolean = false,
+) : SyncableDocument
 
 @Serializable
 data class Settings(
@@ -73,6 +91,11 @@ data class Settings(
     val afterAddBehavior: AfterAddBehavior = AfterAddBehavior.TOAST,
     val addPosition: AddPosition = AddPosition.BOTTOM,
     val showOverdue: Boolean = true,
+    // Sync bookkeeping (matches reminders-web's Settings shape). No natural
+    // anchor timestamp to default to like Task/ReminderList have via
+    // createdAt, so pre-existing settings just default to "oldest possible" —
+    // superseded by the first real sync without needing a migration.
+    val updatedAt: Long = 0L,
 )
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
