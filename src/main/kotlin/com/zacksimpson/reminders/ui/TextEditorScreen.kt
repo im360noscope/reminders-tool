@@ -35,6 +35,7 @@ class TextEditorScreen(
                 keyboardOptionsFlow = keyboardOptions,
                 onSubmit = { goBack(it.toString()) },
                 onBack = { goBack(null) },
+                submitLabel = "DONE",
                 // editorKey defaults to `title`, keying the embedded keyboard's
                 // viewModel() call. This screen has no per-screen ViewModelStoreOwner, so
                 // a fixed key reused across pushes (e.g. add one task, then another) would
