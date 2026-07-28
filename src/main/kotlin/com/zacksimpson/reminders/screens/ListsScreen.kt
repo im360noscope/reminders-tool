@@ -88,7 +88,10 @@ fun ListsTab(
                                 )
                                 .padding(
                                     horizontal = 1.5f.gridUnitsAsDp(),
-                                    vertical = 0.5f.gridUnitsAsDp(),
+                                    // Matches ActionRow/OptionPickerScreen/TapField's
+                                    // vertical inset — same RN paddingVertical/fontSize
+                                    // family (n(11-14) + n(30)) as this row.
+                                    vertical = 0.75f.gridUnitsAsDp(),
                                 ),
                         )
                         if (isReordering) {
