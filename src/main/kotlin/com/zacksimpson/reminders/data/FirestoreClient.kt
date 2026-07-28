@@ -29,15 +29,11 @@ data class FirestoreDocument(val id: String, val fields: JsonObject)
 
 /**
  * Talks to Firestore's REST API directly (see SYNC_PLAN.md §3) — light-sdk has no
- * Firestore Android SDK on its dependency allow-list, so this is a thin client over
- * `firestore.googleapis.com`, authenticated with the ID token [AuthRepository] manages.
- * `firestore.rules` already scopes every request to `request.auth.uid == uid`; no
- * server-side changes were needed for the phone to read/write here.
+ * Firestore Android SDK allow-listed, so this is a thin client over
+ * firestore.googleapis.com, authenticated with the ID token [AuthRepository] manages.
  *
- * Generic over a collection's document shape (`FirestoreDocument.fields` is plain JSON,
- * not a `Task`/`ReminderList`) — converting to/from those model types is the sync
- * engine's job (Phase 4), using [firestoreModelJson] so it doesn't repeat the
- * `encodeDefaults` mistake [AuthClient] made (see that file's history).
+ * Generic over a collection's document shape — converting to/from Task/ReminderList
+ * is the sync engine's job, using [firestoreModelJson].
  */
 class FirestoreClient(private val authRepo: AuthRepository) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -84,12 +80,8 @@ class FirestoreClient(private val authRepo: AuthRepository) {
         return toFirestoreDocument(json.parseToJsonElement(text).jsonObject)
     }
 
-    /**
-     * Full replace-or-create of a document. Deliberately sends no `updateMask` — this
-     * app always syncs whole objects (§4's whole-document last-write-wins design, not
-     * per-field patches), and Firestore's PATCH without an updateMask replaces the
-     * entire document with exactly the fields given, matching that.
-     */
+    /** Full replace-or-create — no updateMask, since sync always writes whole documents,
+     *  not per-field patches. */
     suspend fun setDocument(uid: String, collection: String, docId: String, fields: JsonObject) {
         val token = validToken()
         val response = http.patch("$baseUrl/users/$uid/$collection/$docId") {
@@ -126,9 +118,7 @@ class FirestoreClient(private val authRepo: AuthRepository) {
     }
 }
 
-/** Shared Json config for converting Task/ReminderList/Settings to/from Firestore's
- *  plain-field JSON. encodeDefaults=true is deliberate: kotlinx.serialization omits any
- *  field left at its Kotlin default when false, which would silently drop fields like
- *  `completed = false` or `deleted = false` from what's sent to Firestore — the same
- *  class of bug that broke Phase 2's sign-in until it was found (see AuthClient.kt). */
+/** Shared Json config for Task/ReminderList/Settings <-> Firestore's plain-field JSON.
+ *  encodeDefaults=true is deliberate: a field left at its Kotlin default (e.g.
+ *  completed=false) would otherwise be silently dropped from what's sent. */
 val firestoreModelJson = Json { encodeDefaults = true; ignoreUnknownKeys = true }

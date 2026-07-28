@@ -55,9 +55,8 @@ class AccountViewModel(
     val isBusy = MutableStateFlow(false)
     val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** Reflects the immediate one-shot's WorkManager state — shared with
-     *  MainScreen.willShow()'s on-open poke under the same [SYNC_NOW_TAG], so this also
-     *  shows "Syncing…" for that automatic trigger, not just a tap on the row below. */
+    /** Reflects the immediate one-shot's WorkManager state, shared with MainScreen's
+     *  on-open poke — shows "Syncing…" for that automatic trigger too, not just a tap. */
     val isSyncing = LightWork.observe(lightContext, SYNC_NOW_TAG)
         .map { it is LightJobState.Enqueued || it is LightJobState.Running }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
@@ -107,11 +106,10 @@ class AccountViewModel(
 }
 
 /**
- * Sign in with the same email/password account used on reminders-web, for phone<->desktop
- * sync (see SYNC_PLAN.md). LightTextInputEditor has no password-masking mode, so the entry
- * screen itself shows the password in plain text while typing — unavoidable given the SDK
- * as it stands today. This screen's own row masks it as bullets once captured, so the
- * account screen itself doesn't display the password in the clear.
+ * Sign in with the same account used on reminders-web, for phone<->desktop sync (see
+ * SYNC_PLAN.md). LightTextInputEditor has no password-masking mode, so the entry screen
+ * shows the password in plain text while typing; this screen's own row masks it as
+ * bullets once captured.
  */
 class AccountScreen(
     sealedActivity: SealedLightActivity,
@@ -157,10 +155,8 @@ class AccountScreen(
                             start = 1.5f.gridUnitsAsDp(),
                             top = 1f.gridUnitsAsDp(),
                             end = 1.5f.gridUnitsAsDp(),
-                            // Matches the email row's own bottom margin below it (see
-                            // SignedIn()) so the gap before "Signed in"/Email is roughly
-                            // consistent with the gap before "Last Synced", not noticeably
-                            // tighter — that row has no top padding of its own to compensate.
+                            // Matches the email row's bottom margin (see SignedIn()) so
+                            // this gap is consistent with the gap before "Last Synced".
                             bottom = 1.5f.gridUnitsAsDp(),
                         ),
                 )
@@ -263,11 +259,8 @@ class AccountScreen(
                 )
             }
             // Pinned to the bottom and centered, same shape as ConfirmScreen's confirm
-            // action (ui/ConfirmScreen.kt) — a weighted content block above pushes this
-            // plain, centered Column to the true bottom of the screen. Deliberately not
-            // LightBottomBar: per an earlier project decision, LightBottomBar.Text forces
-            // its own Fine-variant styling, which would visually regress this button's
-            // established Button-variant look (wide tracking, larger size).
+            // button. Not LightBottomBar — its Text variant forces Fine-variant styling,
+            // which would regress this button's look.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

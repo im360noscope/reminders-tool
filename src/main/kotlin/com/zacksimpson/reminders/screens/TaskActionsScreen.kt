@@ -48,10 +48,8 @@ class TaskActionsViewModel(
 
     fun delete(onDeleted: () -> Unit) {
         viewModelScope.launch {
-            // NonCancellable so the write itself always finishes even if this screen is
-            // destroyed mid-delete (e.g. rapid back-navigation) — viewModelScope is
-            // cancelled on destroy, and without this the in-flight DataStore write would
-            // be cancelled too, not just the onDeleted callback that follows it.
+            // NonCancellable so the write finishes even if this screen is destroyed
+            // mid-delete (viewModelScope gets cancelled on destroy).
             withContext(NonCancellable) {
                 repo.deleteTask(taskId)
             }
@@ -122,11 +120,9 @@ class TaskActionsScreen(
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
                                     viewModel.delete {
-                                        // Pushed from here (rather than shown by the caller
-                                        // after this screen pops) so there's a single
-                                        // transition straight into the toast, instead of a
-                                        // pop-then-push that let the underlying list flash
-                                        // on screen for a frame in between.
+                                        // Pushed from here, not by the caller after this
+                                        // screen pops, so the list doesn't flash on screen
+                                        // between the pop and the toast push.
                                         navigateTo(
                                             screenFactory = { ToastScreen(it, "deleted") },
                                             resultCallback = { goBack(TaskAction.DELETED) },

@@ -124,10 +124,8 @@ class AddTaskViewModel(
     }
 }
 
-/**
- * New-task form. Title, List, Date, and Subtasks are functional. Time/Recurring are still
- * placeholders (no picker yet) and, matching RN, only appear once a Date is set.
- */
+/** New-task form: Title, List, Date, Time, Recurring, Subtasks. Time/Recurring only
+ *  appear once a Date is set, matching RN. */
 class AddTaskScreen(
     sealedActivity: SealedLightActivity,
     private val defaultListId: String,
@@ -163,9 +161,8 @@ class AddTaskScreen(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("New Task"),
                     rightButton = if (title.isNotBlank()) {
-                        // ACCEPT's own artwork fills its box edge-to-edge (unlike BACK's,
-                        // which has generous built-in padding), so it reads much bigger at
-                        // the same default sizeUnits — sized down to match BACK's weight.
+                        // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's —
+                        // sized down to match BACK's visual weight.
                         LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = { viewModel.save { goBack(null) } }, sizeUnits = 1.5f)
                     } else {
                         null
@@ -217,8 +214,7 @@ class AddTaskScreen(
                         },
                         onClear = { viewModel.clearDate() },
                     )
-                    // Time/Recurring only shown once a date is set, matching RN. Still
-                    // placeholders: no Time/Recurrence picker yet.
+                    // Time/Recurring only shown once a date is set, matching RN.
                     if (date != null) {
                         ClearableField(
                             label = "Time",

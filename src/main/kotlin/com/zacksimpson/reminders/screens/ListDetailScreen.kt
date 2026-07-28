@@ -44,10 +44,9 @@ class ListDetailViewModel(
     startInReorderMode: Boolean = false,
 ) : LightViewModel<Unit>() {
     val state = repo.dataStateIn(viewModelScope)
-    // Both live here rather than as Composable remember state: the SDK recomposes this
-    // screen's Content() fresh every time a pushed screen (like TaskActionsScreen) pops
-    // back to it, which silently discards remember-based state — the ViewModel survives
-    // that round trip since only the popped screen gets destroyed, not this one.
+    // Live here rather than as Composable remember state: the SDK recomposes this
+    // screen's Content() fresh whenever a pushed screen pops back to it, which
+    // discards remember-based state — the ViewModel survives that round trip.
     val isReordering = MutableStateFlow(startInReorderMode)
     val showCompleted = MutableStateFlow(false)
 
@@ -157,11 +156,6 @@ class ListDetailScreen(
                                         onLongPress = {
                                             navigateTo(
                                                 screenFactory = { TaskActionsScreen(it, task.id) },
-                                                // deliverResult() only invokes this when goBack
-                                                // passed a non-null result, so every other exit
-                                                // (back/swipe/mark-complete/edit) never calls it.
-                                                // TaskActionsScreen already shows the
-                                                // "deleted" toast itself before returning.
                                                 resultCallback = { result ->
                                                     when (result) {
                                                         TaskAction.DELETED -> Unit

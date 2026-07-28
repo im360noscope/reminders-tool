@@ -63,9 +63,7 @@ class TaskDetailViewModel(
 
     init {
         // Draft fields are seeded ONCE from the task's state at open time, then evolve
-        // independently until Save — mirrors the RN screen's useState(task?.x) seeding.
-        // Subtasks are NOT drafted here; they read/write live (see below), matching RN's
-        // addSubtask/toggleSubtask/deleteSubtask calls, which apply immediately.
+        // independently until Save. Subtasks are NOT drafted — they read/write live.
         viewModelScope.launch {
             val first = state.first { it !is DataState.Loading }
             val task = (first as? DataState.Ready)?.data?.tasks?.firstOrNull { it.id == taskId }
@@ -168,14 +166,11 @@ class TaskDetailViewModel(
 }
 
 /**
- * Full task edit screen — the RN app's biggest single screen, ported field-for-field:
- * title, list, date/time/recurring, subtasks, delete.
+ * Full task edit screen: title, list, date/time/recurring, subtasks, delete.
  *
  * Save is an explicit checkmark tap rather than RN's auto-save-on-swipe-back: the SDK's
- * system back gesture calls the activity's goBack() directly and never consults the
- * screen's ViewModel, so there's no reliable hook to save on back (confirmed by reading
- * LightActivity/LightScreen source) — matches the explicit-Save pattern already used on
- * Add Task.
+ * system back gesture calls goBack() directly with no hook to save first — matches the
+ * explicit-Save pattern already used on Add Task.
  */
 class TaskDetailScreen(
     sealedActivity: SealedLightActivity,
@@ -214,9 +209,8 @@ class TaskDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("Edit"),
-                    // ACCEPT's own artwork fills its box edge-to-edge (unlike BACK's,
-                    // which has generous built-in padding), so it reads much bigger at
-                    // the same default sizeUnits — sized down to match BACK's weight.
+                    // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's — sized
+                    // down to match BACK's visual weight.
                     rightButton = LightBarButton.LightIcon(
                         LightIcons.ACCEPT,
                         onClick = { viewModel.save { goBack(null) } },
@@ -276,9 +270,8 @@ class TaskDetailScreen(
                             },
                             onClear = { viewModel.clearDate() },
                         )
-                        // Time/Recurring only shown once a date is set, matching RN — they're
-                        // meaningless without one. Still placeholders: no Time/Recurrence
-                        // picker yet.
+                        // Time/Recurring only shown once a date is set, matching RN —
+                        // they're meaningless without one.
                         if (date != null) {
                             ClearableField(
                                 label = "Time",

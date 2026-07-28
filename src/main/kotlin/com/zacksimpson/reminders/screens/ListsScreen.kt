@@ -46,8 +46,8 @@ fun ListsTab(
             rightButton = if (isReordering) {
                 LightBarButton.Text("DONE", onClick = onStopReordering)
             } else {
-                // ic_plus's artwork fills its box edge-to-edge (unlike LightIcons' own icons,
-                // which have built-in padding) — sizeUnits is reduced to match BACK's visual weight.
+                // ic_plus's artwork fills its box edge-to-edge, unlike LightIcons' own
+                // icons — sizeUnits reduced to match BACK's visual weight.
                 LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f)
             },
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),

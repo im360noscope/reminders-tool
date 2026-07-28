@@ -1,10 +1,7 @@
 package com.zacksimpson.reminders.data
 
-/** Result of reconciling one local vs. one remote copy of an id-keyed collection
- *  (Task, ReminderList): [merged] is what local storage should hold afterward — a
- *  union of both sides, newer [SyncableDocument.updatedAt] wins per id; [toPush] is
- *  exactly the subset that needs writing to Firestore, because the local copy is
- *  newer than (or doesn't exist in) the server's. */
+/** [merged] is the union of both sides (newer [SyncableDocument.updatedAt] wins per
+ *  id); [toPush] is the subset that needs writing to Firestore. */
 data class CollectionMergeResult<T>(val merged: List<T>, val toPush: List<T>)
 
 /** Result of reconciling the singleton Settings document. */
@@ -12,12 +9,9 @@ data class SettingsMergeResult(val merged: Settings, val needsPush: Boolean)
 
 /**
  * Pure last-write-wins merge for phone<->desktop sync (SYNC_PLAN.md §3 step 4).
- * Whole-document conflict resolution, not per-field: comparing `updatedAt` per id is
- * enough because every local mutation — including a delete, which sets
- * `deleted = true` and bumps `updatedAt` rather than removing the row (see
- * RemindersRepository's soft-delete methods) — bumps it. No network or storage calls
- * here; [SyncEngine] is the thin, impure layer that fetches real data and applies the
- * result this produces.
+ * Whole-document, not per-field: a delete just sets `deleted = true` and bumps
+ * `updatedAt` like any other mutation, so comparing `updatedAt` per id is enough.
+ * [SyncEngine] is the impure layer that fetches real data and applies the result.
  */
 object SyncLogic {
     fun <T : SyncableDocument> mergeCollection(local: List<T>, remote: List<T>): CollectionMergeResult<T> {
