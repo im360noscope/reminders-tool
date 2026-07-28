@@ -61,20 +61,15 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
 
     /** Forces the Today tab's date/overdue math to re-run: once a minute while visible,
      *  and immediately whenever this screen is (re)shown (e.g. app resumed from
-     *  background overnight) — RN used a 60s interval plus an AppState listener for the
-     *  same two reasons. onScreenShow is the SDK-sanctioned hook for the latter;
-     *  androidx.compose.ui.platform.LocalLifecycleOwner is a blocked import, so raw
-     *  platform lifecycle observation isn't an option here. */
+     *  background overnight). */
     val refreshTick = MutableStateFlow(0)
 
-    // Lives here rather than as Composable remember state inside TodayTab: MainScreen's
-    // Content() (and everything inside it, including TodayTab) gets recomposed fresh
-    // whenever a pushed screen (e.g. TaskActionsScreen) pops back to it, which silently
-    // discards remember-based state — the ViewModel survives that round trip.
+    // Lives here rather than as Composable remember state: Content() gets recomposed
+    // fresh whenever a pushed screen pops back to it, which discards remember-based
+    // state — the ViewModel survives that round trip.
     val todayShowCompleted = MutableStateFlow(false)
 
-    // Same reasoning as todayShowCompleted: ListActionsScreen pops back to this same
-    // screen instance, so reorder-mode state can't live in ListsTab's own remember.
+    // Same reasoning as todayShowCompleted.
     val listsReordering = MutableStateFlow(false)
 
     init {
@@ -138,8 +133,7 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
     }
 }
 
-/** Boot screen: the four-tab host. Lists is wired to real data; the others are
- *  placeholders until their screens are built. */
+/** Boot screen: the four-tab host — Lists, Today, Settings, and the Add action. */
 @InitialScreen
 class MainScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, MainViewModel>(sealedActivity) {
@@ -149,13 +143,10 @@ class MainScreen(sealedActivity: SealedLightActivity) :
 
     override fun createViewModel() = MainViewModel(RemindersRepository(lightContext.dataStore))
 
-    // Scheduling lives here, on the Screen, not in MainViewModel's own onScreenShow: a
-    // SealedLightContext is only reachable via LightScreen's protected lightContext —
-    // LightViewModel.onScreenShow(screen) can't reach it (protected isn't visible across
-    // that class boundary), so SYNC_PLAN.md §3 step 5's "trigger from onScreenShow" has
-    // to mean this hook instead. enqueuePeriodic/enqueue are both safe to call every
-    // time this screen appears — REPLACE/UPDATE policies make them idempotent, not
-    // duplicate schedules.
+    // Scheduling lives here, on the Screen, not in MainViewModel — a SealedLightContext
+    // is only reachable via LightScreen's protected lightContext, not from a ViewModel's
+    // onScreenShow. Safe to call every time this screen appears — REPLACE/UPDATE
+    // policies make enqueuePeriodic/enqueue idempotent, not duplicate schedules.
     override fun willShow() {
         super.willShow()
         LightWork.enqueuePeriodic(lightContext, SYNC_JOB_KEY, repeatInterval = 15.minutes)
@@ -231,15 +222,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                         when (result) {
                                             TaskAction.DELETED -> Unit
                                             // Reordering only makes sense within a single list, so
-                                            // Today hands off to that task's own List Detail screen
-                                            // already in reorder mode. This is a push, not RN's
-                                            // router.replace — the SDK has no replace primitive —
-                                            // but that's the right shape here anyway: List Detail
-                                            // doesn't already exist to hand off to (unlike within
-                                            // List Detail's own reorder flow, where TaskActionsScreen
-                                            // just pops back to the existing instance instead of
-                                            // creating a new one), and a single back-press from it
-                                            // correctly lands back on Today underneath.
+                                            // Today pushes that task's List Detail screen already
+                                            // in reorder mode; a back-press lands back on Today.
                                             TaskAction.START_REORDER -> {
                                                 val listTitle = (viewModel.state.value as? DataState.Ready)
                                                     ?.data?.lists?.firstOrNull { it.id == task.listId }?.title ?: "List"

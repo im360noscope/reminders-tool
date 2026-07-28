@@ -36,12 +36,10 @@ private fun buildMeta(task: Task, listTitle: String): String {
 }
 
 /**
- * Shared task row: checkbox (or overdue asterisk in place of it), title, meta line
- * (list · date · time · subtask count), and recurrence line. Used by list detail and the
- * Today tab. Long-pressing the title/meta column opens TaskActionsScreen — matches RN's
- * TaskRow, which attached onLongPress to the same pressable as onPress. In reorder mode
- * the checkbox/asterisk is hidden and up/down arrows appear instead, and tap/long-press
- * are disabled — matches RN's isReordering behavior exactly.
+ * Shared task row: checkbox (or overdue asterisk), title, meta line (list · date · time
+ * · subtask count), and recurrence line. Used by list detail and the Today tab. In
+ * reorder mode the checkbox/asterisk is hidden, up/down arrows appear, and tap/long-press
+ * are disabled — matches RN's isReordering behavior.
  */
 @Composable
 fun TaskRowView(
@@ -62,9 +60,8 @@ fun TaskRowView(
     val meta = buildMeta(task, listTitle)
     val recurrenceLabel = task.recurrence?.let(::formatRecurrence)
 
-    // The scroll indicator overlays on top of content (LightScrollBarPosition.Inside)
-    // rather than reserving its own column, so this row leaves its own room to avoid
-    // overlap — matching RN's rows, which needed extra paddingRight for the same reason.
+    // Leaves its own room on the right for the overlaid scroll indicator
+    // (LightScrollBarPosition.Inside doesn't reserve its own column).
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -73,16 +70,12 @@ fun TaskRowView(
         verticalAlignment = Alignment.Top,
     ) {
         if (isReordering) {
-            // No checkbox/asterisk while reordering — matches RN, which omits leftControl
-            // entirely in this mode.
+            // No checkbox/asterisk while reordering — matches RN.
         } else if (overdue) {
             OverdueAsteriskIcon(
-                // Matches TaskCheckboxIcon's size exactly, since they occupy the same
-                // row slot as alternates of each other.
-                size = 17.dp,
-                // Top-biased to line up with the first line of the title. Bottom stays
-                // as-is (not shrunk to compensate) so the enlarged bottom tap area from
-                // the mis-tap fix isn't undone by this vertical-centering correction.
+                size = 17.dp, // matches TaskCheckboxIcon's size — same row slot
+                // Top-biased to line up with the title's first line; bottom kept
+                // generous to preserve tap-target size.
                 modifier = Modifier
                     .clickable(onClick = onToggle)
                     .padding(
@@ -93,9 +86,7 @@ fun TaskRowView(
                     ),
             )
         } else {
-            // Same artwork RN used, but at this size next to Akkurat text it read too big —
-            // shrunk as a first pass; top padding matches the text column's own top inset
-            // as a starting alignment reference (not yet true first-line-center alignment).
+            // RN's artwork read too big next to Akkurat text at full size — shrunk here.
             TaskCheckboxIcon(
                 checked = task.completed,
                 size = 17.dp,
@@ -113,26 +104,21 @@ fun TaskRowView(
         Column(
             modifier = Modifier
                 .weight(1f)
-                // Disabled while reordering — matches RN, which guards onPress/onLongPress
-                // with `if (isReordering) return;` at the call site.
+                // Disabled while reordering — matches RN.
                 .combinedClickable(
                     onClick = { if (!isReordering) onPress() },
                     onLongClick = if (isReordering) null else onLongPress,
                 )
                 .padding(
                     // Replaces the left margin the checkbox/asterisk normally provides,
-                    // since it's hidden in this mode — matches RN's taskContentReordering
-                    // style (paddingLeft: n(22)), without which the row loses its left
-                    // margin entirely while reordering.
+                    // since it's hidden while reordering.
                     start = if (isReordering) 1.5f.gridUnitsAsDp() else 0.dp,
                     top = 0.7f.gridUnitsAsDp(),
                     bottom = 0.7f.gridUnitsAsDp(),
                 ),
         ) {
-            // LightTextVariant.Copy bakes in lineHeight = fontSize * 1.50, which reads
-            // much looser across wraps than RN's title (no explicit line-height at all).
-            // AkkuratText at the same 30 design-px size lets the font's own natural line
-            // height apply instead.
+            // LightTextVariant.Copy's lineHeight = fontSize * 1.50 reads too loose across
+            // wraps — AkkuratText at the same size uses the font's natural line height.
             AkkuratText(text = task.title, fontSizeDesignPx = 30f)
             if (meta.isNotEmpty()) {
                 LightText(

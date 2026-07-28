@@ -14,14 +14,11 @@ import kotlinx.serialization.json.put
 
 /**
  * Converts between plain kotlinx.serialization JSON and Firestore REST API's typed
- * "Value" wire format (each field wrapped as `{"stringValue": "..."}`,
- * `{"integerValue": "123"}`, etc — see
+ * "Value" wire format (each field wrapped as `{"stringValue": "..."}`, etc — see
  * https://firebase.google.com/docs/firestore/reference/rest/v1/Value).
  *
- * reminders-web's schema only ever stores plain numbers/strings/bools/arrays/maps —
- * `updatedAt`/`createdAt` are `Date.now()` epoch-millis numbers, not Firestore's
- * `serverTimestamp()` — so this only needs to handle the cases actually in use, not
- * Firestore's full Value union (no timestampValue, referenceValue, geoPointValue, bytesValue).
+ * Only handles the value types reminders-web actually uses (numbers/strings/bools/
+ * arrays/maps) — no timestampValue, referenceValue, geoPointValue, bytesValue.
  */
 object FirestoreValue {
     /** A plain JSON field map (e.g. from `Json.encodeToJsonElement(Task.serializer(), t)`)

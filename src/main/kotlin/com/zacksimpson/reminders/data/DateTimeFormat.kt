@@ -91,12 +91,9 @@ fun isOverdue(date: String?, time: String?): Boolean {
 }
 
 /**
- * Sort order for same-day tasks. Ported literally from RN's dateTime.ts: when only one of
- * the two has a time set, the untimed one sorts first (this is what the code actually does
- * — note the RN source's own doc comment claims the opposite, "timed before untimed", which
- * doesn't match its own logic; ported the executable behavior, not the comment). When
- * neither has a time, falls back to the manual `order` field; when both have a time,
- * compares the "HH:MM" strings directly.
+ * Sort order for same-day tasks, ported from RN's dateTime.ts. When only one of the two
+ * has a time set, the untimed one sorts first — falls back to `order` when neither has a
+ * time, compares "HH:MM" directly when both do.
  */
 fun compareTasksByDateTime(a: Task, b: Task): Int {
     if (a.time == null && b.time == null) return a.order - b.order

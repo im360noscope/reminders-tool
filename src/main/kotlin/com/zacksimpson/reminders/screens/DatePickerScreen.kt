@@ -102,9 +102,7 @@ class DatePickerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 1f.gridUnitsAsDp()),
             ) {
-                // Month/year header. Chevron size/inset intentionally match LightTopBar's
-                // back button exactly (2f sizeUnits, no extra horizontal inset beyond the
-                // screen's shared 1f gridUnitsAsDp() padding) rather than a bespoke size.
+                // Chevron size/inset match LightTopBar's back button exactly.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -144,10 +142,9 @@ class DatePickerScreen(
                 // Calendar grid
                 Column {
                     rows.forEach { row ->
-                        // height(IntrinsicSize.Min) + fillMaxHeight on each cell replicates
-                        // CSS flexbox's default align-items:stretch, which RN relied on to
-                        // keep blank cells the same height as day cells in the same row —
-                        // Compose doesn't stretch row children to the tallest sibling by default.
+                        // height(IntrinsicSize.Min) + fillMaxHeight keeps blank cells the
+                        // same height as day cells — Compose doesn't stretch row children
+                        // to the tallest sibling by default.
                         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                             row.forEach { day ->
                                 Box(
@@ -191,10 +188,8 @@ class DatePickerScreen(
                 }
             }
 
-                // Dismiss, anchored to the true bottom of the screen (matches RN's
-                // position:absolute footer) via the SDK's own LightBottomBar — same
-                // component + same LightIcons.CLOSE icon the SDK's own LightFullscreenModal
-                // uses for its dismiss button, rather than a manually placed/sized icon.
+                // Dismiss anchored to the bottom via LightBottomBar, same component and
+                // CLOSE icon LightFullscreenModal uses for its own dismiss button.
                 LightBottomBar(
                     items = listOf(LightBarButton.LightIcon(LightIcons.CLOSE, onClick = { goBack(null) })),
                     modifier = Modifier.align(Alignment.BottomCenter),

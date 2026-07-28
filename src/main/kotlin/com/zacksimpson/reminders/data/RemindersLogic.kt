@@ -8,11 +8,7 @@ import java.time.LocalDate
  */
 internal object RemindersLogic {
 
-    /**
-     * Order value for a new task:
-     *  - TOP    → (min of 0 and the list's existing orders) − 1
-     *  - BOTTOM → (max of −1 and the list's existing orders) + 1
-     */
+    /** TOP -> below the lowest existing order; BOTTOM -> above the highest. */
     fun computeOrder(tasks: List<Task>, listId: String, position: AddPosition): Int {
         val orders = tasks.filter { it.listId == listId }.map { it.order }
         return if (position == AddPosition.TOP) {
@@ -43,10 +39,6 @@ internal object RemindersLogic {
         return next.toString()
     }
 
-    /**
-     * Follow-up task spawned when a dated recurring task is completed, or null if it isn't
-     * one. Carries over title/list/time/recurrence and subtasks (reset to incomplete).
-     */
     /** Interval wraps 1<->30 rather than clamping-and-stopping. */
     fun decrementInterval(interval: Int): Int = if (interval <= 1) 30 else interval - 1
 
@@ -58,6 +50,9 @@ internal object RemindersLogic {
         return units[(units.indexOf(unit) + 1) % units.size]
     }
 
+    /** Follow-up task spawned when a dated recurring task is completed, or null if it
+     *  isn't one. Carries over title/list/time/recurrence and subtasks (reset to
+     *  incomplete). */
     fun spawnNextOccurrence(
         task: Task,
         today: LocalDate,

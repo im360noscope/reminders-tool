@@ -14,9 +14,8 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 /** Up/down reorder arrows shared by task rows and list rows. */
 @Composable
 fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMoveDown: () -> Unit) {
-    // spacedBy trimmed from 0.6f: the enlarged clickable padding below now adds its own
-    // gap between the two icons' tap zones, so the old value would have pushed them
-    // further apart than intended once combined.
+    // Tighter than the icons' own spacing suggests — the enlarged clickable padding
+    // below already adds a gap between the two tap zones.
     Row(
         modifier = Modifier.padding(top = 0.75f.gridUnitsAsDp(), end = 0.5f.gridUnitsAsDp()),
         horizontalArrangement = Arrangement.spacedBy(0.2f.gridUnitsAsDp()),
@@ -24,11 +23,9 @@ fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMov
         LightIcon(
             icon = LightIcons.UP,
             size = 1.6f,
-            // LightIcons.UP/DOWN are both the BACK chevron's path rotated ±90°, and that
-            // path isn't vertically centered in its own box — after rotation, UP's ink
-            // sits high in its box and DOWN's sits low, so at the same nominal position
-            // they read visibly offset from each other. Applied before .clickable() since
-            // it's a visual-position offset, not part of the tap area.
+            // UP/DOWN are the BACK chevron rotated ±90°, off-center in its own box — UP's
+            // ink sits high, DOWN's sits low. Applied before .clickable() since it's a
+            // visual offset, not part of the tap area.
             modifier = Modifier
                 .padding(top = 0.58f.gridUnitsAsDp())
                 .alpha(if (isFirst) 0.3f else 1f)
