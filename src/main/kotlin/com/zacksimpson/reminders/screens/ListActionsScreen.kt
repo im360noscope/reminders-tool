@@ -30,6 +30,7 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,39 +44,34 @@ class ListActionsViewModel(
 ) : LightViewModel<ListAction>() {
     val state = repo.dataStateIn(viewModelScope)
 
-    fun rename(title: String, onRenamed: () -> Unit) {
+    // Fire-and-forget: the caller navigates away immediately (goBack right alongside
+    // these calls, not after), which cancels viewModelScope before a normally-dispatched
+    // coroutine would even start — NonCancellable can't protect a coroutine that never
+    // got to run. UNDISPATCHED forces it to start synchronously, right here, so it's
+    // already inside the protected block before that cancellation can land.
+    fun rename(title: String) {
         val t = title.trim()
-        if (t.isEmpty()) {
-            onRenamed()
-            return
-        }
-        viewModelScope.launch {
-            // Same NonCancellable reasoning as clearCompleted()/delete() below.
+        if (t.isEmpty()) return
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withContext(NonCancellable) {
                 repo.renameList(listId, t)
             }
-            onRenamed()
         }
     }
 
-    fun clearCompleted(onCleared: () -> Unit) {
-        viewModelScope.launch {
-            // NonCancellable so the write finishes even if this screen is destroyed
-            // mid-write (viewModelScope gets cancelled on destroy).
+    fun clearCompleted() {
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withContext(NonCancellable) {
                 repo.clearCompletedTasks(listId)
             }
-            onCleared()
         }
     }
 
-    fun delete(onDeleted: () -> Unit) {
-        viewModelScope.launch {
-            // Same NonCancellable reasoning as clearCompleted() above.
+    fun delete() {
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withContext(NonCancellable) {
                 repo.deleteList(listId)
             }
-            onDeleted()
         }
     }
 }
@@ -120,7 +116,10 @@ class ListActionsScreen(
                     onClick = {
                         navigateTo(
                             screenFactory = { TextEditorScreen(it, TextEditorRequest("Rename", listTitle)) },
-                            resultCallback = { text -> viewModel.rename(text) { goBack(null) } },
+                            resultCallback = { text ->
+                                viewModel.rename(text)
+                                goBack(null)
+                            },
                         )
                     },
                 )
@@ -141,7 +140,8 @@ class ListActionsScreen(
                             },
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
-                                    viewModel.clearCompleted { goBack(null) }
+                                    viewModel.clearCompleted()
+                                    goBack(null)
                                 }
                             },
                         )
@@ -160,7 +160,8 @@ class ListActionsScreen(
                             },
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
-                                    viewModel.delete { goBack(null) }
+                                    viewModel.delete()
+                                    goBack(null)
                                 }
                             },
                         )
