@@ -49,8 +49,16 @@ class ListActionsViewModel(
         viewModelScope.launch { repo.renameList(listId, t) }
     }
 
-    fun clearCompleted() {
-        viewModelScope.launch { repo.clearCompletedTasks(listId) }
+    fun clearCompleted(onCleared: () -> Unit) {
+        viewModelScope.launch {
+            // NonCancellable for the same reason as delete() below: the write must
+            // finish even if this screen is destroyed mid-write, which goBack() (called
+            // right after this, from the result callback) does immediately.
+            withContext(NonCancellable) {
+                repo.clearCompletedTasks(listId)
+            }
+            onCleared()
+        }
     }
 
     fun delete(onDeleted: () -> Unit) {
@@ -129,8 +137,7 @@ class ListActionsScreen(
                             },
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
-                                    viewModel.clearCompleted()
-                                    goBack(null)
+                                    viewModel.clearCompleted { goBack(null) }
                                 }
                             },
                         )
