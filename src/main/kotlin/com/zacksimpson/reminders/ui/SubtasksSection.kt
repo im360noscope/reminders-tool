@@ -38,21 +38,23 @@ fun SubtasksSection(
         subtasks.forEach { subtask ->
             SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
         }
-        // Matches TaskCheckboxIcon's size so the two circles read the same size — no
-        // label, just the icon, matching RN's collapsed add-subtask button.
-        PlusCircleIcon(
-            size = 17.dp,
+        // No label, just the icon, matching RN's collapsed add-subtask button — but the
+        // tappable row still spans full width, so tapping the empty space to the right
+        // (where the label used to be) also works, not just the icon itself.
+        Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable(onClick = onAdd)
+                .padding(top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
+        ) {
+            // Matches TaskCheckboxIcon's size so the two circles read the same size.
+            PlusCircleIcon(
+                size = 17.dp,
                 // start matches SubtaskRow's own start so this lines up under the
                 // checkbox above.
-                .padding(
-                    start = 1.4f.gridUnitsAsDp(),
-                    end = 0.9f.gridUnitsAsDp(),
-                    top = 0.6f.gridUnitsAsDp(),
-                    bottom = 0.5f.gridUnitsAsDp(),
-                ),
-        )
+                modifier = Modifier.padding(start = 1.4f.gridUnitsAsDp()),
+            )
+        }
     }
 }
 
