@@ -21,6 +21,7 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.data.AfterAddBehavior
 import com.zacksimpson.reminders.data.Recurrence
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Subtask
@@ -163,7 +164,19 @@ class AddTaskScreen(
                     rightButton = if (title.isNotBlank()) {
                         // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's —
                         // sized down to match BACK's visual weight.
-                        LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = { viewModel.save { goBack(null) } }, sizeUnits = 1.5f)
+                        LightBarButton.LightIcon(
+                            LightIcons.ACCEPT,
+                            onClick = {
+                                viewModel.save {
+                                    val afterAdd = (state as? DataState.Ready)?.data?.settings?.afterAddBehavior
+                                    goBack(null)
+                                    if (afterAdd == AfterAddBehavior.GO_TO_LIST) {
+                                        navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle) })
+                                    }
+                                }
+                            },
+                            sizeUnits = 1.5f,
+                        )
                     } else {
                         null
                     },
