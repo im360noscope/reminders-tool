@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,15 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.light.sdk)
 }
+
+// Secrets live in the gitignored local.properties, never in committed source
+// (see local.properties.sample). Falls back to an empty string so the build
+// doesn't break where it's unset — sync features just won't work until it is.
+val localProperties = Properties().apply {
+    val file = project.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+val firebaseApiKey: String = localProperties.getProperty("firebaseApiKey", "")
 
 android {
     compileSdk = rootProject.ext["compileSdk"] as Int
@@ -27,6 +38,11 @@ android {
         targetSdk = rootProject.ext["targetSdk"] as Int
 
         manifestPlaceholders["sdkVersion"] = property("sdkVersion") as String
+        buildConfigField("String", "FIREBASE_API_KEY", "\"$firebaseApiKey\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -59,5 +75,9 @@ dependencies {
     implementation(project(":sdk:client"))
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
+    // Phone<->desktop sync: Firebase has no Android SDK on the light-sdk allow-list,
+    // so auth/Firestore are hit over their plain REST APIs instead (see SYNC_PLAN.md).
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
     testImplementation(libs.kotlin.test)
 }

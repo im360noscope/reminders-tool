@@ -1,11 +1,11 @@
 [tool]
 id = "com.zacksimpson.reminders"
 label = "Reminders"
-versionCode = 1
+versionCode = 2
 versionName = "2.0.0"
-# Fully offline task manager — no permissions required.
 # Notifications are deferred (the SDK has no exact-time local alarm yet); see README.
-permissions = []
+# INTERNET/ACCESS_NETWORK_STATE added for phone<->desktop sync over Firebase's REST APIs.
+permissions = ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"]
 # LightOS server package on real LP3 hardware.
 # For the local LightOS emulator instead, use "com.thelightphone.sdk.emulator".
 serverPackage = "com.lightos"

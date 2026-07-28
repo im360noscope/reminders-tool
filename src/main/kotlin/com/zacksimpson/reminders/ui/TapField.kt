@@ -73,6 +73,10 @@ fun TapField(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    // Values like a picked list/date are short and benefit from truncating rather than
+    // wrapping; longer status text (e.g. "Last synced <date>, <time>") needs to wrap
+    // instead, or it silently loses the end of the string behind an ellipsis.
+    singleLine: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -84,8 +88,8 @@ fun TapField(
         LightText(
             text = value,
             variant = LightTextVariant.Heading,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+            overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
             modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
         )
     }

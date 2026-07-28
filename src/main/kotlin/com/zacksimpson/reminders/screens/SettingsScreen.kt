@@ -44,6 +44,7 @@ fun SettingsTab(
     onOpenAfterQuickAdd: () -> Unit,
     onOpenAddPosition: () -> Unit,
     onOpenTodayView: () -> Unit,
+    onOpenAccount: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LightTopBar(
@@ -69,6 +70,7 @@ fun SettingsTab(
                     modifier = Modifier.fillMaxSize(),
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
+                    SettingsLinkRow("Account", onOpenAccount)
                     SettingsLinkRow("Today View", onOpenTodayView)
                     SettingsRow("Default List", defaultTitle, onOpenDefaultList)
                     SettingsRow("After Quick Add", afterAddLabel(s.afterAddBehavior), onOpenAfterQuickAdd)
