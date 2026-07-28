@@ -15,7 +15,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.data.Subtask
 
-/** Subtasks list + "Add subtask…" row. Shared by Add Task and Task Detail — the caller
+/** Subtasks list + an add button. Shared by Add Task and Task Detail — the caller
  *  decides whether mutations are draft (Add) or immediate (Edit). */
 @Composable
 fun SubtasksSection(
@@ -38,18 +38,21 @@ fun SubtasksSection(
         subtasks.forEach { subtask ->
             SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
         }
-        Row(
+        // Matches TaskCheckboxIcon's size so the two circles read the same size — no
+        // label, just the icon, matching RN's collapsed add-subtask button.
+        PlusCircleIcon(
+            size = 17.dp,
             modifier = Modifier
                 .clickable(onClick = onAdd)
-                // start matches SubtaskRow's own start so the plus icon lines up under
-                // the checkbox above.
-                .padding(start = 0.5f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Matches TaskCheckboxIcon's size so the two circles read the same size.
-            PlusCircleIcon(size = 17.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
-            LightText(text = "Add subtask…", variant = LightTextVariant.Paragraph)
-        }
+                // start matches SubtaskRow's own start so this lines up under the
+                // checkbox above.
+                .padding(
+                    start = 1.4f.gridUnitsAsDp(),
+                    end = 0.9f.gridUnitsAsDp(),
+                    top = 0.6f.gridUnitsAsDp(),
+                    bottom = 0.5f.gridUnitsAsDp(),
+                ),
+        )
     }
 }
 
@@ -73,7 +76,7 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
                 .padding(
                     start = 0.9f.gridUnitsAsDp(),
                     end = 0.9f.gridUnitsAsDp(),
-                    top = 0.55f.gridUnitsAsDp(),
+                    top = 0.68f.gridUnitsAsDp(),
                     bottom = 0.1f.gridUnitsAsDp(),
                 ),
         )
