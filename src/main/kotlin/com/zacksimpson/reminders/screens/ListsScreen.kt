@@ -69,7 +69,12 @@ fun ListsTab(
                 val sorted = state.data.lists.sortedBy { it.order }
                 sorted.forEachIndexed { index, list ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Scroll-indicator clearance (LightScrollBarPosition.Inside
+                            // overlays rather than reserving its own column) — otherwise
+                            // ReorderArrows sits under the indicator in reorder mode.
+                            .padding(end = 2f.gridUnitsAsDp()),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         LightText(
