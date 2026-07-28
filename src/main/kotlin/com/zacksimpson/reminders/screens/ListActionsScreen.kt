@@ -43,10 +43,19 @@ class ListActionsViewModel(
 ) : LightViewModel<ListAction>() {
     val state = repo.dataStateIn(viewModelScope)
 
-    fun rename(title: String) {
+    fun rename(title: String, onRenamed: () -> Unit) {
         val t = title.trim()
-        if (t.isEmpty()) return
-        viewModelScope.launch { repo.renameList(listId, t) }
+        if (t.isEmpty()) {
+            onRenamed()
+            return
+        }
+        viewModelScope.launch {
+            // Same NonCancellable reasoning as clearCompleted()/delete() below.
+            withContext(NonCancellable) {
+                repo.renameList(listId, t)
+            }
+            onRenamed()
+        }
     }
 
     fun clearCompleted(onCleared: () -> Unit) {
@@ -111,10 +120,7 @@ class ListActionsScreen(
                     onClick = {
                         navigateTo(
                             screenFactory = { TextEditorScreen(it, TextEditorRequest("Rename", listTitle)) },
-                            resultCallback = { text ->
-                                viewModel.rename(text)
-                                goBack(null)
-                            },
+                            resultCallback = { text -> viewModel.rename(text) { goBack(null) } },
                         )
                     },
                 )
