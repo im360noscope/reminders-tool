@@ -1,8 +1,16 @@
 # Reminders
-
 A reminders app for the Light Phone III.
 
 Organize tasks into lists, add due dates and times, check things off as you go, and get notified when it matters.
+
+> [!WARNING]
+> This v2.0 version is a native rewrite using the Light SDK as well. It also uses a new package ID. This means installing from scratch works great, and updating is... _(trails off mumbling)_ 
+
+> Here's what I recommend BEFORE UPDATING:
+> 1. Current Reminders app: Go to settings > Backup & Restore > manually export a backup file
+> 2. Website: import that backup file
+> 3. Now your tasks are safely synced with your account before you even update the app. 
+
 
 ---
 
