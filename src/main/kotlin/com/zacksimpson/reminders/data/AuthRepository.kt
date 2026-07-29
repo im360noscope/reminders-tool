@@ -23,10 +23,9 @@ sealed interface AuthState {
 }
 
 /**
- * Stores the signed-in account's tokens for phone<->desktop sync in the same shared
- * DataStore instance [RemindersRepository] already uses, under its own preference keys.
- * [AuthClient] does the actual network calls; this only persists what comes back and
- * decides when a stored ID token needs refreshing.
+ * Stores the signed-in account's tokens for phone<->desktop sync in the shared
+ * DataStore [RemindersRepository] uses. [AuthClient] does the network calls; this
+ * persists what comes back and decides when a stored ID token needs refreshing.
  */
 class AuthRepository(private val dataStore: DataStore<Preferences>) {
     private val client = AuthClient()
@@ -64,8 +63,8 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         dataStore.edit { p -> p[LAST_SYNCED_KEY] = System.currentTimeMillis() }
     }
 
-    /** A valid ID token for authenticated Firestore REST calls (Phase 3), refreshing
-     *  first if the stored one is expired or about to be. Null if signed out. */
+    /** A valid ID token for authenticated Firestore calls, refreshing first if the
+     *  stored one is expired or about to be. Null if signed out. */
     suspend fun validIdToken(): String? {
         val prefs = dataStore.data.first()
         val refreshToken = prefs[REFRESH_TOKEN_KEY] ?: return null

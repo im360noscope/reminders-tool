@@ -38,11 +38,8 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 
 /**
  * Numpad time entry, ported from RN's TimePicker.tsx — see [TimePickerLogic] for the
- * digit-validation state machine this screen drives. Tapping SAVE closes with the
- * confirmed "HH:MM" (24h) result; the dismiss (✕) — only available with zero digits
- * typed, matching RN — closes with null (no change). The digit string is re-seeded from
- * [initialValue] every time this screen opens (a fresh instance each push, unlike RN's
- * persistent-modal state that could retain stale digits across opens).
+ * digit-validation state machine. SAVE closes with the confirmed "HH:MM" (24h) result;
+ * the dismiss (✕), only available with zero digits typed, closes with null.
  */
 class TimePickerScreen(
     sealedActivity: SealedLightActivity,
@@ -78,15 +75,10 @@ class TimePickerScreen(
                     .fillMaxSize()
                     .background(LightThemeTokens.colors.background),
             ) {
-                // No LightTopBar here (unlike DatePickerScreen's own reference use) — an
-                // empty one still reserves its full 3 grid-unit height, which combined
-                // with the padding below pushed the whole AM/PM+digits block noticeably
-                // lower than the reference layout.
-                // AM/PM pinned to the row's edges; time display absolutely centered over
-                // the same Box so it never shifts the AM/PM buttons as digits are typed.
-                // contentAlignment = Center applies to both children by default (neither
-                // has its own .align()), so AM/PM sits centered against the tall time
-                // text instead of defaulting to top-start.
+                // No LightTopBar — an empty one still reserves 3 grid units of height,
+                // pushing this block lower than intended. AM/PM pinned to the row's
+                // edges; time display centered over the same Box via contentAlignment
+                // so it doesn't shift as digits are typed.
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,21 +100,15 @@ class TimePickerScreen(
                     }
                     AkkuratText(
                         text = TimePickerLogic.buildDisplay(digits),
-                        // The earlier "too tall" complaint was actually the missing
-                        // contentAlignment centering above, not oversized text — 100 read
-                        // smaller than the reference proportionally. Back up near Title.
-                        fontSizeDesignPx = 115f,
+                        fontSizeDesignPx = 115f, // near Title size
                         fontWeight = FontWeight.Light,
                         align = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
-                // Numpad. Each digit column is a weight(1f) box, so the 3 columns always
-                // split the entire available row width evenly — more side padding means
-                // a narrower row, which pulls the (centered) digit columns closer
-                // together. Less padding widens the row and spreads them apart, the
-                // opposite of what "tighten up" needs.
+                // Each digit column is weight(1f), so the 3 columns split the row width
+                // evenly — more side padding narrows the row and pulls them closer together.
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -140,10 +126,7 @@ class TimePickerScreen(
                         }
                     }
                     NumRow {
-                        // Matches NumBtn's own vertical padding so this row's height lines
-                        // up with the numeral rows above it — without it, the icon-only
-                        // cells were shorter than the text cells and threw off the
-                        // Column's SpaceEvenly distribution across all four rows.
+                        // Matches NumBtn's own vertical padding so all four rows line up.
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -159,12 +142,7 @@ class TimePickerScreen(
                                 hasDigits -> Unit // blank — matches RN: no button while mid-entry
                                 else -> LightIcon(
                                     icon = LightIcons.CLOSE,
-                                    // Sized up to match the 48px numpad digits/backspace
-                                    // chevron — CLOSE's own artwork fills its box more
-                                    // evenly (~65% both dimensions) than BACK's asymmetric
-                                    // chevron, so it lands a touch under BACK's 2.4f for
-                                    // the same apparent weight.
-                                    size = 2.2f,
+                                    size = 2.2f, // matches the 48px numpad digits visually
                                     modifier = Modifier.clickable { goBack(null) },
                                 )
                             }
@@ -193,10 +171,8 @@ class TimePickerScreen(
 
 @Composable
 private fun NumRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
-    // verticalAlignment = CenterVertically matters most on the bottom row, where the
-    // SAVE/dismiss cell (small Paragraph text) and the "0" cell (much taller AkkuratText
-    // digit) have different intrinsic heights — without it, Row's default Top alignment
-    // pins the shorter SAVE cell above where "0" and the backspace chevron sit.
+    // CenterVertically matters on the bottom row, where the small SAVE text and the
+    // much taller "0" digit would otherwise misalign under Row's default Top alignment.
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, content = content)
 }
 
@@ -209,10 +185,7 @@ private fun androidx.compose.foundation.layout.RowScope.NumBtn(digit: String, on
             .padding(vertical = 0.2f.gridUnitsAsDp()),
         contentAlignment = Alignment.Center,
     ) {
-        // RN's n(35) numText, per the same calibration used for the time display, lands
-        // roughly between the Heading (38) and Subtitle (52) design-px sizes — a bare 35
-        // rendered noticeably smaller than the reference.
-        AkkuratText(text = digit, fontSizeDesignPx = 48f)
+        AkkuratText(text = digit, fontSizeDesignPx = 48f) // between Heading/Subtitle sizes
     }
 }
 

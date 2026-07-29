@@ -131,9 +131,11 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
         }
         LightIcon(
             icon = LightIcons.DELETE,
+            // Top offset centers against the value line below the label, not the
+            // label itself — the label's own line sits above this icon's top edge.
             modifier = Modifier
                 .clickable(onClick = onClear)
-                .padding(top = 0.6f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),
+                .padding(top = 1.72f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),
         )
     }
 }

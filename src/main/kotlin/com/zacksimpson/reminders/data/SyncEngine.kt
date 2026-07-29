@@ -8,14 +8,9 @@ class SyncException(message: String) : Exception(message)
 
 /**
  * Orchestrates one full sync pass (SYNC_PLAN.md §3 step 4): pull remote, reconcile with
- * local via [SyncLogic]'s pure last-write-wins merge, push whatever local won, persist
- * the reconciled result back to [RemindersRepository]. DataStore stays the single
- * source of truth every screen reads — this only reconciles into/out of it before and
- * after a sync pass, so the phone works fully offline whether or not this ever runs.
- *
- * The impure, network/storage-touching counterpart to [SyncLogic]'s pure functions —
- * kept thin and untested at the unit level on purpose; [SyncLogic] carries the logic
- * actually worth testing in isolation.
+ * local via [SyncLogic]'s merge, push whatever local won, persist the result back to
+ * [RemindersRepository]. The impure, network/storage-touching counterpart to
+ * [SyncLogic]'s pure (and unit-tested) functions.
  */
 class SyncEngine(
     private val remindersRepo: RemindersRepository,

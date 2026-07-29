@@ -30,6 +30,7 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,24 +44,34 @@ class ListActionsViewModel(
 ) : LightViewModel<ListAction>() {
     val state = repo.dataStateIn(viewModelScope)
 
+    // Fire-and-forget: the caller navigates away immediately (goBack right alongside
+    // these calls, not after), which cancels viewModelScope before a normally-dispatched
+    // coroutine would even start — NonCancellable can't protect a coroutine that never
+    // got to run. UNDISPATCHED forces it to start synchronously, right here, so it's
+    // already inside the protected block before that cancellation can land.
     fun rename(title: String) {
         val t = title.trim()
         if (t.isEmpty()) return
-        viewModelScope.launch { repo.renameList(listId, t) }
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withContext(NonCancellable) {
+                repo.renameList(listId, t)
+            }
+        }
     }
 
     fun clearCompleted() {
-        viewModelScope.launch { repo.clearCompletedTasks(listId) }
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            withContext(NonCancellable) {
+                repo.clearCompletedTasks(listId)
+            }
+        }
     }
 
-    fun delete(onDeleted: () -> Unit) {
-        viewModelScope.launch {
-            // NonCancellable for the same reason as TaskActionsScreen's delete: the write
-            // must finish even if this screen is destroyed mid-delete.
+    fun delete() {
+        viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             withContext(NonCancellable) {
                 repo.deleteList(listId)
             }
-            onDeleted()
         }
     }
 }
@@ -149,7 +160,8 @@ class ListActionsScreen(
                             },
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
-                                    viewModel.delete { goBack(null) }
+                                    viewModel.delete()
+                                    goBack(null)
                                 }
                             },
                         )

@@ -15,7 +15,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.data.Subtask
 
-/** Subtasks list + "Add subtask…" row. Shared by Add Task and Task Detail — the caller
+/** Subtasks list + an add button. Shared by Add Task and Task Detail — the caller
  *  decides whether mutations are draft (Add) or immediate (Edit). */
 @Composable
 fun SubtasksSection(
@@ -38,18 +38,22 @@ fun SubtasksSection(
         subtasks.forEach { subtask ->
             SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
         }
+        // No label, just the icon, matching RN's collapsed add-subtask button — but the
+        // tappable row still spans full width, so tapping the empty space to the right
+        // (where the label used to be) also works, not just the icon itself.
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .clickable(onClick = onAdd)
-                // start matches SubtaskRow's own row start (0.5f) so the plus icon lines
-                // up under the checkbox above instead of sitting further right.
-                .padding(start = 0.5f.gridUnitsAsDp(), top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
         ) {
-            // Matches TaskCheckboxIcon's size (see SubtaskRow below) so the two circles read
-            // as the same size stacked on top of each other.
-            PlusCircleIcon(size = 17.dp, modifier = Modifier.padding(horizontal = 0.9f.gridUnitsAsDp()))
-            LightText(text = "Add subtask…", variant = LightTextVariant.Paragraph)
+            // Matches TaskCheckboxIcon's size so the two circles read the same size.
+            PlusCircleIcon(
+                size = 17.dp,
+                // start matches SubtaskRow's own start so this lines up under the
+                // checkbox above.
+                modifier = Modifier.padding(start = 1.4f.gridUnitsAsDp()),
+            )
         }
     }
 }
@@ -59,15 +63,13 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // end bumped to match TaskRowView/TitleField's scroll-indicator clearance
-            // (LightScrollBarPosition.Inside overlays rather than reserving its own
-            // column) — otherwise DeleteIcon sits right under the indicator.
+            // end bumped for scroll-indicator clearance (LightScrollBarPosition.Inside
+            // overlays rather than reserving its own column).
             .padding(start = 0.5f.gridUnitsAsDp(), end = 2f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
-        // Top measured against the subtask text's first-line center (0.95f sat ~16px /
-        // 0.4 grid units too low) rather than copied from TaskRowView's checkbox, since
-        // this row uses Paragraph text, not AkkuratText — different line metrics.
+        // Top offset tuned against this row's Paragraph text, not copied from
+        // TaskRowView's checkbox — different line metrics (AkkuratText there).
         TaskCheckboxIcon(
             checked = subtask.completed,
             size = 17.dp,
@@ -76,7 +78,7 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
                 .padding(
                     start = 0.9f.gridUnitsAsDp(),
                     end = 0.9f.gridUnitsAsDp(),
-                    top = 0.55f.gridUnitsAsDp(),
+                    top = 0.68f.gridUnitsAsDp(),
                     bottom = 0.1f.gridUnitsAsDp(),
                 ),
         )

@@ -20,19 +20,14 @@ private const val TAG = "AuthClient"
 
 /**
  * Talks to Firebase's Identity Toolkit REST API directly. light-sdk has no Firebase
- * Android SDK on its dependency allow-list (see SYNC_PLAN.md §2.1), so this hand-rolls
- * the two calls the app actually needs instead of pulling in firebase-auth.
+ * Android SDK allow-listed, so this hand-rolls the two calls the app needs.
  *
- * Bodies are read as raw text and decoded manually (rather than via Ktor's typed
- * ContentNegotiation) so a shape mismatch can log the actual response instead of just
- * an opaque conversion exception — useful while this is still being stood up against a
- * real Firebase project's exact response shape.
+ * Bodies are read as raw text and decoded manually so a shape mismatch logs the actual
+ * response instead of an opaque conversion exception.
  */
 class AuthClient {
-    // encodeDefaults=true: kotlinx.serialization omits any field left at its Kotlin
-    // default, and SignInRequest.returnSecureToken=true is always exactly its default —
-    // without this, Firebase never sees returnSecureToken and just verifies the
-    // password instead of starting a real session (no refreshToken issued).
+    // encodeDefaults=true, or SignInRequest.returnSecureToken=true (always its default
+    // value) never gets sent, and Firebase just verifies the password with no session.
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -40,12 +35,9 @@ class AuthClient {
 
     private val http = HttpClient(OkHttp) {
         defaultRequest {
-            // Identifies this app to the Android-restricted API key — see
-            // FirebaseConfig's doc comment for why this can't be skipped.
+            // Satisfies the Android-restricted API key — see FirebaseConfig.
             header("X-Android-Package", FirebaseConfig.ANDROID_PACKAGE)
             header("X-Android-Cert", FirebaseConfig.ANDROID_CERT_SHA1)
-            // Identifies this as a Firebase app call, matching what every real Firebase
-            // SDK sends.
             header("X-Firebase-gmpid", FirebaseConfig.FIREBASE_APP_ID)
         }
     }

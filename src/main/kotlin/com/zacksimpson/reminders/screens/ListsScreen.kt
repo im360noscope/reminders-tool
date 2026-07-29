@@ -46,8 +46,8 @@ fun ListsTab(
             rightButton = if (isReordering) {
                 LightBarButton.Text("DONE", onClick = onStopReordering)
             } else {
-                // ic_plus's artwork fills its box edge-to-edge (unlike LightIcons' own icons,
-                // which have built-in padding) — sizeUnits is reduced to match BACK's visual weight.
+                // ic_plus's artwork fills its box edge-to-edge, unlike LightIcons' own
+                // icons — sizeUnits reduced to match BACK's visual weight.
                 LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f)
             },
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
@@ -69,7 +69,12 @@ fun ListsTab(
                 val sorted = state.data.lists.sortedBy { it.order }
                 sorted.forEachIndexed { index, list ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Scroll-indicator clearance (LightScrollBarPosition.Inside
+                            // overlays rather than reserving its own column) — otherwise
+                            // ReorderArrows sits under the indicator in reorder mode.
+                            .padding(end = 2f.gridUnitsAsDp()),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         LightText(
@@ -83,7 +88,10 @@ fun ListsTab(
                                 )
                                 .padding(
                                     horizontal = 1.5f.gridUnitsAsDp(),
-                                    vertical = 0.5f.gridUnitsAsDp(),
+                                    // Matches ActionRow/OptionPickerScreen/TapField's
+                                    // vertical inset — same RN paddingVertical/fontSize
+                                    // family (n(11-14) + n(30)) as this row.
+                                    vertical = 0.75f.gridUnitsAsDp(),
                                 ),
                         )
                         if (isReordering) {
