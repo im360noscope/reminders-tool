@@ -15,6 +15,38 @@ class RemindersLogicTest {
     private fun task(id: String, listId: String, order: Int) =
         Task(id = id, title = id, listId = listId, createdAt = 0L, order = order)
 
+    // ── applyOrder (LIST_TASK_ORDER_MIGRATION.md fallback rule) ────────────────
+
+    @Test
+    fun `applyOrder falls back to fallback sort when orderIds is null or empty`() {
+        val items = listOf(task("a", "inbox", 2), task("b", "inbox", 0), task("c", "inbox", 1))
+        val expected = listOf("b", "c", "a")
+        assertEquals(expected, RemindersLogic.applyOrder(items, Task::id, null) { it.order }.map { it.id })
+        assertEquals(expected, RemindersLogic.applyOrder(items, Task::id, emptyList()) { it.order }.map { it.id })
+    }
+
+    @Test
+    fun `applyOrder sorts known ids by their position in orderIds`() {
+        val items = listOf(task("a", "inbox", 0), task("b", "inbox", 1), task("c", "inbox", 2))
+        val result = RemindersLogic.applyOrder(items, Task::id, listOf("c", "a", "b")) { it.order }
+        assertEquals(listOf("c", "a", "b"), result.map { it.id })
+    }
+
+    @Test
+    fun `applyOrder appends ids missing from orderIds after known ones, sorted by fallback`() {
+        val items = listOf(task("a", "inbox", 5), task("b", "inbox", 0), task("c", "inbox", 1))
+        // orderIds only knows about "a"; "b" and "c" are new and fall back to `order`.
+        val result = RemindersLogic.applyOrder(items, Task::id, listOf("a")) { it.order }
+        assertEquals(listOf("a", "b", "c"), result.map { it.id })
+    }
+
+    @Test
+    fun `applyOrder ignores stale ids in orderIds that no longer match an item`() {
+        val items = listOf(task("a", "inbox", 0), task("b", "inbox", 1))
+        val result = RemindersLogic.applyOrder(items, Task::id, listOf("gone", "b", "a")) { it.order }
+        assertEquals(listOf("b", "a"), result.map { it.id })
+    }
+
     // ── Ordering ──────────────────────────────────────────────────────────────
 
     @Test

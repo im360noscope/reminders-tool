@@ -30,7 +30,9 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
+import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
+import com.zacksimpson.reminders.data.Task
 import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
@@ -132,7 +134,12 @@ class ListDetailScreen(
 
                     is DataState.Ready -> {
                         val listTasks = s.data.tasks.filter { it.listId == listId }
-                        val active = listTasks.filterNot { it.completed }.sortedBy { it.order }
+                        val taskOrder = s.data.lists.firstOrNull { it.id == listId }?.taskOrder
+                        val active = RemindersLogic.applyOrder(
+                            listTasks.filterNot { it.completed },
+                            Task::id,
+                            taskOrder,
+                        ) { it.order }
                         val completed = listTasks.filter { it.completed }
                             .sortedByDescending { it.completedAt ?: 0L }
 

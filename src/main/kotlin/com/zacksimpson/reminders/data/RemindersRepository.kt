@@ -122,27 +122,20 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun moveListUp(id: String) = reorderList(id, -1)
     suspend fun moveListDown(id: String) = reorderList(id, +1)
 
+    /** Persists the reordered active-list array as one field on Settings — a single
+     *  write no matter how many lists exist, matching reminders-web's `reorderLists()`
+     *  (LIST_TASK_ORDER_MIGRATION.md). Individual list docs' own `order` field is left
+     *  untouched; it only remains as the fallback sort key for ids not yet in the array. */
     private suspend fun reorderList(id: String, direction: Int) {
         dataStore.edit { p ->
-            val all = p.readLists()
-            val sorted = all.filterNot { it.deleted }.sortedBy { it.order }
+            val settings = p.readSettings()
+            val active = p.readLists().filterNot { it.deleted }
+            val sorted = RemindersLogic.applyOrder(active, ReminderList::id, settings.listOrder) { it.order }
             val idx = sorted.indexOfFirst { it.id == id }
             val target = idx + direction
             if (idx < 0 || target < 0 || target >= sorted.size) return@edit
-            // writeLists needs every list, including the tombstones filtered out above.
-            val aId = sorted[idx].id
-            val bId = sorted[target].id
-            val aOrder = sorted[idx].order
-            val bOrder = sorted[target].order
-            p.writeLists(
-                all.map { l ->
-                    when (l.id) {
-                        aId -> l.copy(order = bOrder, updatedAt = now())
-                        bId -> l.copy(order = aOrder, updatedAt = now())
-                        else -> l
-                    }
-                },
-            )
+            val reordered = sorted.toMutableList().apply { add(target, removeAt(idx)) }
+            p.writeSettings(settings.copy(listOrder = reordered.map { it.id }, updatedAt = now()))
         }
     }
 
@@ -199,16 +192,26 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun moveTaskUp(id: String, listId: String) = reorderTask(id, listId, -1)
     suspend fun moveTaskDown(id: String, listId: String) = reorderTask(id, listId, +1)
 
-    /** Reorders within [listId]'s active tasks. Shares [swapTaskOrderValues] with
-     *  [swapTaskOrder] since nesting a second dataStore.edit isn't safe. */
+    /** Persists the reordered active-task array as one field on [listId]'s own
+     *  ReminderList doc — a single write no matter how many tasks are in the list,
+     *  matching reminders-web's `reorderTasks()` (LIST_TASK_ORDER_MIGRATION.md). Task
+     *  docs' own `order` field is left untouched; it only remains as the fallback sort
+     *  key for ids not yet in the array. */
     private suspend fun reorderTask(id: String, listId: String, direction: Int) {
         dataStore.edit { p ->
-            val all = p.readTasks()
-            val sorted = all.filter { it.listId == listId && !it.completed && !it.deleted }.sortedBy { it.order }
+            val lists = p.readLists()
+            val list = lists.firstOrNull { it.id == listId } ?: return@edit
+            val active = p.readTasks().filter { it.listId == listId && !it.completed && !it.deleted }
+            val sorted = RemindersLogic.applyOrder(active, Task::id, list.taskOrder) { it.order }
             val idx = sorted.indexOfFirst { it.id == id }
             val target = idx + direction
             if (idx < 0 || target < 0 || target >= sorted.size) return@edit
-            p.writeTasks(swapTaskOrderValues(all, sorted[idx], sorted[target]))
+            val reordered = sorted.toMutableList().apply { add(target, removeAt(idx)) }
+            p.writeLists(
+                lists.map { l ->
+                    if (l.id == listId) l.copy(taskOrder = reordered.map { it.id }, updatedAt = now()) else l
+                },
+            )
         }
     }
 
@@ -285,26 +288,6 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
             )
         }
     }
-
-    /** Swap the order values of two tasks (used by reorder mode). No-op if either is gone. */
-    suspend fun swapTaskOrder(idA: String, idB: String) {
-        dataStore.edit { p ->
-            val tasks = p.readTasks()
-            val a = tasks.firstOrNull { it.id == idA } ?: return@edit
-            val b = tasks.firstOrNull { it.id == idB } ?: return@edit
-            p.writeTasks(swapTaskOrderValues(tasks, a, b))
-        }
-    }
-
-    /** Pure swap step shared by [swapTaskOrder] and [reorderTask]. */
-    private fun swapTaskOrderValues(tasks: List<Task>, a: Task, b: Task): List<Task> =
-        tasks.map { t ->
-            when (t.id) {
-                a.id -> t.copy(order = b.order, updatedAt = now())
-                b.id -> t.copy(order = a.order, updatedAt = now())
-                else -> t
-            }
-        }
 
     // ── Settings ─────────────────────────────────────────────────────────────────
 

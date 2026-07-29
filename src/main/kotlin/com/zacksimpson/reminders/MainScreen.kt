@@ -22,6 +22,8 @@ import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
+import com.zacksimpson.reminders.data.ReminderList
+import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.SYNC_JOB_KEY
 import com.zacksimpson.reminders.data.SYNC_NOW_TAG
@@ -248,7 +250,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                             OptionPickerScreen(
                                                 activity,
                                                 "Default List",
-                                                d.lists.sortedBy { it.order }.map { PickerOption(it.id, it.title) },
+                                                RemindersLogic.applyOrder(d.lists, ReminderList::id, d.settings.listOrder) { it.order }
+                                                    .map { PickerOption(it.id, it.title) },
                                                 d.settings.defaultListId,
                                             )
                                         },

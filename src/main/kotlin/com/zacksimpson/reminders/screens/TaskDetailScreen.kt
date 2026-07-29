@@ -28,6 +28,8 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.data.ReminderList
+import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Recurrence
 import com.zacksimpson.reminders.data.Task
@@ -198,6 +200,7 @@ class TaskDetailScreen(
             val ready = state as? DataState.Ready
             val liveTask = ready?.data?.tasks?.firstOrNull { it.id == taskId }
             val lists = ready?.data?.lists.orEmpty()
+            val listOrder = ready?.data?.settings?.listOrder
             val selectedListTitle = lists.firstOrNull { it.id == listId }?.title ?: "Inbox"
 
             SwipeBackContainer(onSwipeBack = { goBack(null) }) {
@@ -250,7 +253,8 @@ class TaskDetailScreen(
                                         OptionPickerScreen(
                                             activity,
                                             "List",
-                                            lists.sortedBy { it.order }.map { PickerOption(it.id, it.title) },
+                                            RemindersLogic.applyOrder(lists, ReminderList::id, listOrder) { it.order }
+                                                .map { PickerOption(it.id, it.title) },
                                             listId,
                                         )
                                     },

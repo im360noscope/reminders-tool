@@ -83,6 +83,10 @@ data class ReminderList(
     // backward-compatible defaulting as Task.
     override val updatedAt: Long = createdAt,
     val deleted: Boolean = false,
+    // Ordered ids of this list's active tasks, written as a single field on
+    // reorder instead of rewriting each task's own `order` (LIST_TASK_ORDER_MIGRATION.md
+    // in reminders-web). Null/empty means "fall back to `order`" — see RemindersLogic.applyOrder.
+    val taskOrder: List<String>? = null,
 ) : SyncableDocument
 
 @Serializable
@@ -96,6 +100,10 @@ data class Settings(
     // createdAt, so pre-existing settings just default to "oldest possible" —
     // superseded by the first real sync without needing a migration.
     val updatedAt: Long = 0L,
+    // Ordered ids of all active lists, written as a single field on reorder
+    // instead of rewriting each list's own `order` (LIST_TASK_ORDER_MIGRATION.md
+    // in reminders-web). Null/empty means "fall back to `order`".
+    val listOrder: List<String>? = null,
 )
 
 // ─── Defaults ───────────────────────────────────────────────────────────────

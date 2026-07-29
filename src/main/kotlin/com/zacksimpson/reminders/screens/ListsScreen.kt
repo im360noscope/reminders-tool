@@ -21,6 +21,7 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.ReminderList
+import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.ui.ReorderArrows
 
 /**
@@ -66,7 +67,11 @@ fun ListsTab(
                 modifier = Modifier.fillMaxSize(),
                 scrollBarPosition = LightScrollBarPosition.Inside,
             ) {
-                val sorted = state.data.lists.sortedBy { it.order }
+                val sorted = RemindersLogic.applyOrder(
+                    state.data.lists,
+                    ReminderList::id,
+                    state.data.settings.listOrder,
+                ) { it.order }
                 sorted.forEachIndexed { index, list ->
                     Row(
                         modifier = Modifier

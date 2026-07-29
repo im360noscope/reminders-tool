@@ -8,6 +8,20 @@ import java.time.LocalDate
  */
 internal object RemindersLogic {
 
+    /**
+     * Sorts [items] by position in [orderIds] (a drag/reorder-written id array, e.g.
+     * `Settings.listOrder` or `ReminderList.taskOrder`) when present and non-empty;
+     * items whose id isn't in it are appended after, sorted by [fallback] — matches
+     * reminders-web's `applyOrder()` in src/lib/ordering.ts exactly, so the two
+     * clients never disagree on order given the same data (LIST_TASK_ORDER_MIGRATION.md).
+     */
+    fun <T> applyOrder(items: List<T>, id: (T) -> String, orderIds: List<String>?, fallback: (T) -> Int): List<T> {
+        if (orderIds.isNullOrEmpty()) return items.sortedBy(fallback)
+        val rank = orderIds.withIndex().associate { (index, orderId) -> orderId to index }
+        val (known, unknown) = items.partition { rank.containsKey(id(it)) }
+        return known.sortedBy { rank.getValue(id(it)) } + unknown.sortedBy(fallback)
+    }
+
     /** TOP -> below the lowest existing order; BOTTOM -> above the highest. */
     fun computeOrder(tasks: List<Task>, listId: String, position: AddPosition): Int {
         val orders = tasks.filter { it.listId == listId }.map { it.order }
