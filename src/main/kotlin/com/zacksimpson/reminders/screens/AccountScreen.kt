@@ -171,9 +171,7 @@ class AccountScreen(
                         modifier = Modifier.weight(1f),
                     )
 
-                    // Loading folds into SignedOut rather than blanking the screen — the
-                    // sign-in form is the safe default and swaps to SignedIn a frame later
-                    // if that's what's actually stored, same as TodayViewScreen's showOverdue.
+                    // Loading folds into SignedOut instead of blanking the screen.
                     AuthState.Loading, AuthState.SignedOut -> {
                         TapField(
                             label = "Email",

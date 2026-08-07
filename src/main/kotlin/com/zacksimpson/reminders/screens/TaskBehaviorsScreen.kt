@@ -109,10 +109,7 @@ class TaskBehaviorsScreen(
                         modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp()),
                     )
                 } else {
-                    // Falls back to real persisted defaults rather than blanking on
-                    // Loading — same reasoning as TodayViewScreen's showOverdue: DataStore
-                    // settles fast enough that a possibly-stale default for one frame beats
-                    // a blank screen every time this screen is pushed.
+                    // Defaults instead of blanking while Loading, same as TodayViewScreen.
                     val ready = state as? DataState.Ready
                     val settings = ready?.data?.settings
                     val lists = ready?.data?.lists.orEmpty()
