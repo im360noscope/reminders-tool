@@ -64,8 +64,7 @@ class AboutDesktopSyncScreen(
                         )
                         InfoParagraph("Then sign in to that same account here under Settings → Account.")
                         InfoParagraph(
-                            "Automatic syncing occurs every few minutes. You can initiate a " +
-                                "manual sync from your phone anytime: Settings → Account → tap Last Synced.",
+                            "Automatic syncing happens whenever you open the app.",
                             bottomPadding = 0f,
                         )
                     }

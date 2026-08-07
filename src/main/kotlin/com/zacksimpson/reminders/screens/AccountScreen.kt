@@ -255,7 +255,7 @@ class AccountScreen(
                     value = when {
                         isSyncing -> "Syncing…"
                         lastSyncedAt != null -> formatLastSyncedAt(lastSyncedAt)
-                        else -> "Never — tap to sync now"
+                        else -> "Never, tap to sync now"
                     },
                     onClick = onSyncNow,
                     singleLine = false,
