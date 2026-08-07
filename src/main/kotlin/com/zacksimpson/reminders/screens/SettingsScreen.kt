@@ -1,6 +1,5 @@
 package com.zacksimpson.reminders.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +13,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
@@ -86,7 +86,7 @@ private fun SettingsRow(label: String, value: String, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
     ) {
         LightText(text = label, variant = LightTextVariant.Detail)
@@ -102,7 +102,7 @@ private fun SettingsLinkRow(label: String, onClick: () -> Unit) {
         variant = LightTextVariant.Heading,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
     )
 }

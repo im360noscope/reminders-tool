@@ -1,6 +1,5 @@
 package com.zacksimpson.reminders.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +19,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.Task
@@ -118,7 +118,7 @@ fun TodayTab(
                                 variant = LightTextVariant.Paragraph,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onToggleShowCompleted() }
+                                    .lightClickable { onToggleShowCompleted() }
                                     .alpha(0.5f)
                                     .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
                             )

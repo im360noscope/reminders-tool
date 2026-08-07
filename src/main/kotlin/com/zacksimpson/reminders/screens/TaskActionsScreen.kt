@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +21,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.dataStateIn
@@ -145,7 +145,7 @@ class TaskActionsScreen(
             variant = LightTextVariant.Heading,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .lightClickable(onClick = onClick)
                 .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
         )
     }

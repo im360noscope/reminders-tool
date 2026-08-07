@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +27,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
 import com.zacksimpson.reminders.data.RemindersLogic
@@ -185,7 +185,7 @@ class ListDetailScreen(
                                         variant = LightTextVariant.Paragraph,
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clickable { viewModel.toggleShowCompleted() }
+                                            .lightClickable { viewModel.toggleShowCompleted() }
                                             .alpha(0.5f)
                                             .padding(
                                                 horizontal = 1.5f.gridUnitsAsDp(),

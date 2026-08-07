@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +18,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.designVerticalPxToDp
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 
 /**
  * Big tap-to-edit title input: the value (or placeholder) at Heading size with a full
@@ -36,7 +36,7 @@ fun TitleField(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(
                 start = 1.5f.gridUnitsAsDp(),
                 top = 0.75f.gridUnitsAsDp(),
@@ -81,7 +81,7 @@ fun TapField(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
     ) {
         LightText(text = label, variant = LightTextVariant.Detail)
@@ -109,7 +109,7 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(
                 // end bumped to match TaskRowView/TitleField's scroll-indicator clearance
                 // (LightScrollBarPosition.Inside overlays rather than reserving its own
@@ -134,7 +134,7 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
             // Top offset centers against the value line below the label, not the
             // label itself — the label's own line sits above this icon's top edge.
             modifier = Modifier
-                .clickable(onClick = onClear)
+                .lightClickable(onClick = onClear)
                 .padding(top = 1.72f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),
         )
     }

@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,7 @@ import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.TimePickerLogic
 import com.zacksimpson.reminders.data.digitsToTime
 import com.zacksimpson.reminders.data.timeToDisplayParts
@@ -137,13 +137,13 @@ class TimePickerScreen(
                                 canConfirm -> LightText(
                                     text = "SAVE",
                                     variant = LightTextVariant.Paragraph,
-                                    modifier = Modifier.clickable { confirm() },
+                                    modifier = Modifier.lightClickable { confirm() },
                                 )
                                 hasDigits -> Unit // blank — matches RN: no button while mid-entry
                                 else -> LightIcon(
                                     icon = LightIcons.CLOSE,
                                     size = 2.2f, // matches the 48px numpad digits visually
-                                    modifier = Modifier.clickable { goBack(null) },
+                                    modifier = Modifier.lightClickable { goBack(null) },
                                 )
                             }
                         }
@@ -158,7 +158,7 @@ class TimePickerScreen(
                                 LightIcon(
                                     icon = LightIcons.BACK,
                                     size = 2.4f,
-                                    modifier = Modifier.clickable { backspace() },
+                                    modifier = Modifier.lightClickable { backspace() },
                                 )
                             }
                         }
@@ -181,7 +181,7 @@ private fun androidx.compose.foundation.layout.RowScope.NumBtn(digit: String, on
     Box(
         modifier = Modifier
             .weight(1f)
-            .clickable(onClick = onClick)
+            .lightClickable(onClick = onClick)
             .padding(vertical = 0.2f.gridUnitsAsDp()),
         contentAlignment = Alignment.Center,
     ) {
@@ -203,7 +203,7 @@ private fun androidx.compose.foundation.layout.RowScope.AmPmSlot(
     Box(
         modifier = Modifier
             .width(60.dp)
-            .clickable(onClick = onClick),
+            .lightClickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

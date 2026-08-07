@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +26,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.ReminderList
 import com.zacksimpson.reminders.data.RemindersLogic
@@ -334,8 +334,8 @@ class TaskDetailScreen(
             variant = LightTextVariant.Button,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
-                    if (task == null) return@clickable
+                .lightClickable {
+                    if (task == null) return@lightClickable
                     val message = if (task.recurrence != null) {
                         "This is a recurring task. Delete all occurrences?"
                     } else {

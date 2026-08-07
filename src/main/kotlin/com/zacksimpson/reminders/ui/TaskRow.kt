@@ -1,6 +1,5 @@
 package com.zacksimpson.reminders.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.Task
 import com.zacksimpson.reminders.data.formatDate
 import com.zacksimpson.reminders.data.formatRecurrence
@@ -77,7 +77,7 @@ fun TaskRowView(
                 // Top-biased to line up with the title's first line; bottom kept
                 // generous to preserve tap-target size.
                 modifier = Modifier
-                    .clickable(onClick = onToggle)
+                    .lightClickable(onClick = onToggle)
                     .padding(
                         start = 0.9f.gridUnitsAsDp(),
                         end = 0.9f.gridUnitsAsDp(),
@@ -91,7 +91,7 @@ fun TaskRowView(
                 checked = task.completed,
                 size = 17.dp,
                 modifier = Modifier
-                    .clickable(onClick = onToggle)
+                    .lightClickable(onClick = onToggle)
                     .padding(
                         start = 0.9f.gridUnitsAsDp(),
                         end = 0.9f.gridUnitsAsDp(),

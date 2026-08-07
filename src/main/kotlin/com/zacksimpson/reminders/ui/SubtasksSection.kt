@@ -1,6 +1,5 @@
 package com.zacksimpson.reminders.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.Subtask
 
 /** Subtasks list + an add button. Shared by Add Task and Task Detail — the caller
@@ -44,7 +44,7 @@ fun SubtasksSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onAdd)
+                .lightClickable(onClick = onAdd)
                 .padding(top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
         ) {
             // Matches TaskCheckboxIcon's size so the two circles read the same size.
@@ -74,7 +74,7 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
             checked = subtask.completed,
             size = 17.dp,
             modifier = Modifier
-                .clickable(onClick = onToggle)
+                .lightClickable(onClick = onToggle)
                 .padding(
                     start = 0.9f.gridUnitsAsDp(),
                     end = 0.9f.gridUnitsAsDp(),
@@ -87,14 +87,14 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
             variant = LightTextVariant.Paragraph,
             modifier = Modifier
                 .weight(1f)
-                .clickable(onClick = onRename)
+                .lightClickable(onClick = onRename)
                 .padding(vertical = 0.65f.gridUnitsAsDp())
                 .alpha(if (subtask.completed) 0.4f else 1f),
         )
         DeleteIcon(
             size = 14.dp,
             modifier = Modifier
-                .clickable(onClick = onDelete)
+                .lightClickable(onClick = onDelete)
                 .padding(start = 0.5f.gridUnitsAsDp(), top = 0.75f.gridUnitsAsDp(), bottom = 0.6f.gridUnitsAsDp()),
         )
     }

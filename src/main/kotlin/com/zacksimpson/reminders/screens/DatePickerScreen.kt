@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +31,7 @@ import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.ui.AkkuratText
 import com.zacksimpson.reminders.ui.RemindersTheme
 import java.time.LocalDate
@@ -116,13 +116,13 @@ class DatePickerScreen(
                     LightIcon(
                         icon = LightIcons.BACK,
                         size = 2f,
-                        modifier = Modifier.clickable { prevMonth() },
+                        modifier = Modifier.lightClickable { prevMonth() },
                     )
                     LightText(text = "${MONTH_NAMES[viewMonth - 1]} $viewYear", variant = LightTextVariant.Paragraph)
                     LightIcon(
                         icon = LightIcons.ARROW_RIGHT,
                         size = 2f,
-                        modifier = Modifier.clickable { nextMonth() },
+                        modifier = Modifier.lightClickable { nextMonth() },
                     )
                 }
 
@@ -154,7 +154,7 @@ class DatePickerScreen(
                                         .padding(vertical = 0.55f.gridUnitsAsDp())
                                         .let {
                                             if (day != null) {
-                                                it.clickable {
+                                                it.lightClickable {
                                                     val dateStr = "%04d-%02d-%02d".format(viewYear, viewMonth, day)
                                                     goBack(dateStr)
                                                 }

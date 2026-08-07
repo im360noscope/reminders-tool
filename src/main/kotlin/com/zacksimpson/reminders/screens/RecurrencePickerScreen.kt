@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +27,7 @@ import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.Recurrence
 import com.zacksimpson.reminders.data.RecurrenceUnit
 import com.zacksimpson.reminders.data.RemindersLogic
@@ -95,7 +95,7 @@ class RecurrencePickerScreen(
                             size = 2.6f,
                             modifier = Modifier
                                 .padding(horizontal = 2f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp())
-                                .clickable { decrement() },
+                                .lightClickable { decrement() },
                         )
                         Box(modifier = Modifier.width(120.dp), contentAlignment = Alignment.Center) {
                             AkkuratText(
@@ -111,7 +111,7 @@ class RecurrencePickerScreen(
                             size = 2.6f,
                             modifier = Modifier
                                 .padding(horizontal = 2f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp())
-                                .clickable { increment() },
+                                .lightClickable { increment() },
                         )
                     }
 
@@ -120,7 +120,7 @@ class RecurrencePickerScreen(
                         variant = LightTextVariant.Heading,
                         underline = true,
                         modifier = Modifier
-                            .clickable { cycleUnit() }
+                            .lightClickable { cycleUnit() }
                             .padding(horizontal = 1f.gridUnitsAsDp(), vertical = 0.5f.gridUnitsAsDp()),
                     )
                 }
@@ -141,7 +141,7 @@ class RecurrencePickerScreen(
                         size = 2.2f,
                         modifier = Modifier
                             .padding(0.5f.gridUnitsAsDp())
-                            .clickable { goBack(null) },
+                            .lightClickable { goBack(null) },
                     )
                     Box(modifier = Modifier.weight(1f)) {
                         LightText(
@@ -150,7 +150,7 @@ class RecurrencePickerScreen(
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .padding(end = 1.5f.gridUnitsAsDp(), top = 0.5f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp())
-                                .clickable { goBack(Recurrence(interval, unit)) },
+                                .lightClickable { goBack(Recurrence(interval, unit)) },
                         )
                     }
                 }

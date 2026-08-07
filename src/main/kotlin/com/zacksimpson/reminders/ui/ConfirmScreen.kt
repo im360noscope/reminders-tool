@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +20,7 @@ import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 
 /**
  * Generic confirmation screen — a message plus a single confirm action, pinned to the
@@ -75,7 +75,7 @@ class ConfirmScreen(
                     LightText(
                         text = confirmText.uppercase(),
                         variant = LightTextVariant.Button,
-                        modifier = Modifier.clickable { goBack(true) },
+                        modifier = Modifier.lightClickable { goBack(true) },
                     )
                 }
             }

@@ -1,7 +1,6 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +25,7 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.AuthException
 import com.zacksimpson.reminders.data.AuthRepository
 import com.zacksimpson.reminders.data.AuthState
@@ -150,7 +150,7 @@ class AccountScreen(
                     variant = LightTextVariant.Heading,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = { navigateTo(screenFactory = { AboutDesktopSyncScreen(it) }) })
+                        .lightClickable(onClick = { navigateTo(screenFactory = { AboutDesktopSyncScreen(it) }) })
                         .padding(
                             start = 1.5f.gridUnitsAsDp(),
                             top = 1f.gridUnitsAsDp(),
@@ -179,7 +179,9 @@ class AccountScreen(
                             value = email.ifEmpty { "Tap to enter" },
                             onClick = {
                                 navigateTo(
-                                    screenFactory = { TextEditorScreen(it, TextEditorRequest("Email", email)) },
+                                    screenFactory = {
+                                        TextEditorScreen(it, TextEditorRequest("Email", email, initialCaps = false))
+                                    },
                                     resultCallback = { viewModel.setEmail(it) },
                                 )
                             },
@@ -191,7 +193,9 @@ class AccountScreen(
                             value = if (password.isEmpty()) "Tap to enter" else "•".repeat(password.length),
                             onClick = {
                                 navigateTo(
-                                    screenFactory = { TextEditorScreen(it, TextEditorRequest("Password", password)) },
+                                    screenFactory = {
+                                        TextEditorScreen(it, TextEditorRequest("Password", password, initialCaps = false))
+                                    },
                                     resultCallback = { viewModel.setPassword(it) },
                                 )
                             },
@@ -209,7 +213,7 @@ class AccountScreen(
                                 variant = LightTextVariant.Button,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable(enabled = !isBusy) { viewModel.signIn() }
+                                    .lightClickable(enabled = !isBusy) { viewModel.signIn() }
                                     .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
                             )
                         }
@@ -270,7 +274,7 @@ class AccountScreen(
                 LightText(
                     text = "SIGN OUT",
                     variant = LightTextVariant.Button,
-                    modifier = Modifier.clickable(onClick = onSignOut),
+                    modifier = Modifier.lightClickable(onClick = onSignOut),
                 )
             }
         }
