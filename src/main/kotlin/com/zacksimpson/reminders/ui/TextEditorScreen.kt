@@ -10,7 +10,11 @@ import com.thelightphone.sdk.rememberKeyboardOptions
 import com.thelightphone.sdk.ui.LightTextInputEditor
 import com.thelightphone.sdk.ui.LightThemeTokens
 
-data class TextEditorRequest(val title: String, val initialValue: String = "")
+data class TextEditorRequest(
+    val title: String,
+    val initialValue: String = "",
+    val initialCaps: Boolean = true,
+)
 
 /**
  * Reusable single-line text entry backed by the LightOS keyboard. Returns the entered
@@ -36,6 +40,7 @@ class TextEditorScreen(
                 onSubmit = { goBack(it.toString()) },
                 onBack = { goBack(null) },
                 submitLabel = "DONE",
+                initialCaps = request.initialCaps,
                 // editorKey defaults to `title`, keying the embedded keyboard's
                 // viewModel() call. This screen has no per-screen ViewModelStoreOwner, so
                 // a fixed key reused across pushes (e.g. add one task, then another) would
