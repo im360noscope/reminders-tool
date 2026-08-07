@@ -20,32 +20,21 @@ import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightBottomBar
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightThemeTokens
-import com.zacksimpson.reminders.data.AddPosition
-import com.zacksimpson.reminders.data.AfterAddBehavior
-import com.zacksimpson.reminders.data.ReminderList
-import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.SYNC_JOB_KEY
 import com.zacksimpson.reminders.data.SYNC_NOW_TAG
-import com.zacksimpson.reminders.data.Settings
-import com.zacksimpson.reminders.screens.ADD_POSITION_OPTIONS
-import com.zacksimpson.reminders.screens.AFTER_ADD_OPTIONS
 import com.zacksimpson.reminders.screens.AccountScreen
 import com.zacksimpson.reminders.screens.AddTaskScreen
 import com.zacksimpson.reminders.screens.ListAction
 import com.zacksimpson.reminders.screens.ListActionsScreen
 import com.zacksimpson.reminders.screens.ListDetailScreen
 import com.zacksimpson.reminders.screens.ListsTab
-import com.zacksimpson.reminders.screens.OptionPickerScreen
-import com.zacksimpson.reminders.screens.PickerOption
 import com.zacksimpson.reminders.screens.SettingsTab
 import com.zacksimpson.reminders.screens.TaskAction
 import com.zacksimpson.reminders.screens.TaskActionsScreen
+import com.zacksimpson.reminders.screens.TaskBehaviorsScreen
 import com.zacksimpson.reminders.screens.TaskDetailScreen
 import com.zacksimpson.reminders.screens.TodayTab
-import com.zacksimpson.reminders.screens.TodayViewScreen
-import com.zacksimpson.reminders.screens.addPositionKey
-import com.zacksimpson.reminders.screens.afterAddKey
 import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
@@ -120,19 +109,6 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
         viewModelScope.launch { repo.moveListDown(id) }
     }
 
-    fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
-
-    fun setAfterAdd(key: String) = update {
-        it.copy(afterAddBehavior = if (key == "go-to-list") AfterAddBehavior.GO_TO_LIST else AfterAddBehavior.TOAST)
-    }
-
-    fun setAddPosition(key: String) = update {
-        it.copy(addPosition = if (key == "top") AddPosition.TOP else AddPosition.BOTTOM)
-    }
-
-    private fun update(transform: (Settings) -> Settings) {
-        viewModelScope.launch { repo.updateSettings(transform) }
-    }
 }
 
 /** Boot screen: the four-tab host — Lists, Today, Settings, and the Add action. */
@@ -243,54 +219,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                         )
                         Tab.SETTINGS -> SettingsTab(
                             state = dataState,
-                            onOpenDefaultList = {
-                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
-                                    navigateTo(
-                                        screenFactory = { activity ->
-                                            OptionPickerScreen(
-                                                activity,
-                                                "Default List",
-                                                RemindersLogic.applyOrder(d.lists, ReminderList::id, d.settings.listOrder) { it.order }
-                                                    .map { PickerOption(it.id, it.title) },
-                                                d.settings.defaultListId,
-                                            )
-                                        },
-                                        resultCallback = { key -> viewModel.setDefaultList(key) },
-                                    )
-                                }
-                            },
-                            onOpenAfterQuickAdd = {
-                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
-                                    navigateTo(
-                                        screenFactory = { activity ->
-                                            OptionPickerScreen(
-                                                activity,
-                                                "After Quick Add",
-                                                AFTER_ADD_OPTIONS,
-                                                afterAddKey(d.settings.afterAddBehavior),
-                                            )
-                                        },
-                                        resultCallback = { key -> viewModel.setAfterAdd(key) },
-                                    )
-                                }
-                            },
-                            onOpenAddPosition = {
-                                (viewModel.state.value as? DataState.Ready)?.data?.let { d ->
-                                    navigateTo(
-                                        screenFactory = { activity ->
-                                            OptionPickerScreen(
-                                                activity,
-                                                "Add New Tasks",
-                                                ADD_POSITION_OPTIONS,
-                                                addPositionKey(d.settings.addPosition),
-                                            )
-                                        },
-                                        resultCallback = { key -> viewModel.setAddPosition(key) },
-                                    )
-                                }
-                            },
-                            onOpenTodayView = {
-                                navigateTo(screenFactory = { TodayViewScreen(it) })
+                            onOpenTaskBehaviors = {
+                                navigateTo(screenFactory = { TaskBehaviorsScreen(it) })
                             },
                             onOpenAccount = {
                                 navigateTo(screenFactory = { AccountScreen(it) })

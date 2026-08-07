@@ -15,35 +15,15 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
-import com.zacksimpson.reminders.data.AddPosition
-import com.zacksimpson.reminders.data.AfterAddBehavior
-
-val AFTER_ADD_OPTIONS = listOf(
-    PickerOption("toast", "Add Next"),
-    PickerOption("go-to-list", "Go to List"),
-)
-val ADD_POSITION_OPTIONS = listOf(
-    PickerOption("top", "Top of List"),
-    PickerOption("bottom", "Bottom of List"),
-)
-
-fun afterAddKey(v: AfterAddBehavior) = if (v == AfterAddBehavior.GO_TO_LIST) "go-to-list" else "toast"
-fun addPositionKey(v: AddPosition) = if (v == AddPosition.TOP) "top" else "bottom"
-
-private fun afterAddLabel(v: AfterAddBehavior) = AFTER_ADD_OPTIONS.first { it.key == afterAddKey(v) }.label
-private fun addPositionLabel(v: AddPosition) = ADD_POSITION_OPTIONS.first { it.key == addPositionKey(v) }.label
 
 /**
- * Settings tab: each row shows a small label over its current value and opens a picker.
- * Notifications / Backup rows arrive with those features.
+ * Settings tab: top-level links. Task Behaviors folds Today View / Default List /
+ * After Quick Add / Add New Tasks under one screen.
  */
 @Composable
 fun SettingsTab(
     state: DataState,
-    onOpenDefaultList: () -> Unit,
-    onOpenAfterQuickAdd: () -> Unit,
-    onOpenAddPosition: () -> Unit,
-    onOpenTodayView: () -> Unit,
+    onOpenTaskBehaviors: () -> Unit,
     onOpenAccount: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -64,33 +44,15 @@ fun SettingsTab(
             )
 
             is DataState.Ready -> {
-                val s = state.data.settings
-                val defaultTitle = state.data.lists.firstOrNull { it.id == s.defaultListId }?.title ?: "Inbox"
                 LightScrollView(
                     modifier = Modifier.fillMaxSize(),
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     SettingsLinkRow("Account", onOpenAccount)
-                    SettingsLinkRow("Today View", onOpenTodayView)
-                    SettingsRow("Default List", defaultTitle, onOpenDefaultList)
-                    SettingsRow("After Quick Add", afterAddLabel(s.afterAddBehavior), onOpenAfterQuickAdd)
-                    SettingsRow("Add New Tasks", addPositionLabel(s.addPosition), onOpenAddPosition)
+                    SettingsLinkRow("Task Behaviors", onOpenTaskBehaviors)
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SettingsRow(label: String, value: String, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .lightClickable(onClick = onClick)
-            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
-    ) {
-        LightText(text = label, variant = LightTextVariant.Detail)
-        LightText(text = value, variant = LightTextVariant.Heading)
     }
 }
 
