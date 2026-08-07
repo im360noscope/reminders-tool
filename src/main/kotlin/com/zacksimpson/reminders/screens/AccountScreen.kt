@@ -162,8 +162,6 @@ class AccountScreen(
                 )
 
                 when (val s = authState) {
-                    AuthState.Loading -> Unit
-
                     is AuthState.SignedIn -> SignedIn(
                         email = s.email,
                         lastSyncedAt = lastSyncedAt,
@@ -173,7 +171,10 @@ class AccountScreen(
                         modifier = Modifier.weight(1f),
                     )
 
-                    AuthState.SignedOut -> {
+                    // Loading folds into SignedOut rather than blanking the screen — the
+                    // sign-in form is the safe default and swaps to SignedIn a frame later
+                    // if that's what's actually stored, same as TodayViewScreen's showOverdue.
+                    AuthState.Loading, AuthState.SignedOut -> {
                         TapField(
                             label = "Email",
                             value = email.ifEmpty { "Tap to enter" },
