@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.InitialScreen
 import com.thelightphone.sdk.LightScreen
@@ -231,8 +232,11 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                 LightBottomBar(
                     items = listOf(
                         LightBarButton.LightIcon(LightIcons.LIST, onClick = { viewModel.select(Tab.LISTS) }),
-                        // No calendar/"today" icon in the SDK set yet — ALARM is a placeholder.
-                        LightBarButton.LightIcon(LightIcons.ALARM, onClick = { viewModel.select(Tab.TODAY) }),
+                        LightBarButton.Icon(
+                            painterResource(R.drawable.ic_today),
+                            onClick = { viewModel.select(Tab.TODAY) },
+                            sizeUnits = 1.9f,
+                        ),
                         // Add is an action, not a tab — it opens the New Task screen.
                         LightBarButton.LightIcon(LightIcons.ADD, onClick = {
                             val defaultListId =
