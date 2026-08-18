@@ -40,13 +40,14 @@ import com.zacksimpson.reminders.ui.TapField
 import com.zacksimpson.reminders.ui.TextEditorRequest
 import com.zacksimpson.reminders.ui.TextEditorScreen
 import com.zacksimpson.reminders.ui.TitleField
+import com.zacksimpson.reminders.ui.ToastScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class AddTaskViewModel(
     private val repo: RemindersRepository,
     defaultListId: String,
-    defaultDate: String?,
+    private val defaultDate: String?,
 ) : LightViewModel<Unit>() {
     val title = MutableStateFlow("")
     val selectedListId = MutableStateFlow(defaultListId)
@@ -125,6 +126,16 @@ class AddTaskViewModel(
             onSaved()
         }
     }
+
+    /** Clears the form for another quick add — keeps the selected list, matching RN's
+     *  resetForm(keepList = true). */
+    fun resetForNextAdd() {
+        title.value = ""
+        date.value = defaultDate
+        time.value = null
+        recurrence.value = null
+        subtasks.value = emptyList()
+    }
 }
 
 /** New-task form: Title, List, Date, Time, Recurring, Subtasks. Time/Recurring only
@@ -172,9 +183,14 @@ class AddTaskScreen(
                             onClick = {
                                 viewModel.save {
                                     val afterAdd = (state as? DataState.Ready)?.data?.settings?.afterAddBehavior
-                                    goBack(null)
                                     if (afterAdd == AfterAddBehavior.GO_TO_LIST) {
+                                        goBack(null)
                                         navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle) })
+                                    } else {
+                                        navigateTo(
+                                            screenFactory = { ToastScreen(it, "added") },
+                                            resultCallback = { viewModel.resetForNextAdd() },
+                                        )
                                     }
                                 }
                             },
