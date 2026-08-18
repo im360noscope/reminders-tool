@@ -8,17 +8,37 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import com.thelightphone.sdk.ui.LightIcon
-import com.thelightphone.sdk.ui.LightIcons
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.designVerticalPxToDp
+import com.thelightphone.sdk.ui.designVerticalPxToSp
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
+
+/**
+ * Subheading's size scaled the same way [LightText] scales it, but with the variant's
+ * built-in letter-spacing stripped — Subheading's tracking (designed for smaller,
+ * secondary text like Fine/Button) reads oddly at field-value prominence, next to
+ * Heading-based text elsewhere that has none.
+ */
+@Composable
+private fun fieldValueStyle(): TextStyle {
+    val base = LightThemeTokens.typography.subheading
+    return base.copy(
+        fontSize = base.fontSize.value.designVerticalPxToSp(),
+        lineHeight = base.lineHeight.value.designVerticalPxToSp(),
+        letterSpacing = TextUnit.Unspecified,
+        color = LightThemeTokens.colors.content,
+    )
+}
 
 /**
  * Big tap-to-edit title input: the value (or placeholder) at Heading size with a full
@@ -85,9 +105,9 @@ fun TapField(
             .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 0.75f.gridUnitsAsDp()),
     ) {
         LightText(text = label, variant = LightTextVariant.Detail)
-        LightText(
+        Text(
             text = value,
-            variant = LightTextVariant.Heading,
+            style = fieldValueStyle(),
             maxLines = if (singleLine) 1 else Int.MAX_VALUE,
             overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
             modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
@@ -97,7 +117,7 @@ fun TapField(
 
 /**
  * Field row with a value that can be cleared (Date / Time / Recurring once set) — shows
- * "None" with a no-op tap when [value] is null, otherwise the value plus a DELETE icon
+ * "None" with a no-op tap when [value] is null, otherwise the value plus a clear-field icon
  * button. Shared by Add Task and Task Detail.
  */
 @Composable
@@ -123,14 +143,14 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
     ) {
         Column {
             LightText(text = label, variant = LightTextVariant.Detail)
-            LightText(
+            Text(
                 text = value,
-                variant = LightTextVariant.Heading,
+                style = fieldValueStyle(),
                 modifier = Modifier.padding(top = 0.25f.gridUnitsAsDp()),
             )
         }
-        LightIcon(
-            icon = LightIcons.DELETE,
+        ClearIcon(
+            size = 17.dp,
             // Top offset centers against the value line below the label, not the
             // label itself — the label's own line sits above this icon's top edge.
             modifier = Modifier
