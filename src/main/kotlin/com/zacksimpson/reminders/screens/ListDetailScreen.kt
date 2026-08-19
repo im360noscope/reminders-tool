@@ -30,6 +30,7 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.R
+import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.data.Task
@@ -44,8 +45,9 @@ class ListDetailViewModel(
     private val repo: RemindersRepository,
     val listId: String,
     startInReorderMode: Boolean = false,
+    initialData: AppData? = null,
 ) : LightViewModel<Unit>() {
-    val state = repo.dataStateIn(viewModelScope)
+    val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
     // Live here rather than as Composable remember state: the SDK recomposes this
     // screen's Content() fresh whenever a pushed screen pops back to it, which
     // discards remember-based state — the ViewModel survives that round trip.
@@ -89,13 +91,14 @@ class ListDetailScreen(
     private val listId: String,
     private val listTitle: String,
     private val startInReorderMode: Boolean = false,
+    private val initialData: AppData? = null,
 ) : LightScreen<Unit, ListDetailViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<ListDetailViewModel>
         get() = ListDetailViewModel::class.java
 
     override fun createViewModel() =
-        ListDetailViewModel(RemindersRepository(lightContext.dataStore), listId, startInReorderMode)
+        ListDetailViewModel(RemindersRepository(lightContext.dataStore), listId, startInReorderMode, initialData)
 
     @Composable
     override fun Content() {
@@ -120,7 +123,10 @@ class ListDetailScreen(
                         // unlike LightIcons' own icons, so the default size reads too big.
                         LightBarButton.Icon(
                             painterResource(R.drawable.ic_plus),
-                            onClick = { navigateTo(screenFactory = { AddTaskScreen(it, listId) }) },
+                            onClick = {
+                                val d = (viewModel.state.value as? DataState.Ready)?.data
+                                navigateTo(screenFactory = { AddTaskScreen(it, listId, initialData = d) })
+                            },
                             sizeUnits = 1.2f,
                         )
                     },
@@ -158,11 +164,11 @@ class ListDetailScreen(
                                         listTitle = listTitle,
                                         onToggle = { viewModel.toggleTask(task.id) },
                                         onPress = {
-                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id, initialData = s.data) })
                                         },
                                         onLongPress = {
                                             navigateTo(
-                                                screenFactory = { TaskActionsScreen(it, task.id) },
+                                                screenFactory = { TaskActionsScreen(it, task.id, s.data) },
                                                 resultCallback = { result ->
                                                     when (result) {
                                                         TaskAction.DELETED -> Unit
@@ -199,11 +205,11 @@ class ListDetailScreen(
                                                 listTitle = listTitle,
                                                 onToggle = { viewModel.toggleTask(task.id) },
                                                 onPress = {
-                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                                            navigateTo(screenFactory = { TaskDetailScreen(it, task.id, initialData = s.data) })
                                         },
                                                 onLongPress = {
                                                     navigateTo(
-                                                        screenFactory = { TaskActionsScreen(it, task.id) },
+                                                        screenFactory = { TaskActionsScreen(it, task.id, s.data) },
                                                         resultCallback = { result ->
                                                             when (result) {
                                                                 TaskAction.DELETED -> Unit

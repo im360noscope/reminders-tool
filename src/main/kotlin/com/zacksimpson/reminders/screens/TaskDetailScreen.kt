@@ -28,6 +28,7 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.ReminderList
 import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
@@ -53,6 +54,7 @@ import kotlinx.coroutines.launch
 class TaskDetailViewModel(
     private val repo: RemindersRepository,
     private val taskId: String,
+    initialData: AppData?,
 ) : LightViewModel<Unit>() {
     val title = MutableStateFlow("")
     val selectedListId = MutableStateFlow("")
@@ -61,7 +63,7 @@ class TaskDetailViewModel(
     val recurrence = MutableStateFlow<Recurrence?>(null)
     val seeded = MutableStateFlow(false)
     val notFound = MutableStateFlow(false)
-    val state = repo.dataStateIn(viewModelScope)
+    val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
 
     init {
         // Draft fields are seeded ONCE from the task's state at open time, then evolve
@@ -177,13 +179,14 @@ class TaskDetailViewModel(
 class TaskDetailScreen(
     sealedActivity: SealedLightActivity,
     private val taskId: String,
+    private val initialData: AppData? = null,
 ) : LightScreen<Unit, TaskDetailViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<TaskDetailViewModel>
         get() = TaskDetailViewModel::class.java
 
     override fun createViewModel() =
-        TaskDetailViewModel(RemindersRepository(lightContext.dataStore), taskId)
+        TaskDetailViewModel(RemindersRepository(lightContext.dataStore), taskId, initialData)
 
     @Composable
     override fun Content() {

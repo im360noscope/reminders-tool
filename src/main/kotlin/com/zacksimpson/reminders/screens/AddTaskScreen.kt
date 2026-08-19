@@ -22,6 +22,7 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AfterAddBehavior
+import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.Recurrence
 import com.zacksimpson.reminders.data.ReminderList
 import com.zacksimpson.reminders.data.RemindersLogic
@@ -48,6 +49,7 @@ class AddTaskViewModel(
     private val repo: RemindersRepository,
     defaultListId: String,
     private val defaultDate: String?,
+    initialData: AppData?,
 ) : LightViewModel<Unit>() {
     val title = MutableStateFlow("")
     val selectedListId = MutableStateFlow(defaultListId)
@@ -55,7 +57,7 @@ class AddTaskViewModel(
     val time = MutableStateFlow<String?>(null)
     val recurrence = MutableStateFlow<Recurrence?>(null)
     val subtasks = MutableStateFlow<List<Subtask>>(emptyList())
-    val state = repo.dataStateIn(viewModelScope)
+    val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
 
     fun setTitle(value: String) {
         title.value = value
@@ -144,13 +146,14 @@ class AddTaskScreen(
     sealedActivity: SealedLightActivity,
     private val defaultListId: String,
     private val defaultDate: String? = null,
+    private val initialData: AppData? = null,
 ) : LightScreen<Unit, AddTaskViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<AddTaskViewModel>
         get() = AddTaskViewModel::class.java
 
     override fun createViewModel() =
-        AddTaskViewModel(RemindersRepository(lightContext.dataStore), defaultListId, defaultDate)
+        AddTaskViewModel(RemindersRepository(lightContext.dataStore), defaultListId, defaultDate, initialData)
 
     @Composable
     override fun Content() {
@@ -182,10 +185,10 @@ class AddTaskScreen(
                             LightIcons.ACCEPT,
                             onClick = {
                                 viewModel.save {
-                                    val afterAdd = (state as? DataState.Ready)?.data?.settings?.afterAddBehavior
-                                    if (afterAdd == AfterAddBehavior.GO_TO_LIST) {
+                                    val d = (viewModel.state.value as? DataState.Ready)?.data
+                                    if (d?.settings?.afterAddBehavior == AfterAddBehavior.GO_TO_LIST) {
                                         goBack(null)
-                                        navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle) })
+                                        navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle, initialData = d) })
                                     } else {
                                         navigateTo(
                                             screenFactory = { ToastScreen(it, "added") },

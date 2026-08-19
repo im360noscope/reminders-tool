@@ -23,6 +23,7 @@ import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
+import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.RemindersRepository
 import com.zacksimpson.reminders.dataStateIn
 import com.zacksimpson.reminders.ui.ConfirmScreen
@@ -39,8 +40,9 @@ enum class TaskAction { DELETED, START_REORDER }
 class TaskActionsViewModel(
     private val repo: RemindersRepository,
     private val taskId: String,
+    initialData: AppData?,
 ) : LightViewModel<TaskAction>() {
-    val state = repo.dataStateIn(viewModelScope)
+    val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
 
     fun toggle() {
         viewModelScope.launch { repo.toggleTask(taskId) }
@@ -65,13 +67,14 @@ class TaskActionsViewModel(
 class TaskActionsScreen(
     sealedActivity: SealedLightActivity,
     private val taskId: String,
+    private val initialData: AppData? = null,
 ) : LightScreen<TaskAction, TaskActionsViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<TaskActionsViewModel>
         get() = TaskActionsViewModel::class.java
 
     override fun createViewModel() =
-        TaskActionsViewModel(RemindersRepository(lightContext.dataStore), taskId)
+        TaskActionsViewModel(RemindersRepository(lightContext.dataStore), taskId, initialData)
 
     @Composable
     override fun Content() {
@@ -101,7 +104,10 @@ class TaskActionsScreen(
                 )
                 ActionRow(
                     text = "Edit Details",
-                    onClick = { navigateTo(screenFactory = { TaskDetailScreen(it, taskId) }) },
+                    onClick = {
+                        val data = (state as? DataState.Ready)?.data
+                        navigateTo(screenFactory = { TaskDetailScreen(it, taskId, initialData = data) })
+                    },
                 )
                 ActionRow(
                     text = "Reorder Tasks",

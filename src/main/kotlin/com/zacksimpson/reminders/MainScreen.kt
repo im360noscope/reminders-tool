@@ -168,7 +168,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                 )
                             },
                             onOpenList = { list ->
-                                navigateTo(screenFactory = { ListDetailScreen(it, list.id, list.title) })
+                                val data = (viewModel.state.value as? DataState.Ready)?.data
+                                navigateTo(screenFactory = { ListDetailScreen(it, list.id, list.title, initialData = data) })
                             },
                             onLongPressList = { list ->
                                 navigateTo(
@@ -192,18 +193,22 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             showCompleted = todayShowCompleted,
                             onToggleShowCompleted = { viewModel.toggleTodayShowCompleted() },
                             onAddTask = {
-                                val defaultListId =
-                                    (viewModel.state.value as? DataState.Ready)?.data?.settings?.defaultListId ?: "inbox"
+                                val data = (viewModel.state.value as? DataState.Ready)?.data
+                                val defaultListId = data?.settings?.defaultListId ?: "inbox"
                                 navigateTo(
-                                    screenFactory = { AddTaskScreen(it, defaultListId, LocalDate.now().toString()) },
+                                    screenFactory = {
+                                        AddTaskScreen(it, defaultListId, LocalDate.now().toString(), initialData = data)
+                                    },
                                 )
                             },
                             onOpenTask = { task ->
-                                navigateTo(screenFactory = { TaskDetailScreen(it, task.id) })
+                                val data = (viewModel.state.value as? DataState.Ready)?.data
+                                navigateTo(screenFactory = { TaskDetailScreen(it, task.id, initialData = data) })
                             },
                             onLongPressTask = { task ->
+                                val actionsData = (viewModel.state.value as? DataState.Ready)?.data
                                 navigateTo(
-                                    screenFactory = { TaskActionsScreen(it, task.id) },
+                                    screenFactory = { TaskActionsScreen(it, task.id, actionsData) },
                                     // TaskActionsScreen already shows the "deleted" toast
                                     // itself before returning.
                                     resultCallback = { result ->
@@ -213,11 +218,17 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                             // Today pushes that task's List Detail screen already
                                             // in reorder mode; a back-press lands back on Today.
                                             TaskAction.START_REORDER -> {
-                                                val listTitle = (viewModel.state.value as? DataState.Ready)
-                                                    ?.data?.lists?.firstOrNull { it.id == task.listId }?.title ?: "List"
+                                                val data = (viewModel.state.value as? DataState.Ready)?.data
+                                                val listTitle = data?.lists?.firstOrNull { it.id == task.listId }?.title ?: "List"
                                                 navigateTo(
                                                     screenFactory = {
-                                                        ListDetailScreen(it, task.listId, listTitle, startInReorderMode = true)
+                                                        ListDetailScreen(
+                                                            it,
+                                                            task.listId,
+                                                            listTitle,
+                                                            startInReorderMode = true,
+                                                            initialData = data,
+                                                        )
                                                     },
                                                 )
                                             }
@@ -230,7 +241,8 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                         Tab.SETTINGS -> SettingsTab(
                             state = dataState,
                             onOpenTaskBehaviors = {
-                                navigateTo(screenFactory = { TaskBehaviorsScreen(it) })
+                                val data = (viewModel.state.value as? DataState.Ready)?.data
+                                navigateTo(screenFactory = { TaskBehaviorsScreen(it, data) })
                             },
                             onOpenAccount = {
                                 navigateTo(screenFactory = { AccountScreen(it) })
@@ -248,9 +260,9 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                         ),
                         // Add is an action, not a tab — it opens the New Task screen.
                         LightBarButton.LightIcon(LightIcons.ADD, onClick = {
-                            val defaultListId =
-                                (viewModel.state.value as? DataState.Ready)?.data?.settings?.defaultListId ?: "inbox"
-                            navigateTo(screenFactory = { AddTaskScreen(it, defaultListId) })
+                            val data = (viewModel.state.value as? DataState.Ready)?.data
+                            val defaultListId = data?.settings?.defaultListId ?: "inbox"
+                            navigateTo(screenFactory = { AddTaskScreen(it, defaultListId, initialData = data) })
                         }),
                         LightBarButton.LightIcon(LightIcons.SETTINGS, onClick = { viewModel.select(Tab.SETTINGS) }),
                     ),

@@ -27,6 +27,7 @@ import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AddPosition
 import com.zacksimpson.reminders.data.AfterAddBehavior
+import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.ReminderList
 import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.data.RemindersRepository
@@ -51,8 +52,11 @@ fun addPositionKey(v: AddPosition) = if (v == AddPosition.TOP) "top" else "botto
 private fun afterAddLabel(v: AfterAddBehavior) = AFTER_ADD_OPTIONS.first { it.key == afterAddKey(v) }.label
 private fun addPositionLabel(v: AddPosition) = ADD_POSITION_OPTIONS.first { it.key == addPositionKey(v) }.label
 
-class TaskBehaviorsViewModel(private val repo: RemindersRepository) : LightViewModel<Unit>() {
-    val state = repo.dataStateIn(viewModelScope)
+class TaskBehaviorsViewModel(
+    private val repo: RemindersRepository,
+    initialData: AppData?,
+) : LightViewModel<Unit>() {
+    val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
 
     fun setDefaultList(id: String) = update { it.copy(defaultListId = id) }
 
@@ -75,13 +79,14 @@ class TaskBehaviorsViewModel(private val repo: RemindersRepository) : LightViewM
  */
 class TaskBehaviorsScreen(
     sealedActivity: SealedLightActivity,
+    private val initialData: AppData? = null,
 ) : LightScreen<Unit, TaskBehaviorsViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<TaskBehaviorsViewModel>
         get() = TaskBehaviorsViewModel::class.java
 
     override fun createViewModel() =
-        TaskBehaviorsViewModel(RemindersRepository(lightContext.dataStore))
+        TaskBehaviorsViewModel(RemindersRepository(lightContext.dataStore), initialData)
 
     @Composable
     override fun Content() {

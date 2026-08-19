@@ -17,9 +17,13 @@ sealed interface DataState {
 }
 
 /** Collect the repository's live data as a [DataState], turning a corruption error into
- *  [DataState.Corrupt] rather than crashing the collector. */
-fun RemindersRepository.dataStateIn(scope: CoroutineScope): StateFlow<DataState> =
+ *  [DataState.Corrupt] rather than crashing the collector. [initialValue] lets a screen
+ *  seed itself from an already-warm caller instead of starting at Loading. */
+fun RemindersRepository.dataStateIn(
+    scope: CoroutineScope,
+    initialValue: DataState = DataState.Loading,
+): StateFlow<DataState> =
     appData
         .map<AppData, DataState> { DataState.Ready(it) }
         .catch { e -> emit(DataState.Corrupt(e.message ?: "Data is unreadable")) }
-        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), DataState.Loading)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), initialValue)
