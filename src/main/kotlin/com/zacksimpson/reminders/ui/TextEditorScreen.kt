@@ -41,6 +41,9 @@ class TextEditorScreen(
                 onBack = { goBack(null) },
                 submitLabel = "DONE",
                 initialCaps = request.initialCaps,
+                // Default is multi-line, where Return inserts "\n" — every field here is
+                // single-line, so Return should submit instead.
+                singleLine = true,
                 // editorKey defaults to `title`, keying the embedded keyboard's
                 // viewModel() call. This screen has no per-screen ViewModelStoreOwner, so
                 // a fixed key reused across pushes (e.g. add one task, then another) would
