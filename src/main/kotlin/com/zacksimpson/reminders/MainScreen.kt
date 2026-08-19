@@ -124,12 +124,21 @@ class MainScreen(sealedActivity: SealedLightActivity) :
 
     // Scheduling lives here, on the Screen, not in MainViewModel — a SealedLightContext
     // is only reachable via LightScreen's protected lightContext, not from a ViewModel's
-    // onScreenShow. Safe to call every time this screen appears — REPLACE/UPDATE
-    // policies make enqueuePeriodic/enqueue idempotent, not duplicate schedules.
+    // onScreenShow. willShow() fires on every return to MainScreen (e.g. backing out of
+    // Account), not just true app launch, so the one-shot poke is guarded to once per
+    // process — RN only syncs on cold start and real app-foreground, not on in-app nav.
+    // enqueuePeriodic stays unguarded; its UPDATE policy is idempotent by design.
     override fun willShow() {
         super.willShow()
         LightWork.enqueuePeriodic(lightContext, SYNC_JOB_KEY, repeatInterval = 15.minutes)
-        LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = SYNC_NOW_TAG)
+        if (!hasPokedSyncOnLaunch) {
+            hasPokedSyncOnLaunch = true
+            LightWork.enqueue(lightContext, SYNC_JOB_KEY, tag = SYNC_NOW_TAG)
+        }
+    }
+
+    private companion object {
+        var hasPokedSyncOnLaunch = false
     }
 
     @Composable

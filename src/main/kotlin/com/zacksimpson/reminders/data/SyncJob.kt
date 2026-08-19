@@ -22,8 +22,11 @@ const val SYNC_NOW_TAG = "$SYNC_JOB_KEY-now"
  * is scheduled unconditionally since there's no signed-out-aware way to cancel it.
  *
  * light-sdk exposes no network-connectivity check to tool code, so this just attempts
- * a sync and lets any failure fall through to [LightJobResult.Retry], which
- * WorkManager backs off and retries automatically.
+ * a sync. [AuthException] (Firebase rejected the sign-in/refresh call outright — bad
+ * API key, expired/revoked refresh token) is treated as permanent, surfacing as
+ * "Error. Tap to try again" in Account rather than retrying forever; anything else
+ * falls through to [LightJobResult.Retry], which WorkManager backs off and retries
+ * automatically.
  */
 @LightJob(SYNC_JOB_KEY)
 val syncRemindersJob: LightJobHandler = { lightContext, _ ->
@@ -40,6 +43,9 @@ val syncRemindersJob: LightJobHandler = { lightContext, _ ->
                 firestore.close()
             }
         }
+    } catch (e: AuthException) {
+        Log.e(TAG, "Sync failed, won't retry", e)
+        LightJobResult.Error()
     } catch (e: Exception) {
         Log.e(TAG, "Sync failed, will retry", e)
         LightJobResult.Retry

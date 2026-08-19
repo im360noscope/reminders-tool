@@ -55,10 +55,19 @@ class AccountViewModel(
     val isBusy = MutableStateFlow(false)
     val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** Reflects the immediate one-shot's WorkManager state, shared with MainScreen's
-     *  on-open poke — shows "Syncing…" for that automatic trigger too, not just a tap. */
-    val isSyncing = LightWork.observe(lightContext, SYNC_NOW_TAG)
+    /** Shared by MainScreen's on-open poke and this screen's own "Sync now" tap — both
+     *  enqueue under the same tag, so either one's outcome shows up here. */
+    private val syncJobState = LightWork.observe(lightContext, SYNC_NOW_TAG)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LightJobState.NotScheduled)
+
+    val isSyncing = syncJobState
         .map { it is LightJobState.Enqueued || it is LightJobState.Running }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    /** True once the job gives up for good (see [SyncJob]'s [AuthException] handling) —
+     *  shows "Error. Tap to try again" instead of leaving "Syncing…" up forever. */
+    val syncFailed = syncJobState
+        .map { it is LightJobState.Failed }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     fun syncNow() {
@@ -132,6 +141,7 @@ class AccountScreen(
             val isBusy by viewModel.isBusy.collectAsState()
             val lastSyncedAt by viewModel.lastSyncedAt.collectAsState()
             val isSyncing by viewModel.isSyncing.collectAsState()
+            val syncFailed by viewModel.syncFailed.collectAsState()
 
             Column(
                 modifier = Modifier
@@ -166,6 +176,7 @@ class AccountScreen(
                         email = s.email,
                         lastSyncedAt = lastSyncedAt,
                         isSyncing = isSyncing,
+                        syncFailed = syncFailed,
                         onSyncNow = { viewModel.syncNow() },
                         onSignOut = { viewModel.signOut() },
                         modifier = Modifier.weight(1f),
@@ -228,6 +239,7 @@ class AccountScreen(
         email: String,
         lastSyncedAt: Long?,
         isSyncing: Boolean,
+        syncFailed: Boolean,
         onSyncNow: () -> Unit,
         onSignOut: () -> Unit,
         modifier: Modifier = Modifier,
@@ -254,6 +266,7 @@ class AccountScreen(
                     label = "Last Synced",
                     value = when {
                         isSyncing -> "Syncing…"
+                        syncFailed -> "Error. Tap to try again"
                         lastSyncedAt != null -> formatLastSyncedAt(lastSyncedAt)
                         else -> "Never, tap to sync now"
                     },
