@@ -25,6 +25,7 @@ fun SettingsTab(
     state: DataState,
     onOpenTaskBehaviors: () -> Unit,
     onOpenAccount: () -> Unit,
+    onOpenNotifications: () -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         LightTopBar(
@@ -49,6 +50,7 @@ fun SettingsTab(
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     SettingsLinkRow("Account", onOpenAccount)
+                    SettingsLinkRow("Notifications", onOpenNotifications)
                     SettingsLinkRow("Task Behaviors", onOpenTaskBehaviors)
                 }
             }

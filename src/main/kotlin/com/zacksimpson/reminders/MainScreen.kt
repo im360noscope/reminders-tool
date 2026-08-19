@@ -30,6 +30,7 @@ import com.zacksimpson.reminders.screens.ListAction
 import com.zacksimpson.reminders.screens.ListActionsScreen
 import com.zacksimpson.reminders.screens.ListDetailScreen
 import com.zacksimpson.reminders.screens.ListsTab
+import com.zacksimpson.reminders.screens.NotificationsScreen
 import com.zacksimpson.reminders.screens.SettingsTab
 import com.zacksimpson.reminders.screens.TaskAction
 import com.zacksimpson.reminders.screens.TaskActionsScreen
@@ -246,6 +247,9 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             },
                             onOpenAccount = {
                                 navigateTo(screenFactory = { AccountScreen(it) })
+                            },
+                            onOpenNotifications = {
+                                navigateTo(screenFactory = { NotificationsScreen(it) })
                             },
                         )
                     }
