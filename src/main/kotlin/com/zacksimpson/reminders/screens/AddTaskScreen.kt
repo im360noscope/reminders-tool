@@ -147,6 +147,9 @@ class AddTaskScreen(
     private val defaultListId: String,
     private val defaultDate: String? = null,
     private val initialData: AppData? = null,
+    // False when opened from inside a list's own "+" — you're already looking at that
+    // list, so After Quick Add doesn't apply; just toast and dismiss back to it.
+    private val honorAfterAddBehavior: Boolean = true,
 ) : LightScreen<Unit, AddTaskViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<AddTaskViewModel>
@@ -186,13 +189,15 @@ class AddTaskScreen(
                             onClick = {
                                 viewModel.save {
                                     val d = (viewModel.state.value as? DataState.Ready)?.data
-                                    if (d?.settings?.afterAddBehavior == AfterAddBehavior.GO_TO_LIST) {
+                                    if (honorAfterAddBehavior && d?.settings?.afterAddBehavior == AfterAddBehavior.GO_TO_LIST) {
                                         goBack(null)
                                         navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle, initialData = d) })
                                     } else {
                                         navigateTo(
                                             screenFactory = { ToastScreen(it, "added") },
-                                            resultCallback = { viewModel.resetForNextAdd() },
+                                            resultCallback = {
+                                                if (honorAfterAddBehavior) viewModel.resetForNextAdd() else goBack(null)
+                                            },
                                         )
                                     }
                                 }

@@ -125,7 +125,11 @@ class ListDetailScreen(
                             painterResource(R.drawable.ic_plus),
                             onClick = {
                                 val d = (viewModel.state.value as? DataState.Ready)?.data
-                                navigateTo(screenFactory = { AddTaskScreen(it, listId, initialData = d) })
+                                navigateTo(
+                                    screenFactory = {
+                                        AddTaskScreen(it, listId, initialData = d, honorAfterAddBehavior = false)
+                                    },
+                                )
                             },
                             sizeUnits = 1.2f,
                         )
