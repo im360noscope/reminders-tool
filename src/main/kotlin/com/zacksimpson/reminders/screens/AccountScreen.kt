@@ -48,12 +48,19 @@ class AccountViewModel(
     private val authRepo: AuthRepository,
     private val lightContext: SealedLightContext,
 ) : LightViewModel<Unit>() {
-    val authState = authRepo.authStateIn(viewModelScope)
+    val authState = authRepo.authStateIn(viewModelScope, cachedAuthState)
     val email = MutableStateFlow("")
     val password = MutableStateFlow("")
     val error = MutableStateFlow<String?>(null)
     val isBusy = MutableStateFlow(false)
-    val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), cachedLastSyncedAt)
+
+    init {
+        // No warm caller to seed from like the list/task screens (only this screen ever
+        // reads auth state), so instead remember the last-observed value across pushes.
+        viewModelScope.launch { authState.collect { cachedAuthState = it } }
+        viewModelScope.launch { lastSyncedAt.collect { cachedLastSyncedAt = it } }
+    }
 
     /** Shared by MainScreen's on-open poke and this screen's own "Sync now" tap — both
      *  enqueue under the same tag, so either one's outcome shows up here. */
@@ -111,6 +118,11 @@ class AccountViewModel(
 
     override fun onCleared() {
         authRepo.close()
+    }
+
+    private companion object {
+        var cachedAuthState: AuthState = AuthState.Loading
+        var cachedLastSyncedAt: Long? = null
     }
 }
 

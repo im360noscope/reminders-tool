@@ -105,7 +105,10 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
 
 /** Same WhileSubscribed/initial-value/catch convention RemindersRepository.dataStateIn uses —
  *  an unreadable DataStore falls back to SignedOut rather than crashing the collector. */
-fun AuthRepository.authStateIn(scope: CoroutineScope): StateFlow<AuthState> =
+fun AuthRepository.authStateIn(
+    scope: CoroutineScope,
+    initialValue: AuthState = AuthState.Loading,
+): StateFlow<AuthState> =
     state
         .catch { emit(AuthState.SignedOut) }
-        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), AuthState.Loading)
+        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), initialValue)
