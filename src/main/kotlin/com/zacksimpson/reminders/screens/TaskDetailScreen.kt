@@ -3,8 +3,10 @@ package com.zacksimpson.reminders.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -27,6 +29,7 @@ import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
+import com.thelightphone.sdk.ui.verticalGridUnitsAsDp
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AppData
 import com.zacksimpson.reminders.data.ReminderList
@@ -322,6 +325,7 @@ class TaskDetailScreen(
                             onDelete = { viewModel.removeSubtask(it) },
                         )
 
+                        Spacer(modifier = Modifier.height(1.5f.verticalGridUnitsAsDp()))
                         DeleteRow(task = liveTask, onDeleted = { viewModel.delete { goBack(null) } })
                     }
                 }
