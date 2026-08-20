@@ -66,7 +66,7 @@ fun TitleField(
         LightText(
             text = value.ifBlank { placeholder },
             variant = LightTextVariant.Heading,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .fillMaxWidth()
