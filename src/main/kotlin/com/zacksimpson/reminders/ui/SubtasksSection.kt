@@ -80,7 +80,8 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
                     end = 0.9f.gridUnitsAsDp(),
                     top = 0.68f.gridUnitsAsDp(),
                     bottom = 0.1f.gridUnitsAsDp(),
-                ),
+                )
+                .alpha(if (subtask.completed) 0.4f else 1f),
         )
         LightText(
             text = subtask.title,
