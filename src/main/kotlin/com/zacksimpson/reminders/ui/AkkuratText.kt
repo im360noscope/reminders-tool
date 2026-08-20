@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.designVerticalPxToSp
 
@@ -24,11 +25,15 @@ fun AkkuratText(
     modifier: Modifier = Modifier,
     fontWeight: FontWeight = FontWeight.Normal,
     align: TextAlign? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
 ) {
     val fontFamily = LightThemeTokens.typography.copy.fontFamily
     Text(
         text = text,
         modifier = modifier,
+        maxLines = maxLines,
+        overflow = overflow,
         style = TextStyle(
             color = LightThemeTokens.colors.content,
             fontFamily = fontFamily,

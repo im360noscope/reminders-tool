@@ -63,9 +63,12 @@ fun TitleField(
                 bottom = 0.75f.gridUnitsAsDp(),
             ),
     ) {
-        LightText(
+        // LightTextVariant.Heading's built-in line height (1.35x) reads too loose
+        // across a wrap (same issue noted for TaskRowView's title) — AkkuratText at
+        // Heading's own 38sp size uses the font's natural, tighter line height instead.
+        AkkuratText(
             text = value.ifBlank { placeholder },
-            variant = LightTextVariant.Heading,
+            fontSizeDesignPx = 38f,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
