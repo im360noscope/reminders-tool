@@ -80,7 +80,10 @@ fun TitleField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 2.5f.gridUnitsAsDp())
-                .height(3f.designVerticalPxToDp())
+                // Thicker than the SDK's own INPUT_UNDERLINE_THICKNESS_PX (3f, also
+                // RN's literal borderBottomWidth: 3) — bumped to match Light Calendar's
+                // own title-field underline weight more closely.
+                .height(4f.designVerticalPxToDp())
                 .background(LightThemeTokens.colors.content),
         )
     }
