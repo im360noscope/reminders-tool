@@ -127,7 +127,7 @@ class ListDetailScreen(
                                 val d = (viewModel.state.value as? DataState.Ready)?.data
                                 navigateTo(
                                     screenFactory = {
-                                        AddTaskScreen(it, listId, initialData = d, honorAfterAddBehavior = false)
+                                        AddTaskScreen(it, listId, initialData = d, honorAfterAddBehavior = false, isModal = false)
                                     },
                                 )
                             },

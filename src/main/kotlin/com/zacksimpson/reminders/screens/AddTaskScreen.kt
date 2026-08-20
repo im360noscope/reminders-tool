@@ -1,25 +1,32 @@
 package com.zacksimpson.reminders.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewModelScope
 import com.thelightphone.sdk.LightScreen
 import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
+import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
+import com.thelightphone.sdk.ui.LightText
+import com.thelightphone.sdk.ui.LightTextVariant
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.LightTopBar
 import com.thelightphone.sdk.ui.LightTopBarCenter
 import com.thelightphone.sdk.ui.gridUnitsAsDp
+import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 import com.zacksimpson.reminders.data.AfterAddBehavior
 import com.zacksimpson.reminders.data.AppData
@@ -150,6 +157,11 @@ class AddTaskScreen(
     // False when opened from inside a list's own "+" — you're already looking at that
     // list, so After Quick Add doesn't apply; just toast and dismiss back to it.
     private val honorAfterAddBehavior: Boolean = true,
+    // True for the Today tab's "+" and the bottom-bar global "+" — matches RN's
+    // AddTaskModal (isModal): plain title-only top bar, no swipe-back, and a bottom
+    // footer with a centered ✕ and a right-aligned SAVE, instead of the top-bar
+    // back-chevron + checkmark used when opened from inside a list's own "+".
+    private val isModal: Boolean = true,
 ) : LightScreen<Unit, AddTaskViewModel>(sealedActivity) {
 
     override val viewModelClass: Class<AddTaskViewModel>
@@ -172,38 +184,36 @@ class AddTaskScreen(
             val listOrder = (state as? DataState.Ready)?.data?.settings?.listOrder
             val selectedListTitle = lists.firstOrNull { it.id == listId }?.title ?: "Inbox"
 
-            SwipeBackContainer(onSwipeBack = { goBack(null) }) {
+            val onSave: () -> Unit = {
+                viewModel.save {
+                    val d = (viewModel.state.value as? DataState.Ready)?.data
+                    if (honorAfterAddBehavior && d?.settings?.afterAddBehavior == AfterAddBehavior.GO_TO_LIST) {
+                        goBack(null)
+                        navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle, initialData = d) })
+                    } else {
+                        navigateTo(
+                            screenFactory = { ToastScreen(it, "added") },
+                            resultCallback = {
+                                if (honorAfterAddBehavior) viewModel.resetForNextAdd() else goBack(null)
+                            },
+                        )
+                    }
+                }
+            }
+
+            val screenContent: @Composable () -> Unit = {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(LightThemeTokens.colors.background),
             ) {
                 LightTopBar(
-                    leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
+                    leftButton = if (isModal) null else LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("New Task"),
-                    rightButton = if (title.isNotBlank()) {
+                    rightButton = if (!isModal && title.isNotBlank()) {
                         // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's —
                         // sized down to match BACK's visual weight.
-                        LightBarButton.LightIcon(
-                            LightIcons.ACCEPT,
-                            onClick = {
-                                viewModel.save {
-                                    val d = (viewModel.state.value as? DataState.Ready)?.data
-                                    if (honorAfterAddBehavior && d?.settings?.afterAddBehavior == AfterAddBehavior.GO_TO_LIST) {
-                                        goBack(null)
-                                        navigateTo(screenFactory = { ListDetailScreen(it, listId, selectedListTitle, initialData = d) })
-                                    } else {
-                                        navigateTo(
-                                            screenFactory = { ToastScreen(it, "added") },
-                                            resultCallback = {
-                                                if (honorAfterAddBehavior) viewModel.resetForNextAdd() else goBack(null)
-                                            },
-                                        )
-                                    }
-                                }
-                            },
-                            sizeUnits = 1.5f,
-                        )
+                        LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = onSave, sizeUnits = 1.5f)
                     } else {
                         null
                     },
@@ -211,7 +221,7 @@ class AddTaskScreen(
                 )
 
                 LightScrollView(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     TitleField(
@@ -299,7 +309,44 @@ class AddTaskScreen(
                         onDelete = { viewModel.removeSubtask(it) },
                     )
                 }
+
+                // Bottom footer only in the modal presentation (Today tab's "+" and
+                // the bottom-bar global "+") — matches RN's AddTaskModal footer
+                // (centered ✕ dismiss, right-aligned SAVE) instead of a top-bar
+                // back-chevron + checkmark.
+                if (isModal) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 1f.gridUnitsAsDp()),
+                    ) {
+                        LightIcon(
+                            // 2.2f (TimePickerScreen's dismiss size) was tuned against
+                            // that screen's 48px numpad digits — too heavy paired with
+                            // SAVE's small Button-variant text here.
+                            icon = LightIcons.CLOSE,
+                            size = 1.5f,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .lightClickable { goBack(null) },
+                        )
+                        LightText(
+                            text = "SAVE",
+                            variant = LightTextVariant.Button,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 2f.gridUnitsAsDp())
+                                .lightClickable(onClick = onSave),
+                        )
+                    }
+                }
             }
+            }
+
+            if (isModal) {
+                screenContent()
+            } else {
+                SwipeBackContainer(onSwipeBack = { goBack(null) }) { screenContent() }
             }
         }
     }
