@@ -34,7 +34,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Signals what happened back to whichever screen opened this one. */
+/** signals what happened back to whichever screen opened this one. */
 enum class TaskAction { DELETED, START_REORDER }
 
 class TaskActionsViewModel(
@@ -61,8 +61,8 @@ class TaskActionsViewModel(
 }
 
 /**
- * Long-press action sheet for a task — Mark Complete/Incomplete, Edit Details, Reorder
- * Tasks, Delete — ported from RN's task-actions/[id].tsx.
+ * long-press action sheet for a task: Mark Complete/Incomplete, Edit Details, Reorder
+ * Tasks, Delete.
  */
 class TaskActionsScreen(
     sealedActivity: SealedLightActivity,
@@ -126,7 +126,7 @@ class TaskActionsScreen(
                             resultCallback = { confirmed ->
                                 if (confirmed == true) {
                                     viewModel.delete {
-                                        // Pushed from here, not by the caller after this
+                                        // pushed from here, not by the caller after this
                                         // screen pops, so the list doesn't flash on screen
                                         // between the pop and the toast push.
                                         navigateTo(

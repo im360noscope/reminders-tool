@@ -11,10 +11,10 @@ import com.thelightphone.sdk.ui.LightIcons
 import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 
-/** Up/down reorder arrows shared by task rows and list rows. */
+/** up/down reorder arrows shared by task rows and list rows. */
 @Composable
 fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMoveDown: () -> Unit) {
-    // Tighter than the icons' own spacing suggests — the enlarged clickable padding
+    // tighter than the icons' own spacing suggests, the enlarged clickable padding
     // below already adds a gap between the two tap zones.
     Row(
         modifier = Modifier.padding(top = 0.75f.gridUnitsAsDp(), end = 0.5f.gridUnitsAsDp()),
@@ -23,14 +23,14 @@ fun ReorderArrows(isFirst: Boolean, isLast: Boolean, onMoveUp: () -> Unit, onMov
         LightIcon(
             icon = LightIcons.UP,
             size = 1.6f,
-            // UP/DOWN are the BACK chevron rotated ±90°, off-center in its own box — UP's
-            // ink sits high, DOWN's sits low. Applied before .lightClickable() since it's a
+            // UP/DOWN are the BACK chevron rotated ±90°, off-center in its own box, UP's
+            // ink sits high, DOWN's sits low. applied before .lightClickable() since it's a
             // visual offset, not part of the tap area.
             modifier = Modifier
                 .padding(top = 0.58f.gridUnitsAsDp())
                 .alpha(if (isFirst) 0.3f else 1f)
                 .lightClickable(enabled = !isFirst, onClick = onMoveUp)
-                // Enlarges the tap target beyond the glyph, matching the checkbox/asterisk
+                // enlarges the tap target beyond the glyph, matching the checkbox/asterisk
                 // treatment.
                 .padding(horizontal = 0.4f.gridUnitsAsDp(), vertical = 0.35f.gridUnitsAsDp()),
         )

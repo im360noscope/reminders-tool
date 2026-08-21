@@ -68,8 +68,8 @@ class TaskDetailViewModel(
     val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
 
     init {
-        // Draft fields are seeded ONCE from the task's state at open time, then evolve
-        // independently until Save. Subtasks are NOT drafted — they read/write live.
+        // draft fields are seeded once from the task's state at open time, then evolve
+        // independently until Save. subtasks are not drafted, they read/write live.
         viewModelScope.launch {
             val first = state.first { it !is DataState.Loading }
             val task = (first as? DataState.Ready)?.data?.tasks?.firstOrNull { it.id == taskId }
@@ -144,7 +144,7 @@ class TaskDetailViewModel(
         }
     }
 
-    // Subtask mutations are immediate/live — the task already exists, so there's no
+    // subtask mutations are immediate/live, the task already exists so there's no
     // "draft" to hold them in (unlike Add Task, which is creating a brand-new task).
     fun addSubtask(text: String) {
         val t = text.trim()
@@ -172,11 +172,11 @@ class TaskDetailViewModel(
 }
 
 /**
- * Full task edit screen: title, list, date/time/recurring, subtasks, delete.
+ * full task edit screen: title, list, date/time/recurring, subtasks, delete.
  *
- * Save is an explicit checkmark tap rather than RN's auto-save-on-swipe-back: the SDK's
- * system back gesture calls goBack() directly with no hook to save first — matches the
- * explicit-Save pattern already used on Add Task.
+ * Save is an explicit checkmark tap, not auto-save-on-back: the SDK's system back gesture
+ * calls goBack() directly with no hook to save first, matches the explicit-Save pattern
+ * already used on Add Task.
  */
 class TaskDetailScreen(
     sealedActivity: SealedLightActivity,
@@ -217,7 +217,7 @@ class TaskDetailScreen(
                 LightTopBar(
                     leftButton = LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("Edit"),
-                    // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's — sized
+                    // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's, sized
                     // down to match BACK's visual weight.
                     rightButton = LightBarButton.LightIcon(
                         LightIcons.ACCEPT,
@@ -278,8 +278,6 @@ class TaskDetailScreen(
                             },
                             onClear = { viewModel.clearDate() },
                         )
-                        // Time/Recurring only shown once a date is set, matching RN —
-                        // they're meaningless without one.
                         if (date != null) {
                             ClearableField(
                                 label = "Time",

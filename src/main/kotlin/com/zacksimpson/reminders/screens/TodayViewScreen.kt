@@ -34,7 +34,7 @@ class TodayViewViewModel(private val repo: RemindersRepository) : LightViewModel
     }
 }
 
-/** Today View settings — just the Show Overdue toggle, ported from RN's today-view.tsx. */
+/** Today View settings, just the Show Overdue toggle. */
 class TodayViewScreen(
     sealedActivity: SealedLightActivity,
 ) : LightScreen<Unit, TodayViewViewModel>(sealedActivity) {

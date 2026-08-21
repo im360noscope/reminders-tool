@@ -23,16 +23,16 @@ import kotlinx.serialization.json.put
 
 class FirestoreException(message: String) : Exception(message)
 
-/** A single Firestore document as this app sees it: its ID plus the field map already
+/** a single Firestore document as this app sees it: its ID plus the field map already
  *  unwrapped from Firestore's typed Value format into plain JSON. */
 data class FirestoreDocument(val id: String, val fields: JsonObject)
 
 /**
- * Talks to Firestore's REST API directly (see SYNC_PLAN.md §3) — light-sdk has no
+ * talks to Firestore's REST API directly (see SYNC_PLAN.md §3). light-sdk has no
  * Firestore Android SDK allow-listed, so this is a thin client over
  * firestore.googleapis.com, authenticated with the ID token [AuthRepository] manages.
  *
- * Generic over a collection's document shape — converting to/from Task/ReminderList
+ * generic over a collection's document shape, converting to/from Task/ReminderList
  * is the sync engine's job, using [firestoreModelJson].
  */
 class FirestoreClient(private val authRepo: AuthRepository) {
@@ -44,7 +44,7 @@ class FirestoreClient(private val authRepo: AuthRepository) {
 
     fun close() = http.close()
 
-    /** Every document in a user's collection (e.g. "tasks", "lists") — soft-deleted
+    /** every document in a user's collection (e.g. "tasks", "lists"). soft-deleted
      *  (`deleted: true`) documents are included too, same as reminders-web's own
      *  `getDocs`/`onSnapshot` calls; filtering those out is the caller's job. */
     suspend fun listDocuments(uid: String, collection: String): List<FirestoreDocument> {
@@ -67,7 +67,7 @@ class FirestoreClient(private val authRepo: AuthRepository) {
         return documents
     }
 
-    /** The singleton settings document, or null if the user has never synced settings
+    /** the singleton settings document, or null if the user has never synced settings
      *  before (matches reminders-web's own "doesn't exist yet" handling). */
     suspend fun getDocument(uid: String, collection: String, docId: String): FirestoreDocument? {
         val token = validToken()
@@ -80,7 +80,7 @@ class FirestoreClient(private val authRepo: AuthRepository) {
         return toFirestoreDocument(json.parseToJsonElement(text).jsonObject)
     }
 
-    /** Full replace-or-create — no updateMask, since sync always writes whole documents,
+    /** full replace-or-create, no updateMask, since sync always writes whole documents,
      *  not per-field patches. */
     suspend fun setDocument(uid: String, collection: String, docId: String, fields: JsonObject) {
         val token = validToken()
@@ -118,7 +118,7 @@ class FirestoreClient(private val authRepo: AuthRepository) {
     }
 }
 
-/** Shared Json config for Task/ReminderList/Settings <-> Firestore's plain-field JSON.
+/** shared Json config for Task/ReminderList/Settings <-> Firestore's plain-field JSON.
  *  encodeDefaults=true is deliberate: a field left at its Kotlin default (e.g.
  *  completed=false) would otherwise be silently dropped from what's sent. */
 val firestoreModelJson = Json { encodeDefaults = true; ignoreUnknownKeys = true }

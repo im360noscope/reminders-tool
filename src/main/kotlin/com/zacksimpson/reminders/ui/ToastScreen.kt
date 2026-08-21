@@ -15,10 +15,8 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import kotlinx.coroutines.delay
 
 /**
- * Full-screen, self-dismissing message — matches RN's Toast.tsx, which used a full-screen
- * Modal rather than a floating corner toast (the SDK has nothing toast-like to build on;
- * this is pushed as a screen and pops itself). Lowercase message text, matching RN's
- * "added" convention.
+ * full-screen, self-dismissing message. the SDK has nothing toast-like to build on, so
+ * this is pushed as a screen and pops itself.
  */
 class ToastScreen(
     sealedActivity: SealedLightActivity,
@@ -40,8 +38,6 @@ class ToastScreen(
                     .background(LightThemeTokens.colors.background),
                 contentAlignment = Alignment.Center,
             ) {
-                // RN's n(40) toast text — matches the calibrated n(40)-to-Subtitle mapping
-                // used elsewhere.
                 LightText(text = message, variant = LightTextVariant.Subtitle)
             }
         }

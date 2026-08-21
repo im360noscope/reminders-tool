@@ -3,15 +3,15 @@ package com.zacksimpson.reminders.data
 import java.time.LocalDate
 
 /**
- * Pure domain logic — no storage, no Android, no clock (callers pass date/id/clock in).
- * Split out so ordering and recurrence can be unit-tested in isolation.
+ * pure domain logic, no storage, no Android, no clock (callers pass date/id/clock in).
+ * split out so ordering and recurrence can be unit-tested in isolation.
  */
 internal object RemindersLogic {
 
     /**
-     * Sorts [items] by position in [orderIds] (a drag/reorder-written id array, e.g.
+     * sorts [items] by position in [orderIds] (a drag/reorder-written id array, e.g.
      * `Settings.listOrder` or `ReminderList.taskOrder`) when present and non-empty;
-     * items whose id isn't in it are appended after, sorted by [fallback] — matches
+     * items whose id isn't in it are appended after, sorted by [fallback], matches
      * reminders-web's `applyOrder()` in src/lib/ordering.ts exactly, so the two
      * clients never disagree on order given the same data (LIST_TASK_ORDER_MIGRATION.md).
      */
@@ -33,8 +33,8 @@ internal object RemindersLogic {
     }
 
     /**
-     * Advance a date by one recurrence interval. `plusMonths`/`plusYears` clamp
-     * end-of-month (Jan 31 + 1 month → Feb 28) rather than overflowing.
+     * advance a date by one recurrence interval. `plusMonths`/`plusYears` clamp
+     * end-of-month (Jan 31 + 1 month -> Feb 28) rather than overflowing.
      */
     fun addInterval(date: LocalDate, r: Recurrence): LocalDate = when (r.unit) {
         RecurrenceUnit.DAY -> date.plusDays(r.interval.toLong())
@@ -44,7 +44,7 @@ internal object RemindersLogic {
     }
 
     /**
-     * Next occurrence date as ISO "YYYY-MM-DD". Advances at least one interval past
+     * next occurrence date as ISO "YYYY-MM-DD". advances at least one interval past
      * [dateStr], then keeps going until the result is >= [today].
      */
     fun nextOccurrenceDate(dateStr: String, recurrence: Recurrence, today: LocalDate): String {
@@ -53,7 +53,7 @@ internal object RemindersLogic {
         return next.toString()
     }
 
-    /** Interval wraps 1<->30 rather than clamping-and-stopping. */
+    /** interval wraps 1<->30 rather than clamping-and-stopping. */
     fun decrementInterval(interval: Int): Int = if (interval <= 1) 30 else interval - 1
 
     fun incrementInterval(interval: Int): Int = if (interval >= 30) 1 else interval + 1
@@ -64,8 +64,8 @@ internal object RemindersLogic {
         return units[(units.indexOf(unit) + 1) % units.size]
     }
 
-    /** Follow-up task spawned when a dated recurring task is completed, or null if it
-     *  isn't one. Carries over title/list/time/recurrence and subtasks (reset to
+    /** follow-up task spawned when a dated recurring task is completed, or null if it
+     *  isn't one. carries over title/list/time/recurrence and subtasks (reset to
      *  incomplete). */
     fun spawnNextOccurrence(
         task: Task,

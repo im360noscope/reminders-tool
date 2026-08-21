@@ -35,10 +35,9 @@ import com.zacksimpson.reminders.ui.AkkuratText
 import com.zacksimpson.reminders.ui.RemindersTheme
 
 /**
- * "Recurs every: N unit(s)" stepper, ported from RN's RecurrencePicker.tsx. Interval wraps
- * 1<->30 (no clamping-and-stopping); unit cycles day->week->month->year->day. Re-seeds from
- * [initialValue] every time this screen opens — same as RN's `useEffect` resync on visible,
- * naturally matching since this is a fresh screen instance each push.
+ * "Recurs every: N unit(s)" stepper. interval wraps 1<->30 (no clamping-and-stopping),
+ * unit cycles day->week->month->year->day. re-seeds from [initialValue] every time this
+ * screen opens, since this is a fresh screen instance each push.
  */
 class RecurrencePickerScreen(
     sealedActivity: SealedLightActivity,
@@ -100,7 +99,7 @@ class RecurrencePickerScreen(
                         Box(modifier = Modifier.width(120.dp), contentAlignment = Alignment.Center) {
                             AkkuratText(
                                 text = interval.toString(),
-                                // Matches TimePickerScreen's time display size.
+                                // matches TimePickerScreen's time display size.
                                 fontSizeDesignPx = 115f,
                                 fontWeight = FontWeight.Light,
                                 align = TextAlign.Center,
@@ -125,8 +124,8 @@ class RecurrencePickerScreen(
                     )
                 }
 
-                // Footer: dismiss centered, SAVE on the right — matches RN's two flex:1
-                // side-slots with the dismiss X between them.
+                // footer: dismiss centered, SAVE on the right. the middle Box/weight(1f)
+                // slots balance the row so the dismiss X lands dead center.
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -137,7 +136,7 @@ class RecurrencePickerScreen(
                     Box(modifier = Modifier.weight(1f))
                     LightIcon(
                         icon = LightIcons.CLOSE,
-                        // Matches TimePickerScreen's dismiss X.
+                        // matches TimePickerScreen's dismiss X.
                         size = 2.2f,
                         modifier = Modifier
                             .padding(0.5f.gridUnitsAsDp())

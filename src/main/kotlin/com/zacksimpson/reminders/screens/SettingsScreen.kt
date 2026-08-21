@@ -16,7 +16,7 @@ import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.DataState
 
 /**
- * Settings tab: top-level links. Task Behaviors folds Today View / Default List /
+ * settings tab: top-level links. Task Behaviors folds Today View / Default List /
  * After Quick Add / Add New Tasks under one screen.
  */
 @Composable
@@ -56,7 +56,7 @@ fun SettingsTab(
     }
 }
 
-/** A settings row that's just a label leading to another screen — no current-value line. */
+/** a settings row that's just a label leading to another screen, no current-value line. */
 @Composable
 private fun SettingsLinkRow(label: String, onClick: () -> Unit) {
     LightText(

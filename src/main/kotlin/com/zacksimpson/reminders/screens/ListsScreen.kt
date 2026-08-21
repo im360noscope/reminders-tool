@@ -24,9 +24,9 @@ import com.zacksimpson.reminders.data.RemindersLogic
 import com.zacksimpson.reminders.ui.ReorderArrows
 
 /**
- * Lists tab: the header plus every list, sorted by order. Tap a list to open it, long-press
- * for Rename/Reorder/Clear Completed/Delete, `+` to add one. In reorder mode, tap/long-press
- * are disabled and up/down arrows appear instead — matches RN's isReordering behavior.
+ * lists tab: header plus every list, sorted by order. tap a list to open it, long-press
+ * for Rename/Reorder/Clear Completed/Delete, `+` to add one. in reorder mode, tap/long-press
+ * are disabled and up/down arrows appear instead.
  */
 @Composable
 fun ListsTab(
@@ -47,7 +47,7 @@ fun ListsTab(
                 LightBarButton.Text("DONE", onClick = onStopReordering)
             } else {
                 // ic_plus's artwork fills its box edge-to-edge, unlike LightIcons' own
-                // icons — sizeUnits reduced to match BACK's visual weight.
+                // icons, sizeUnits reduced to match BACK's visual weight.
                 LightBarButton.Icon(painterResource(R.drawable.ic_plus), onClick = onAddList, sizeUnits = 1.2f)
             },
             modifier = Modifier.padding(bottom = 1f.gridUnitsAsDp()),
@@ -86,9 +86,7 @@ fun ListsTab(
                                 )
                                 .padding(
                                     start = 1.5f.gridUnitsAsDp(),
-                                    // Matches ActionRow/OptionPickerScreen/TapField's
-                                    // vertical inset — same RN paddingVertical/fontSize
-                                    // family (n(11-14) + n(30)) as this row.
+                                    // matches ActionRow/OptionPickerScreen/TapField's vertical inset.
                                     top = 0.75f.gridUnitsAsDp(),
                                     bottom = 0.75f.gridUnitsAsDp(),
                                 ),

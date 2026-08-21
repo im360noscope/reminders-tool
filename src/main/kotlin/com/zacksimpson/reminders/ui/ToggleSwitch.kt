@@ -16,8 +16,7 @@ import com.thelightphone.sdk.ui.lightClickable
 
 /**
  * Settings-row toggle: the SDK's own TOGGLE_ON/TOGGLE_OFF glyphs on the left, label (plus
- * an optional description subtitle) on the right — matches RN's ToggleSwitch, but using
- * LightIcons instead of a hand-drawn switch graphic.
+ * an optional description subtitle) on the right.
  */
 @Composable
 fun ToggleSwitch(

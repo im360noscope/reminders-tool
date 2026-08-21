@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-/** Signed-out vs signed-in, mirroring [DataState]'s Loading/Ready/Corrupt shape but for
+/** signed-out vs signed-in, mirroring [DataState]'s Loading/Ready/Corrupt shape but for
  *  auth rather than task data. */
 sealed interface AuthState {
     data object Loading : AuthState
@@ -23,8 +23,8 @@ sealed interface AuthState {
 }
 
 /**
- * Stores the signed-in account's tokens for phone<->desktop sync in the shared
- * DataStore [RemindersRepository] uses. [AuthClient] does the network calls; this
+ * stores the signed-in account's tokens for phone<->desktop sync in the shared
+ * DataStore [RemindersRepository] uses. [AuthClient] does the network calls, this
  * persists what comes back and decides when a stored ID token needs refreshing.
  */
 class AuthRepository(private val dataStore: DataStore<Preferences>) {
@@ -36,8 +36,8 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         if (uid != null && email != null) AuthState.SignedIn(uid, email) else AuthState.SignedOut
     }
 
-    /** Epoch millis of the last successful [SyncEngine.sync] call, or null if this
-     *  account has never synced. Drives the Settings "last synced" row. */
+    /** epoch millis of the last successful [SyncEngine.sync] call, or null if this
+     *  account has never synced. drives the Settings "last synced" row. */
     val lastSyncedAt: Flow<Long?> = dataStore.data.map { it[LAST_SYNCED_KEY] }
 
     suspend fun signIn(email: String, password: String) {
@@ -58,13 +58,13 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Called by [SyncEngine] after a sync pass completes without error. */
+    /** called by [SyncEngine] after a sync pass completes without error. */
     suspend fun recordSyncSuccess() {
         dataStore.edit { p -> p[LAST_SYNCED_KEY] = System.currentTimeMillis() }
     }
 
-    /** A valid ID token for authenticated Firestore calls, refreshing first if the
-     *  stored one is expired or about to be. Null if signed out. */
+    /** a valid ID token for authenticated Firestore calls, refreshing first if the
+     *  stored one is expired or about to be. null if signed out. */
     suspend fun validIdToken(): String? {
         val prefs = dataStore.data.first()
         val refreshToken = prefs[REFRESH_TOKEN_KEY] ?: return null
@@ -97,13 +97,13 @@ class AuthRepository(private val dataStore: DataStore<Preferences>) {
         val EXPIRES_AT_KEY = longPreferencesKey("auth:expiresAt")
         val LAST_SYNCED_KEY = longPreferencesKey("auth:lastSyncedAt")
 
-        // Refresh a bit before actual expiry so a call made right at the boundary
+        // refresh a bit before actual expiry so a call made right at the boundary
         // doesn't get rejected by Firestore for using a token that expired mid-flight.
         const val REFRESH_MARGIN_MS = 60_000L
     }
 }
 
-/** Same WhileSubscribed/initial-value/catch convention RemindersRepository.dataStateIn uses —
+/** same WhileSubscribed/initial-value/catch convention RemindersRepository.dataStateIn uses,
  *  an unreadable DataStore falls back to SignedOut rather than crashing the collector. */
 fun AuthRepository.authStateIn(
     scope: CoroutineScope,

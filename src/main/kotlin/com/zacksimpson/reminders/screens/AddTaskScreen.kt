@@ -135,8 +135,7 @@ class AddTaskViewModel(
         }
     }
 
-    /** Clears the form for another quick add — keeps the selected list, matching RN's
-     *  resetForm(keepList = true). */
+    /** clears the form for another quick add, keeps the selected list. */
     fun resetForNextAdd() {
         title.value = ""
         date.value = defaultDate
@@ -146,20 +145,20 @@ class AddTaskViewModel(
     }
 }
 
-/** New-task form: Title, List, Date, Time, Recurring, Subtasks. Time/Recurring only
- *  appear once a Date is set, matching RN. */
+/** new-task form: Title, List, Date, Time, Recurring, Subtasks. Time/Recurring only
+ *  appear once a Date is set. */
 class AddTaskScreen(
     sealedActivity: SealedLightActivity,
     private val defaultListId: String,
     private val defaultDate: String? = null,
     private val initialData: AppData? = null,
-    // False when opened from inside a list's own "+" — you're already looking at that
-    // list, so After Quick Add doesn't apply; just toast and dismiss back to it.
+    // false when opened from inside a list's own "+", you're already looking at that
+    // list so After Quick Add doesn't apply, just toast and dismiss back to it.
     private val honorAfterAddBehavior: Boolean = true,
-    // True for the Today tab's "+" and the bottom-bar global "+" — matches RN's
-    // AddTaskModal (isModal): plain title-only top bar, no swipe-back, and a bottom
-    // footer with a centered ✕ and a right-aligned SAVE, instead of the top-bar
-    // back-chevron + checkmark used when opened from inside a list's own "+".
+    // true for the Today tab's "+" and the bottom-bar global "+": plain title-only top
+    // bar, no swipe-back, bottom footer with a centered ✕ and a right-aligned SAVE,
+    // instead of the top-bar back-chevron + checkmark used when opened from inside a
+    // list's own "+".
     private val isModal: Boolean = true,
 ) : LightScreen<Unit, AddTaskViewModel>(sealedActivity) {
 
@@ -210,7 +209,7 @@ class AddTaskScreen(
                     leftButton = if (isModal) null else LightBarButton.LightIcon(LightIcons.BACK, onClick = { goBack(null) }),
                     center = LightTopBarCenter.Text("New Task"),
                     rightButton = if (!isModal && title.isNotBlank()) {
-                        // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's —
+                        // ACCEPT's artwork fills its box edge-to-edge, unlike BACK's,
                         // sized down to match BACK's visual weight.
                         LightBarButton.LightIcon(LightIcons.ACCEPT, onClick = onSave, sizeUnits = 1.5f)
                     } else {
@@ -263,7 +262,6 @@ class AddTaskScreen(
                         },
                         onClear = { viewModel.clearDate() },
                     )
-                    // Time/Recurring only shown once a date is set, matching RN.
                     if (date != null) {
                         ClearableField(
                             label = "Time",
@@ -308,10 +306,8 @@ class AddTaskScreen(
                     )
                 }
 
-                // Bottom footer only in the modal presentation (Today tab's "+" and
-                // the bottom-bar global "+") — matches RN's AddTaskModal footer
-                // (centered ✕ dismiss, right-aligned SAVE) instead of a top-bar
-                // back-chevron + checkmark.
+                // modal-only footer: centered ✕ dismiss, right-aligned SAVE (non-modal
+                // uses the top-bar back-chevron + checkmark instead).
                 if (isModal) {
                     Box(
                         modifier = Modifier
@@ -320,7 +316,7 @@ class AddTaskScreen(
                     ) {
                         LightIcon(
                             // 2.2f (TimePickerScreen's dismiss size) was tuned against
-                            // that screen's 48px numpad digits — too heavy paired with
+                            // that screen's 48px numpad digits, too heavy paired with
                             // SAVE's small Button-variant text here.
                             icon = LightIcons.CLOSE,
                             size = 1.5f,

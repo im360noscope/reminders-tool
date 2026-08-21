@@ -21,9 +21,8 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 import com.zacksimpson.reminders.ui.SwipeBackContainer
 
 /**
- * One-off explainer, not a back-navigable detail screen — same modal-style pattern as
- * verses-tool's FallbackTranslationInfoScreen: no back chevron, swipe-back disabled, a
- * single bottom-pinned "UNDERSTOOD" dismisses it. Opened from the Account screen.
+ * one-off explainer, not back-navigable: no back chevron, swipe-back disabled, a single
+ * bottom-pinned "UNDERSTOOD" dismisses it. opened from the Account screen.
  */
 class AboutDesktopSyncScreen(
     sealedActivity: SealedLightActivity,

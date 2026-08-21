@@ -25,7 +25,7 @@ import com.thelightphone.sdk.ui.lightClickable
 
 /**
  * Subheading's size scaled the same way [LightText] scales it, but with the variant's
- * built-in letter-spacing stripped — Subheading's tracking (designed for smaller,
+ * built-in letter-spacing stripped, Subheading's tracking (designed for smaller,
  * secondary text like Fine/Button) reads oddly at field-value prominence, next to
  * Heading-based text elsewhere that has none.
  */
@@ -41,8 +41,8 @@ private fun fieldValueStyle(): TextStyle {
 }
 
 /**
- * Big tap-to-edit title input: the value (or placeholder) at Heading size with a full
- * underline beneath and no label. Mirrors the RN title field.
+ * big tap-to-edit title input: the value (or placeholder) at Heading size with a full
+ * underline beneath and no label.
  */
 @Composable
 fun TitleField(
@@ -62,7 +62,7 @@ fun TitleField(
             ),
     ) {
         // LightTextVariant.Heading's built-in line height (1.35x) reads too loose
-        // across a wrap (same issue noted for TaskRowView's title) — AkkuratText at
+        // across a wrap (same issue noted for TaskRowView's title), AkkuratText at
         // Heading's own 38sp size uses the font's natural, tighter line height instead.
         AkkuratText(
             text = value.ifBlank { placeholder },
@@ -75,9 +75,8 @@ fun TitleField(
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                // Thicker than the SDK's own INPUT_UNDERLINE_THICKNESS_PX (3f, also
-                // RN's literal borderBottomWidth: 3) — bumped to match Light Calendar's
-                // own title-field underline weight more closely.
+                // thicker than the SDK's own INPUT_UNDERLINE_THICKNESS_PX (3f), bumped
+                // to match Light Calendar's own title-field underline weight more closely.
                 .height(4f.designVerticalPxToDp())
                 .background(LightThemeTokens.colors.content),
         )
@@ -85,8 +84,8 @@ fun TitleField(
 }
 
 /**
- * Label-over-value field row (List / Date / Time / Recurring). Small label above a larger
- * value, no underline — mirrors the RN field style.
+ * label-over-value field row (List / Date / Time / Recurring). small label above a larger
+ * value, no underline.
  */
 @Composable
 fun TapField(
@@ -94,7 +93,7 @@ fun TapField(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    // Values like a picked list/date are short and benefit from truncating rather than
+    // values like a picked list/date are short and benefit from truncating rather than
     // wrapping; longer status text (e.g. "Last synced <date>, <time>") needs to wrap
     // instead, or it silently loses the end of the string behind an ellipsis.
     singleLine: Boolean = true,
@@ -117,9 +116,9 @@ fun TapField(
 }
 
 /**
- * Field row with a value that can be cleared (Date / Time / Recurring once set) — shows
+ * field row with a value that can be cleared (Date / Time / Recurring once set), shows
  * "None" with a no-op tap when [value] is null, otherwise the value plus a clear-field icon
- * button. Shared by Add Task and Task Detail.
+ * button. shared by Add Task and Task Detail.
  */
 @Composable
 fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: () -> Unit) {
@@ -149,8 +148,8 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
         }
         ClearIcon(
             size = 17.dp,
-            // Top offset centers against the value line below the label, not the
-            // label itself — the label's own line sits above this icon's top edge.
+            // top offset centers against the value line below the label, not the
+            // label itself, the label's own line sits above this icon's top edge.
             modifier = Modifier
                 .lightClickable(onClick = onClear)
                 .padding(top = 1.72f.gridUnitsAsDp(), start = 1f.gridUnitsAsDp()),

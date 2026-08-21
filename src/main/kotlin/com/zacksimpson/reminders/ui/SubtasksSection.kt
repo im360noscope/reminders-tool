@@ -15,7 +15,7 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 import com.zacksimpson.reminders.data.Subtask
 
-/** Subtasks list + an add button. Shared by Add Task and Task Detail — the caller
+/** subtasks list + an add button. shared by Add Task and Task Detail, the caller
  *  decides whether mutations are draft (Add) or immediate (Edit). */
 @Composable
 fun SubtasksSection(
@@ -38,16 +38,15 @@ fun SubtasksSection(
         subtasks.forEach { subtask ->
             SubtaskRow(subtask, onRename = { onRename(subtask) }, onToggle = { onToggle(subtask.id) }, onDelete = { onDelete(subtask.id) })
         }
-        // No label, just the icon, matching RN's collapsed add-subtask button — but the
-        // tappable row still spans full width, so tapping the empty space to the right
-        // (where the label used to be) also works, not just the icon itself.
+        // just the icon, no label, the tappable row still spans full width, so tapping
+        // the empty space to the right of the icon also works, not just the icon itself.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .lightClickable(onClick = onAdd)
                 .padding(top = 0.6f.gridUnitsAsDp(), bottom = 0.5f.gridUnitsAsDp()),
         ) {
-            // Matches TaskCheckboxIcon's size so the two circles read the same size.
+            // matches TaskCheckboxIcon's size so the two circles read the same size.
             PlusCircleIcon(
                 size = 17.dp,
                 // start matches SubtaskRow's own start so this lines up under the
@@ -66,8 +65,8 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
             .padding(horizontal = 0.5f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
-        // Top offset tuned against this row's Paragraph text, not copied from
-        // TaskRowView's checkbox — different line metrics (AkkuratText there).
+        // top offset tuned against this row's Paragraph text, not copied from
+        // TaskRowView's checkbox, different line metrics (AkkuratText there).
         TaskCheckboxIcon(
             checked = subtask.completed,
             size = 17.dp,

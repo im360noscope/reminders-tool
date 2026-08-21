@@ -43,8 +43,8 @@ class NotificationsViewModel : LightViewModel<Unit>() {
 }
 
 /**
- * Notification settings, ported from RN's notifications.tsx — labels only. Not wired to
- * anything real yet since the SDK has no exact-time local alarm.
+ * notification settings, labels only. not wired to anything real yet since the SDK
+ * has no exact-time local alarm.
  */
 class NotificationsScreen(
     sealedActivity: SealedLightActivity,

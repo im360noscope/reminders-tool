@@ -7,9 +7,9 @@ import kotlinx.serialization.json.jsonObject
 class SyncException(message: String) : Exception(message)
 
 /**
- * Orchestrates one full sync pass (SYNC_PLAN.md §3 step 4): pull remote, reconcile with
+ * orchestrates one full sync pass (SYNC_PLAN.md §3 step 4): pull remote, reconcile with
  * local via [SyncLogic]'s merge, push whatever local won, persist the result back to
- * [RemindersRepository]. The impure, network/storage-touching counterpart to
+ * [RemindersRepository]. the impure, network/storage-touching counterpart to
  * [SyncLogic]'s pure (and unit-tested) functions.
  */
 class SyncEngine(

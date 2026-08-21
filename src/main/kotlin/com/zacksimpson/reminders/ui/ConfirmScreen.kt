@@ -23,10 +23,9 @@ import com.thelightphone.sdk.ui.gridUnitsAsDp
 import com.thelightphone.sdk.ui.lightClickable
 
 /**
- * Generic confirmation screen — a message plus a single confirm action, pinned to the
- * bottom. Returns true if confirmed, false/null if backed out. Typed navigateTo/goBack
- * result callback, no string-tag routing (the RN app's `/confirm` used URL params for
- * this; the SDK's `navigateTo(...) { result -> }` does it directly).
+ * generic confirmation screen, a message plus a single confirm action, pinned to the
+ * bottom. returns true if confirmed, false/null if backed out via
+ * `navigateTo(...) { result -> }`.
  */
 class ConfirmScreen(
     sealedActivity: SealedLightActivity,
@@ -59,8 +58,7 @@ class ConfirmScreen(
                 ) {
                     LightText(
                         text = message,
-                        // Bumped from Paragraph (24.5) — RN's n(22) message text read
-                        // small at that size; Copy (30) matches better.
+                        // Paragraph read too small here; Copy matches better.
                         variant = LightTextVariant.Copy,
                         align = TextAlign.Center,
                     )

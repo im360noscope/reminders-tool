@@ -19,10 +19,10 @@ import kotlinx.serialization.json.Json
 private const val TAG = "AuthClient"
 
 /**
- * Talks to Firebase's Identity Toolkit REST API directly. light-sdk has no Firebase
+ * talks to Firebase's Identity Toolkit REST API directly. light-sdk has no Firebase
  * Android SDK allow-listed, so this hand-rolls the two calls the app needs.
  *
- * Bodies are read as raw text and decoded manually so a shape mismatch logs the actual
+ * bodies are read as raw text and decoded manually so a shape mismatch logs the actual
  * response instead of an opaque conversion exception.
  */
 class AuthClient {
@@ -35,7 +35,7 @@ class AuthClient {
 
     private val http = HttpClient(OkHttp) {
         defaultRequest {
-            // Satisfies the Android-restricted API key — see FirebaseConfig.
+            // satisfies the Android-restricted API key, see FirebaseConfig.
             header("X-Android-Package", FirebaseConfig.ANDROID_PACKAGE)
             header("X-Android-Cert", FirebaseConfig.ANDROID_CERT_SHA1)
             header("X-Firebase-gmpid", FirebaseConfig.FIREBASE_APP_ID)
@@ -90,7 +90,7 @@ class AuthClient {
             throw AuthException("Sign-in failed — unexpected server response")
         }
 
-    // Falls back to a generic message if the error body isn't the shape Identity
+    // falls back to a generic message if the error body isn't the shape Identity
     // Toolkit normally returns (e.g. a 5xx from an upstream proxy, not Firebase itself).
     private fun errorMessage(text: String, statusCode: Int): String {
         Log.e(TAG, "request failed ($statusCode): $text")

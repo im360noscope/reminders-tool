@@ -56,14 +56,14 @@ class AccountViewModel(
     val lastSyncedAt = authRepo.lastSyncedAt.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), cachedLastSyncedAt)
 
     init {
-        // No warm caller to seed from like the list/task screens (only this screen ever
-        // reads auth state), so instead remember the last-observed value across pushes.
+        // no warm caller to seed from like the list/task screens (only this screen reads
+        // auth state), so we remember the last-observed value across pushes.
         viewModelScope.launch { authState.collect { cachedAuthState = it } }
         viewModelScope.launch { lastSyncedAt.collect { cachedLastSyncedAt = it } }
     }
 
-    /** Shared by MainScreen's on-open poke and this screen's own "Sync now" tap — both
-     *  enqueue under the same tag, so either one's outcome shows up here. */
+    /** shared by MainScreen's on-open poke and this screen's own "Sync now" tap, both
+     *  enqueue under the same tag so either one's outcome shows up here. */
     private val syncJobState = LightWork.observe(lightContext, SYNC_NOW_TAG)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LightJobState.NotScheduled)
 
@@ -71,7 +71,7 @@ class AccountViewModel(
         .map { it is LightJobState.Enqueued || it is LightJobState.Running }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    /** True once the job gives up for good (see [SyncJob]'s [AuthException] handling) —
+    /** true once the job gives up for good (see [SyncJob]'s [AuthException] handling),
      *  shows "Error. Tap to try again" instead of leaving "Syncing…" up forever. */
     val syncFailed = syncJobState
         .map { it is LightJobState.Failed }
@@ -127,7 +127,7 @@ class AccountViewModel(
 }
 
 /**
- * Sign in with the same account used on reminders-web, for phone<->desktop sync (see
+ * sign in with the same account used on reminders-web, for phone<->desktop sync (see
  * SYNC_PLAN.md). LightTextInputEditor has no password-masking mode, so the entry screen
  * shows the password in plain text while typing; this screen's own row masks it as
  * bullets once captured.
@@ -177,8 +177,8 @@ class AccountScreen(
                             start = 1.5f.gridUnitsAsDp(),
                             top = 1f.gridUnitsAsDp(),
                             end = 1.5f.gridUnitsAsDp(),
-                            // Matches the email row's bottom margin (see SignedIn()) so
-                            // this gap is consistent with the gap before "Last Synced".
+                            // matches the email row's bottom margin (see SignedIn()) so
+                            // the gap is consistent with the gap before "Last Synced".
                             bottom = 1.5f.gridUnitsAsDp(),
                         ),
                 )
@@ -194,7 +194,7 @@ class AccountScreen(
                         modifier = Modifier.weight(1f),
                     )
 
-                    // Loading folds into SignedOut instead of blanking the screen.
+                    // loading folds into SignedOut instead of blanking the screen.
                     AuthState.Loading, AuthState.SignedOut -> {
                         TapField(
                             label = "Email",
@@ -210,8 +210,8 @@ class AccountScreen(
                         )
                         TapField(
                             label = "Password",
-                            // Own row masks the captured value — the entry screen itself
-                            // still shows it in the clear while typing (see class doc).
+                            // own row masks the captured value, entry screen itself still
+                            // shows it in the clear while typing (see class doc).
                             value = if (password.isEmpty()) "Tap to enter" else "•".repeat(password.length),
                             onClick = {
                                 navigateTo(
@@ -265,7 +265,7 @@ class AccountScreen(
                 )
                 LightText(
                     text = email,
-                    // Copy, not Heading — long email addresses need to fit on one line.
+                    // Copy, not Heading, long email addresses need to fit on one line.
                     variant = LightTextVariant.Copy,
                     modifier = Modifier.padding(
                         start = 1.5f.gridUnitsAsDp(),
@@ -286,8 +286,8 @@ class AccountScreen(
                     singleLine = false,
                 )
             }
-            // Pinned to the bottom and centered, same shape as ConfirmScreen's confirm
-            // button. Not LightBottomBar — its Text variant forces Fine-variant styling,
+            // pinned to bottom and centered, same shape as ConfirmScreen's confirm
+            // button. not LightBottomBar, its Text variant forces Fine-variant styling
             // which would regress this button's look.
             Column(
                 modifier = Modifier

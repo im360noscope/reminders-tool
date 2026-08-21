@@ -47,9 +47,9 @@ class ListDetailViewModel(
     initialData: AppData? = null,
 ) : LightViewModel<Unit>() {
     val state = repo.dataStateIn(viewModelScope, initialData?.let { DataState.Ready(it) } ?: DataState.Loading)
-    // Live here rather than as Composable remember state: the SDK recomposes this
+    // live here rather than as Composable remember state: the SDK recomposes this
     // screen's Content() fresh whenever a pushed screen pops back to it, which
-    // discards remember-based state — the ViewModel survives that round trip.
+    // discards remember-based state. the ViewModel survives that round trip.
     val isReordering = MutableStateFlow(startInReorderMode)
     val showCompleted = MutableStateFlow(false)
 
@@ -79,10 +79,10 @@ class ListDetailViewModel(
 }
 
 /**
- * A single list's tasks: active (sorted by order) then a collapsible completed section
- * (sorted newest-completed-first), matching the RN list-detail screen. Tapping a task row's
- * checkbox/overdue-asterisk toggles completion; tapping its content opens TaskDetailScreen
- * for full editing. [startInReorderMode] lets Today's task-actions flow land here already
+ * a single list's tasks: active (sorted by order) then a collapsible completed section
+ * (sorted newest-completed-first). tapping a task row's checkbox/overdue-asterisk toggles
+ * completion, tapping its content opens TaskDetailScreen for full editing.
+ * [startInReorderMode] lets Today's task-actions flow land here already
  * reordering, since reordering only makes sense within a single list.
  */
 class ListDetailScreen(
@@ -118,7 +118,7 @@ class ListDetailScreen(
                     rightButton = if (isReordering) {
                         LightBarButton.Text("DONE", onClick = { viewModel.stopReordering() })
                     } else {
-                        // sizeUnits reduced — ic_plus's artwork fills its box edge-to-edge,
+                        // sizeUnits reduced: ic_plus's artwork fills its box edge-to-edge,
                         // unlike LightIcons' own icons, so the default size reads too big.
                         LightBarButton.Icon(
                             painterResource(R.drawable.ic_plus),

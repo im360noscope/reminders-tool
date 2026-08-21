@@ -17,10 +17,10 @@ data class TextEditorRequest(
 )
 
 /**
- * Reusable single-line text entry backed by the LightOS keyboard. Returns the entered
+ * reusable single-line text entry backed by the LightOS keyboard. returns the entered
  * text as the screen result on submit, or nothing if the user backs out.
  *
- * Push it with `navigateTo({ TextEditorScreen(it, TextEditorRequest("...")) }) { text -> ... }`.
+ * push it with `navigateTo({ TextEditorScreen(it, TextEditorRequest("...")) }) { text -> ... }`.
  */
 class TextEditorScreen(
     sealedActivity: SealedLightActivity,
@@ -41,14 +41,14 @@ class TextEditorScreen(
                 onBack = { goBack(null) },
                 submitLabel = "DONE",
                 initialCaps = request.initialCaps,
-                // Default is multi-line, where Return inserts "\n" — every field here is
+                // default is multi-line, where Return inserts "\n", every field here is
                 // single-line, so Return should submit instead.
                 singleLine = true,
                 // editorKey defaults to `title`, keying the embedded keyboard's
-                // viewModel() call. This screen has no per-screen ViewModelStoreOwner, so
+                // viewModel() call. this screen has no per-screen ViewModelStoreOwner, so
                 // a fixed key reused across pushes (e.g. add one task, then another) would
-                // hand back the first push's now-abandoned TextFieldState — the keyboard
-                // renders but keystrokes go nowhere. `this` is unique per push. Qualified
+                // hand back the first push's now-abandoned TextFieldState, the keyboard
+                // renders but keystrokes go nowhere. `this` is unique per push. qualified
                 // since unqualified `this` here resolves to SwipeBackContainer's BoxScope.
                 editorKey = this@TextEditorScreen,
                 modifier = Modifier.background(LightThemeTokens.colors.background),

@@ -12,20 +12,20 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import java.time.LocalDate
 
-/** Snapshot of everything the app persists. */
+/** snapshot of everything the app persists. */
 data class AppData(
     val lists: List<ReminderList>,
     val tasks: List<Task>,
     val settings: Settings,
 )
 
-/** Stored value exists but can't be parsed; left on disk untouched, not reset. */
+/** stored value exists but can't be parsed, left on disk untouched, not reset. */
 class DataCorruptionException(key: String, cause: Throwable) :
     Exception("Stored data for '$key' is unreadable; it was preserved, not overwritten.", cause)
 
 /**
- * Single source of truth for persisted data, backed by the SDK's shared DataStore.
- * No in-memory cache — every mutation is one atomic edit(). A corrupt key throws
+ * single source of truth for persisted data, backed by the SDK's shared DataStore.
+ * no in-memory cache, every mutation is one atomic edit(). a corrupt key throws
  * before any write, so bad data is never overwritten.
  */
 class RemindersRepository(private val dataStore: DataStore<Preferences>) {
@@ -33,9 +33,9 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     private val listSerializer = ListSerializer(ReminderList.serializer())
     private val taskSerializer = ListSerializer(Task.serializer())
 
-    // ── Reads ────────────────────────────────────────────────────────────────
+    // ── reads ────────────────────────────────────────────────────────────────
 
-    /** Live snapshot, excludes soft-deleted rows. Throws [DataCorruptionException] if a
+    /** live snapshot, excludes soft-deleted rows. throws [DataCorruptionException] if a
      *  stored value is unparseable. */
     val appData: Flow<AppData> = dataStore.data.map { it.toAppData() }
 
@@ -45,11 +45,11 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         settings = readSettings(),
     )
 
-    /** Full read including tombstones, for [SyncEngine] to propagate deletions. */
+    /** full read including tombstones, for [SyncEngine] to propagate deletions. */
     suspend fun snapshotForSync(): AppData =
         dataStore.data.first().let { p -> AppData(p.readLists(), p.readTasks(), p.readSettings()) }
 
-    /** Replaces lists/tasks/settings wholesale with [SyncEngine]'s reconciled result. */
+    /** replaces lists/tasks/settings wholesale with [SyncEngine]'s reconciled result. */
     suspend fun applySyncedState(lists: List<ReminderList>, tasks: List<Task>, settings: Settings) {
         dataStore.edit { p ->
             p.writeLists(lists)
@@ -67,7 +67,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     private fun Preferences.readSettings(): Settings =
         decode(this[SETTINGS_KEY], SETTINGS_KEY, Settings.serializer()) ?: Settings()
 
-    /** Absent key → null (caller applies a default); present but unparseable → throw. */
+    /** absent key -> null (caller applies a default); present but unparseable -> throw. */
     private fun <T> decode(raw: String?, key: Preferences.Key<String>, serializer: KSerializer<T>): T? {
         if (raw == null) return null
         return try {
@@ -77,7 +77,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // ── Writes (encoders) ──────────────────────────────────────────────────────
+    // ── writes (encoders) ──────────────────────────────────────────────────────
 
     private fun MutablePreferences.writeLists(v: List<ReminderList>) {
         this[LISTS_KEY] = appJson.encodeToString(listSerializer, v)
@@ -91,7 +91,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         this[SETTINGS_KEY] = appJson.encodeToString(Settings.serializer(), v)
     }
 
-    // ── List operations ────────────────────────────────────────────────────────
+    // ── list operations ────────────────────────────────────────────────────────
 
     suspend fun addList(title: String) {
         dataStore.edit { p ->
@@ -108,7 +108,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Soft-deletes the list and reassigns its tasks to the default list. */
+    /** soft-deletes the list and reassigns its tasks to the default list. */
     suspend fun deleteList(id: String) {
         dataStore.edit { p ->
             val defaultId = p.readSettings().defaultListId
@@ -122,9 +122,9 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun moveListUp(id: String) = reorderList(id, -1)
     suspend fun moveListDown(id: String) = reorderList(id, +1)
 
-    /** Persists the reordered active-list array as one field on Settings — a single
+    /** persists the reordered active-list array as one field on Settings, a single
      *  write no matter how many lists exist, matching reminders-web's `reorderLists()`
-     *  (LIST_TASK_ORDER_MIGRATION.md). Individual list docs' own `order` field is left
+     *  (LIST_TASK_ORDER_MIGRATION.md). individual list docs' own `order` field is left
      *  untouched; it only remains as the fallback sort key for ids not yet in the array. */
     private suspend fun reorderList(id: String, direction: Int) {
         dataStore.edit { p ->
@@ -139,7 +139,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // ── Task operations ──────────────────────────────────────────────────────────
+    // ── task operations ──────────────────────────────────────────────────────────
 
     suspend fun addTask(
         title: String,
@@ -182,7 +182,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Soft-delete, not a real removal — see [SyncableDocument]. */
+    /** soft-delete, not a real removal, see [SyncableDocument]. */
     suspend fun deleteTask(id: String) {
         dataStore.edit { p ->
             p.writeTasks(p.readTasks().map { if (it.id == id) it.copy(deleted = true, updatedAt = now()) else it })
@@ -192,9 +192,9 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun moveTaskUp(id: String, listId: String) = reorderTask(id, listId, -1)
     suspend fun moveTaskDown(id: String, listId: String) = reorderTask(id, listId, +1)
 
-    /** Persists the reordered active-task array as one field on [listId]'s own
-     *  ReminderList doc — a single write no matter how many tasks are in the list,
-     *  matching reminders-web's `reorderTasks()` (LIST_TASK_ORDER_MIGRATION.md). Task
+    /** persists the reordered active-task array as one field on [listId]'s own
+     *  ReminderList doc, a single write no matter how many tasks are in the list,
+     *  matching reminders-web's `reorderTasks()` (LIST_TASK_ORDER_MIGRATION.md). task
      *  docs' own `order` field is left untouched; it only remains as the fallback sort
      *  key for ids not yet in the array. */
     private suspend fun reorderTask(id: String, listId: String, direction: Int) {
@@ -215,7 +215,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Soft-deletes every completed task in the list — same as [deleteTask]. */
+    /** soft-deletes every completed task in the list, same as [deleteTask]. */
     suspend fun clearCompletedTasks(listId: String) {
         dataStore.edit { p ->
             p.writeTasks(
@@ -226,7 +226,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Toggle completion. Completing a dated recurring task also spawns its next occurrence. */
+    /** toggle completion. completing a dated recurring task also spawns its next occurrence. */
     suspend fun toggleTask(id: String) {
         dataStore.edit { p ->
             val toggled = p.readTasks().map { t ->
@@ -246,7 +246,7 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // ── Subtask operations ───────────────────────────────────────────────────────
+    // ── subtask operations ───────────────────────────────────────────────────────
 
     suspend fun addSubtask(taskId: String, title: String) {
         dataStore.edit { p ->
@@ -289,15 +289,15 @@ class RemindersRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // ── Settings ─────────────────────────────────────────────────────────────────
+    // ── settings ─────────────────────────────────────────────────────────────────
 
     suspend fun updateSettings(transform: (Settings) -> Settings) {
         dataStore.edit { p -> p.writeSettings(transform(p.readSettings()).copy(updatedAt = now())) }
     }
 
-    // ── Backup restore (additive merge by id; never deletes) ─────────────────────
+    // ── backup restore (additive merge by id; never deletes) ─────────────────────
 
-    /** Merge backup lists/tasks in, keeping any existing rows and appending only new ids. */
+    /** merge backup lists/tasks in, keeping any existing rows and appending only new ids. */
     suspend fun restoreBackup(lists: List<ReminderList>, tasks: List<Task>) {
         dataStore.edit { p ->
             val curLists = p.readLists()

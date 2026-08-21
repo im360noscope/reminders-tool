@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
-// ─── Enums ──────────────────────────────────────────────────────────────────
-// @SerialName values are the JSON strings — stable and human-readable.
+// ─── enums ──────────────────────────────────────────────────────────────────
+// @SerialName values are the JSON strings, stable and human-readable.
 
 @Serializable
 enum class RecurrenceUnit {
@@ -27,17 +27,17 @@ enum class AddPosition {
     @SerialName("bottom") BOTTOM,
 }
 
-// ─── Sync ───────────────────────────────────────────────────────────────────
+// ─── sync ───────────────────────────────────────────────────────────────────
 
-/** An id-keyed, soft-deletable row that can be reconciled by [SyncLogic.mergeCollection]
- *  — `updatedAt` alone decides which side wins a merge (see that file). */
+/** an id-keyed, soft-deletable row that can be reconciled by [SyncLogic.mergeCollection],
+ *  `updatedAt` alone decides which side wins a merge (see that file). */
 interface SyncableDocument {
     val id: String
     val updatedAt: Long
 }
 
-// ─── Models ─────────────────────────────────────────────────────────────────
-// Every optional field has a default so partial/older JSON still decodes.
+// ─── models ─────────────────────────────────────────────────────────────────
+// every optional field has a default so partial/older JSON still decodes.
 
 @Serializable
 data class Recurrence(
@@ -66,7 +66,7 @@ data class Task(
     val completedAt: Long? = null,
     val createdAt: Long,
     val order: Int,
-    // Sync bookkeeping (matches reminders-web's Task shape) — default to
+    // sync bookkeeping (matches reminders-web's Task shape), default to
     // createdAt/false so tasks persisted before this field existed still
     // decode, treated as "unmodified since creation."
     override val updatedAt: Long = createdAt,
@@ -79,13 +79,13 @@ data class ReminderList(
     val title: String,
     val createdAt: Long,
     val order: Int,
-    // Sync bookkeeping (matches reminders-web's ReminderList shape) — same
+    // sync bookkeeping (matches reminders-web's ReminderList shape), same
     // backward-compatible defaulting as Task.
     override val updatedAt: Long = createdAt,
     val deleted: Boolean = false,
-    // Ordered ids of this list's active tasks, written as a single field on
+    // ordered ids of this list's active tasks, written as a single field on
     // reorder instead of rewriting each task's own `order` (LIST_TASK_ORDER_MIGRATION.md
-    // in reminders-web). Null/empty means "fall back to `order`" — see RemindersLogic.applyOrder.
+    // in reminders-web). null/empty means "fall back to `order`", see RemindersLogic.applyOrder.
     val taskOrder: List<String>? = null,
 ) : SyncableDocument
 
@@ -95,28 +95,28 @@ data class Settings(
     val afterAddBehavior: AfterAddBehavior = AfterAddBehavior.TOAST,
     val addPosition: AddPosition = AddPosition.BOTTOM,
     val showOverdue: Boolean = true,
-    // Sync bookkeeping (matches reminders-web's Settings shape). No natural
+    // sync bookkeeping (matches reminders-web's Settings shape). no natural
     // anchor timestamp to default to like Task/ReminderList have via
-    // createdAt, so pre-existing settings just default to "oldest possible" —
+    // createdAt, so pre-existing settings just default to "oldest possible",
     // superseded by the first real sync without needing a migration.
     val updatedAt: Long = 0L,
-    // Ordered ids of all active lists, written as a single field on reorder
+    // ordered ids of all active lists, written as a single field on reorder
     // instead of rewriting each list's own `order` (LIST_TASK_ORDER_MIGRATION.md
-    // in reminders-web). Null/empty means "fall back to `order`".
+    // in reminders-web). null/empty means "fall back to `order`".
     val listOrder: List<String>? = null,
 )
 
-// ─── Defaults ───────────────────────────────────────────────────────────────
+// ─── defaults ───────────────────────────────────────────────────────────────
 
-/** Default list, shown until the user first mutates lists. `createdAt` is a placeholder
+/** default list, shown until the user first mutates lists. `createdAt` is a placeholder
  *  until a real value is persisted. */
 val SEED_INBOX = ReminderList(id = "inbox", title = "Inbox", createdAt = 0L, order = 0)
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── helpers ────────────────────────────────────────────────────────────────
 
 fun generateId(): String = UUID.randomUUID().toString()
 
-/** "Every 1 day" / "Every 3 weeks" — matches the RN formatRecurrence output. */
+/** "Every 1 day" / "Every 3 weeks". */
 fun formatRecurrence(r: Recurrence): String {
     val unit = r.unit.name.lowercase()
     val label = if (r.interval == 1) unit else "${unit}s"

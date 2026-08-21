@@ -20,18 +20,16 @@ private val EDGE_WIDTH = 10.dp
 private val DRAG_THRESHOLD = 80.dp
 
 /**
- * Left-edge swipe-to-go-back gesture — LightOS has no OS-level back-swipe, so this
- * reimplements what RN's SwipeBackContainer.tsx did via react-native-gesture-handler's
- * native gesture arbitration. Compose's plain pointerInput has no equivalent, so this is
- * a simpler approximation, not a full port.
+ * left-edge swipe-to-go-back gesture, LightOS has no OS-level back-swipe, and Compose's
+ * plain pointerInput has no built-in gesture arbitration for this, so it's hand-rolled here.
  *
- * The gesture lives on a narrow strip along the left edge, layered on top of [content]
+ * the gesture lives on a narrow strip along the left edge, layered on top of [content]
  * rather than wrapping it, so it only competes for touches starting there. EDGE_WIDTH is
  * kept small (10dp) to stay inside the dead margin before real tap targets like
  * checkboxes and the back button, which start around 12-13dp from the edge.
  *
- * If Light ever ships real edge-swipe-back support, this file is meant to be replaced
- * wholesale, not evolved — no such plan exists yet.
+ * if Light ever ships real edge-swipe-back support, this file is meant to be replaced
+ * wholesale, not evolved, no such plan exists yet.
  */
 @Composable
 fun SwipeBackContainer(

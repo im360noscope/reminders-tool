@@ -11,12 +11,12 @@ import com.thelightphone.sdk.ui.LightThemeTokens
 import com.thelightphone.sdk.ui.designVerticalPxToSp
 
 /**
- * For bespoke text the fixed [com.thelightphone.sdk.ui.LightTextVariant] table doesn't
- * cover — a literal design-pixel size (scaled via the SDK's own [designVerticalPxToSp],
+ * for bespoke text the fixed [com.thelightphone.sdk.ui.LightTextVariant] table doesn't
+ * cover, a literal design-pixel size (scaled via the SDK's own [designVerticalPxToSp],
  * same convention every LightText size uses) plus an explicit [FontWeight], still on the
  * real Akkurat family (pulled from the shared typography, since [LightTextVariant] doesn't
- * expose a weight override). Used for the time-picker's big digit display (Light weight,
- * mirroring the RN app's PublicSans-Thin) and its numpad digits.
+ * expose a weight override). used for the time-picker's big digit display (Light weight)
+ * and its numpad digits.
  */
 @Composable
 fun AkkuratText(

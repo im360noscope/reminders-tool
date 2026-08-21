@@ -16,7 +16,7 @@ sealed interface DataState {
     data class Corrupt(val message: String) : DataState
 }
 
-/** Collect the repository's live data as a [DataState], turning a corruption error into
+/** collect the repository's live data as a [DataState], turning a corruption error into
  *  [DataState.Corrupt] rather than crashing the collector. [initialValue] lets a screen
  *  seed itself from an already-warm caller instead of starting at Loading. */
 fun RemindersRepository.dataStateIn(

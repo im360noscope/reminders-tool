@@ -13,20 +13,20 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 
 /**
- * Converts between plain kotlinx.serialization JSON and Firestore REST API's typed
- * "Value" wire format (each field wrapped as `{"stringValue": "..."}`, etc — see
+ * converts between plain kotlinx.serialization JSON and Firestore REST API's typed
+ * "Value" wire format (each field wrapped as `{"stringValue": "..."}`, etc, see
  * https://firebase.google.com/docs/firestore/reference/rest/v1/Value).
  *
- * Only handles the value types reminders-web actually uses (numbers/strings/bools/
- * arrays/maps) — no timestampValue, referenceValue, geoPointValue, bytesValue.
+ * only handles the value types reminders-web actually uses (numbers/strings/bools/
+ * arrays/maps), no timestampValue, referenceValue, geoPointValue, bytesValue.
  */
 object FirestoreValue {
-    /** A plain JSON field map (e.g. from `Json.encodeToJsonElement(Task.serializer(), t)`)
+    /** a plain JSON field map (e.g. from `Json.encodeToJsonElement(Task.serializer(), t)`)
      *  into Firestore's per-field typed wrapper, ready to send as a document's `fields`. */
     fun encodeFields(fields: JsonObject): JsonObject =
         JsonObject(fields.mapValues { (_, v) -> encode(v) })
 
-    /** The `fields` map from a Firestore document response back into plain JSON,
+    /** the `fields` map from a Firestore document response back into plain JSON,
      *  decodable by `Json.decodeFromJsonElement(Task.serializer(), ...)`. */
     fun decodeFields(fields: JsonObject): JsonObject =
         JsonObject(fields.mapValues { (_, v) -> decode(v.jsonObject) })

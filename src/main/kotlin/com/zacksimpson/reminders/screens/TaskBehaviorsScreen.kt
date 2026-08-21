@@ -74,7 +74,7 @@ class TaskBehaviorsViewModel(
 
 /**
  * Today View / Default List / After Quick Add / Add New Tasks, folded under one parent
- * settings screen — matches RN's task-behaviors.tsx restructure.
+ * settings screen.
  */
 class TaskBehaviorsScreen(
     sealedActivity: SealedLightActivity,
@@ -113,7 +113,7 @@ class TaskBehaviorsScreen(
                         modifier = Modifier.padding(horizontal = 1.5f.gridUnitsAsDp()),
                     )
                 } else {
-                    // Defaults instead of blanking while Loading, same as TodayViewScreen.
+                    // defaults instead of blanking while Loading, same as TodayViewScreen.
                     val ready = state as? DataState.Ready
                     val settings = ready?.data?.settings
                     val lists = ready?.data?.lists.orEmpty()

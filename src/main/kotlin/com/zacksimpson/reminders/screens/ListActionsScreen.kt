@@ -35,7 +35,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Signals what happened back to whichever screen opened this one. */
+/** signals what happened back to whichever screen opened this one. */
 enum class ListAction { START_REORDER }
 
 class ListActionsViewModel(
@@ -44,11 +44,11 @@ class ListActionsViewModel(
 ) : LightViewModel<ListAction>() {
     val state = repo.dataStateIn(viewModelScope)
 
-    // Fire-and-forget: the caller navigates away immediately (goBack right alongside
-    // these calls, not after), which cancels viewModelScope before a normally-dispatched
-    // coroutine would even start — NonCancellable can't protect a coroutine that never
-    // got to run. UNDISPATCHED forces it to start synchronously, right here, so it's
-    // already inside the protected block before that cancellation can land.
+    // fire-and-forget: the caller navigates away immediately (goBack right alongside
+    // these calls), which cancels viewModelScope before a normally-dispatched coroutine
+    // would even start. NonCancellable can't protect a coroutine that never got to run,
+    // so UNDISPATCHED forces it to start synchronously here, before that cancellation
+    // can land.
     fun rename(title: String) {
         val t = title.trim()
         if (t.isEmpty()) return
@@ -77,8 +77,7 @@ class ListActionsViewModel(
 }
 
 /**
- * Long-press action sheet for a list — Rename, Reorder Lists, Clear Completed, Delete —
- * ported from RN's list-actions/[id]/index.tsx.
+ * long-press action sheet for a list: Rename, Reorder Lists, Clear Completed, Delete.
  */
 class ListActionsScreen(
     sealedActivity: SealedLightActivity,

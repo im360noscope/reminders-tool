@@ -10,21 +10,20 @@ private val MONTHS = listOf(
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 )
 
-/** "YYYY-MM-DD" -> "Jan 5". Hardcoded English abbreviations (not locale-dependent) to
- *  match the RN app's display exactly. */
+/** "YYYY-MM-DD" -> "Jan 5". hardcoded English abbreviations (not locale-dependent). */
 fun formatDate(dateStr: String): String {
     val (_, mo, d) = dateStr.split("-").map(String::toInt)
     return "${MONTHS[mo - 1]} $d"
 }
 
-/** "YYYY-MM-DD" -> "Jan 5, 2024" — used in field rows (vs. the shorter [formatDate] used
+/** "YYYY-MM-DD" -> "Jan 5, 2024", used in field rows (vs. the shorter [formatDate] used
  *  in task-row meta lines). */
 fun formatDisplayDate(dateStr: String): String {
     val (y, mo, d) = dateStr.split("-").map(String::toInt)
     return "${MONTHS[mo - 1]} $d, $y"
 }
 
-/** Epoch millis -> "Jan 5, 2:30 PM", for the Settings "last synced" row. */
+/** epoch millis -> "Jan 5, 2:30 PM", for the Settings "last synced" row. */
 fun formatLastSyncedAt(epochMillis: Long): String {
     val dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
     val dateStr = "%04d-%02d-%02d".format(dt.year, dt.monthValue, dt.dayOfMonth)
@@ -35,8 +34,7 @@ fun formatLastSyncedAt(epochMillis: Long): String {
 /** "HH:MM" 24h -> "h:mm AM/PM" (or unchanged when use24Hour is true).
  *  TODO: use24Hour should read the device's clock format, but the SDK has no sanctioned
  *  API for it yet (android.text.format.DateFormat.is24HourFormat needs a Context, and
- *  android.content.Context is a blocked import) — defaults to 12-hour like the RN
- *  fallback, same as RN's `getCalendars()[0]?.uses24hourClock ?? false`. */
+ *  android.content.Context is a blocked import), defaults to 12-hour until then. */
 fun formatTime(time24: String, use24Hour: Boolean = false): String {
     if (use24Hour) return time24
     val (hStr, mStr) = time24.split(":")
@@ -47,7 +45,7 @@ fun formatTime(time24: String, use24Hour: Boolean = false): String {
 }
 
 /**
- * TimePicker digits ("HMM" or "HHMM") + AM/PM -> "HH:MM" 24h for storage. Always applies
+ * TimePicker digits ("HMM" or "HHMM") + AM/PM -> "HH:MM" 24h for storage. always applies
  * the 12h->24h hour adjustment when [use24Hour] is false, regardless of digit count.
  */
 fun digitsToTime(digits: String, ampm: String, use24Hour: Boolean = false): String {
@@ -78,7 +76,7 @@ fun timeToDisplayParts(time24: String, use24Hour: Boolean = false): Pair<String,
     return Pair("${h.toString().padStart(2, '0')}$mStr", ampm)
 }
 
-/** True if the task's date/time is in the past. */
+/** true if the task's date/time is in the past. */
 fun isOverdue(date: String?, time: String?): Boolean {
     if (date == null) return false
     val today = LocalDate.now()
@@ -91,9 +89,9 @@ fun isOverdue(date: String?, time: String?): Boolean {
 }
 
 /**
- * Sort order for same-day tasks, ported from RN's dateTime.ts. When only one of the two
- * has a time set, the untimed one sorts first — falls back to `order` when neither has a
- * time, compares "HH:MM" directly when both do.
+ * sort order for same-day tasks. when only one of the two has a time set, the untimed
+ * one sorts first, falls back to `order` when neither has a time, compares "HH:MM"
+ * directly when both do.
  */
 fun compareTasksByDateTime(a: Task, b: Task): Int {
     if (a.time == null && b.time == null) return a.order - b.order
@@ -102,7 +100,7 @@ fun compareTasksByDateTime(a: Task, b: Task): Int {
     return a.time.compareTo(b.time)
 }
 
-/** Sort order across dates, then by [compareTasksByDateTime] within the same date. */
+/** sort order across dates, then by [compareTasksByDateTime] within the same date. */
 fun compareTasksByDateThenTime(a: Task, b: Task): Int {
     if (a.date != b.date) return (a.date ?: "").compareTo(b.date ?: "")
     return compareTasksByDateTime(a, b)

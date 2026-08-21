@@ -12,8 +12,8 @@ import androidx.compose.ui.unit.Dp
 import com.thelightphone.sdk.ui.LightThemeTokens
 import com.zacksimpson.reminders.R
 
-/** Custom icons ported from the RN app's raw SVG path data — theme content color is
- *  hardcoded white into the vector resources since the app is single-mode. */
+/** custom vector icons, theme content color is hardcoded white into the vector
+ *  resources since the app is single-mode. */
 
 @Composable
 fun PlusCircleIcon(size: Dp, modifier: Modifier = Modifier) {
@@ -33,8 +33,8 @@ fun DeleteIcon(size: Dp, modifier: Modifier = Modifier) {
     )
 }
 
-/** Circular-outline ✕ — distinct from [DeleteIcon] (RN's ClearIcon.tsx vs DeleteIcon.tsx),
- *  used for "clear this field" buttons rather than subtask-row deletion. */
+/** circular-outline ✕, distinct from [DeleteIcon], used for "clear this field" buttons
+ *  rather than subtask-row deletion. */
 @Composable
 fun ClearIcon(size: Dp, modifier: Modifier = Modifier) {
     Image(
@@ -53,14 +53,18 @@ fun OverdueAsteriskIcon(size: Dp, modifier: Modifier = Modifier) {
     )
 }
 
-/** Ring when unchecked; ring + filled center when checked (matches TaskCheckbox.tsx). */
+// radius of the filled center as a fraction of the icon's size, small enough to leave
+// ic_checkbox_ring's outline visible around it.
+private const val CHECKBOX_FILL_RADIUS_FRACTION = 0.421f
+
+/** ring when unchecked; ring + filled center when checked. */
 @Composable
 fun TaskCheckboxIcon(checked: Boolean, size: Dp, modifier: Modifier = Modifier) {
     val color = LightThemeTokens.colors.content
     Box(modifier = modifier.size(size)) {
         if (checked) {
             Canvas(modifier = Modifier.size(size)) {
-                drawCircle(color = color, radius = this.size.minDimension * (35.375f / 84f))
+                drawCircle(color = color, radius = this.size.minDimension * CHECKBOX_FILL_RADIUS_FRACTION)
             }
         }
         Image(

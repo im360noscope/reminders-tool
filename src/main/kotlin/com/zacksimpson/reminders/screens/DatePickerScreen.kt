@@ -37,7 +37,7 @@ import com.zacksimpson.reminders.ui.RemindersTheme
 import java.time.LocalDate
 import java.time.YearMonth
 
-// Matches Copy/Subheading's 30 design-px size — LightTextVariant has no per-call size
+// matches Copy/Subheading's 30 design-px size. LightTextVariant has no per-call size
 // override, so this goes through AkkuratText like the Time/Recurrence picker digits.
 private const val DAY_NUMBER_DESIGN_PX = 30f
 
@@ -48,11 +48,10 @@ private val MONTH_NAMES = listOf(
 private val DAY_HEADERS = listOf("S", "M", "T", "W", "T", "F", "S")
 
 /**
- * Calendar month picker. Tapping a day both selects AND closes the screen in one tap
- * (matches RN — there's no separate confirm step). The dismiss (✕) closes without
- * changing the value. Always opens on the current month, regardless of any already-set
- * date — matches RN's `useMonthNavigation`, which seeds from `new Date()`, not from the
- * task's existing date.
+ * calendar month picker. tapping a day both selects and closes the screen in one tap,
+ * no separate confirm step. the dismiss (✕) closes without changing the value.
+ * always opens on the current month regardless of any already-set date, deliberate,
+ * not a bug.
  */
 class DatePickerScreen(
     sealedActivity: SealedLightActivity,
@@ -102,7 +101,7 @@ class DatePickerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 1f.gridUnitsAsDp()),
             ) {
-                // Chevron size/inset match LightTopBar's back button exactly.
+                // chevron size/inset match LightTopBar's back button exactly.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,7 +125,7 @@ class DatePickerScreen(
                     )
                 }
 
-                // Day-of-week headers — same size as the day-of-month digits, bolded to
+                // day-of-week headers, same size as the day-of-month digits, bolded to
                 // read as a header rather than another row of dates.
                 Row(modifier = Modifier.fillMaxWidth()) {
                     DAY_HEADERS.forEach { d ->
@@ -139,11 +138,10 @@ class DatePickerScreen(
                     }
                 }
 
-                // Calendar grid
                 Column {
                     rows.forEach { row ->
                         // height(IntrinsicSize.Min) + fillMaxHeight keeps blank cells the
-                        // same height as day cells — Compose doesn't stretch row children
+                        // same height as day cells. Compose doesn't stretch row children
                         // to the tallest sibling by default.
                         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                             row.forEach { day ->
@@ -188,7 +186,7 @@ class DatePickerScreen(
                 }
             }
 
-                // Dismiss anchored to the bottom via LightBottomBar, same component and
+                // dismiss anchored to the bottom via LightBottomBar, same component and
                 // CLOSE icon LightFullscreenModal uses for its own dismiss button.
                 LightBottomBar(
                     items = listOf(LightBarButton.LightIcon(LightIcons.CLOSE, onClick = { goBack(null) })),

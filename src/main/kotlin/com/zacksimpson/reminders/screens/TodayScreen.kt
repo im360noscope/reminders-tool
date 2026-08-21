@@ -29,11 +29,11 @@ import com.zacksimpson.reminders.ui.TaskRowView
 import java.time.LocalDate
 
 /**
- * Today tab: overdue tasks, then today's active tasks, then a collapsible completed
- * section — ported from RN's today.tsx. [refreshTick] forces the date/overdue
- * computations below to re-run on a schedule (see MainViewModel) — Compose only
- * recomposes on state change, so without this a screen left open across midnight, or
- * resumed from background, would keep showing stale overdue/today status.
+ * today tab: overdue tasks, then today's active tasks, then a collapsible completed
+ * section. [refreshTick] forces the date/overdue computations below to re-run on a
+ * schedule (see MainViewModel), Compose only recomposes on state change, so without
+ * this a screen left open across midnight, or resumed from background, would keep
+ * showing stale overdue/today status.
  */
 @Composable
 fun TodayTab(

@@ -36,10 +36,10 @@ private fun buildMeta(task: Task, listTitle: String): String {
 }
 
 /**
- * Shared task row: checkbox (or overdue asterisk), title, meta line (list · date · time
- * · subtask count), and recurrence line. Used by list detail and the Today tab. In
+ * shared task row: checkbox (or overdue asterisk), title, meta line (list · date · time
+ * · subtask count), and recurrence line. used by list detail and the Today tab. in
  * reorder mode the checkbox/asterisk is hidden, up/down arrows appear, and tap/long-press
- * are disabled — matches RN's isReordering behavior.
+ * are disabled.
  */
 @Composable
 fun TaskRowView(
@@ -67,11 +67,10 @@ fun TaskRowView(
         verticalAlignment = Alignment.Top,
     ) {
         if (isReordering) {
-            // No checkbox/asterisk while reordering — matches RN.
         } else if (overdue) {
             OverdueAsteriskIcon(
-                size = 17.dp, // matches TaskCheckboxIcon's size — same row slot
-                // Top-biased to line up with the title's first line; bottom kept
+                size = 17.dp, // matches TaskCheckboxIcon's size, same row slot
+                // top-biased to line up with the title's first line; bottom kept
                 // generous to preserve tap-target size.
                 modifier = Modifier
                     .lightClickable(onClick = onToggle)
@@ -83,7 +82,8 @@ fun TaskRowView(
                     ),
             )
         } else {
-            // RN's artwork read too big next to Akkurat text at full size — shrunk here.
+            // shrunk to 17dp, the artwork read too big next to the Akkurat text at
+            // its full size.
             TaskCheckboxIcon(
                 checked = task.completed,
                 size = 17.dp,
@@ -101,13 +101,12 @@ fun TaskRowView(
         Column(
             modifier = Modifier
                 .weight(1f)
-                // Disabled while reordering — matches RN.
                 .combinedClickable(
                     onClick = { if (!isReordering) onPress() },
                     onLongClick = if (isReordering) null else onLongPress,
                 )
                 .padding(
-                    // Replaces the left margin the checkbox/asterisk normally provides,
+                    // replaces the left margin the checkbox/asterisk normally provides,
                     // since it's hidden while reordering.
                     start = if (isReordering) 1.5f.gridUnitsAsDp() else 0.dp,
                     top = 0.7f.gridUnitsAsDp(),
@@ -115,7 +114,7 @@ fun TaskRowView(
                 ),
         ) {
             // LightTextVariant.Copy's lineHeight = fontSize * 1.50 reads too loose across
-            // wraps — AkkuratText at the same size uses the font's natural line height.
+            // wraps, AkkuratText at the same size uses the font's natural line height.
             AkkuratText(text = task.title, fontSizeDesignPx = 30f)
             if (meta.isNotEmpty()) {
                 LightText(

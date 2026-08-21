@@ -25,8 +25,8 @@ import com.zacksimpson.reminders.ui.SwipeBackContainer
 data class PickerOption(val key: String, val label: String)
 
 /**
- * Single-select list. Tapping an option returns its key as the screen result; the current
- * selection is underlined. Returns nothing if backed out.
+ * single-select list. tapping an option returns its key as the screen result, the current
+ * selection is underlined. returns nothing if backed out.
  */
 class OptionPickerScreen(
     sealedActivity: SealedLightActivity,

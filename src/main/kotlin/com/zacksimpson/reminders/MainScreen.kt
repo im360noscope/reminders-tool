@@ -52,17 +52,17 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
     val selectedTab = MutableStateFlow(Tab.LISTS)
     val state = repo.dataStateIn(viewModelScope)
 
-    /** Forces the Today tab's date/overdue math to re-run: once a minute while visible,
+    /** forces the Today tab's date/overdue math to re-run: once a minute while visible,
      *  and immediately whenever this screen is (re)shown (e.g. app resumed from
      *  background overnight). */
     val refreshTick = MutableStateFlow(0)
 
-    // Lives here rather than as Composable remember state: Content() gets recomposed
+    // lives here rather than as Composable remember state: Content() gets recomposed
     // fresh whenever a pushed screen pops back to it, which discards remember-based
-    // state — the ViewModel survives that round trip.
+    // state. the ViewModel survives that round trip.
     val todayShowCompleted = MutableStateFlow(false)
 
-    // Same reasoning as todayShowCompleted.
+    // same reasoning as todayShowCompleted.
     val listsReordering = MutableStateFlow(false)
 
     init {
@@ -113,7 +113,7 @@ class MainViewModel(private val repo: RemindersRepository) : LightViewModel<Unit
 
 }
 
-/** Boot screen: the four-tab host — Lists, Today, Settings, and the Add action. */
+/** boot screen: the four-tab host, Lists, Today, Settings, and the Add action. */
 @InitialScreen
 class MainScreen(sealedActivity: SealedLightActivity) :
     LightScreen<Unit, MainViewModel>(sealedActivity) {
@@ -123,12 +123,11 @@ class MainScreen(sealedActivity: SealedLightActivity) :
 
     override fun createViewModel() = MainViewModel(RemindersRepository(lightContext.dataStore))
 
-    // Scheduling lives here, on the Screen, not in MainViewModel — a SealedLightContext
+    // scheduling lives here, on the Screen, not in MainViewModel: a SealedLightContext
     // is only reachable via LightScreen's protected lightContext, not from a ViewModel's
     // onScreenShow. willShow() fires on every return to MainScreen (e.g. backing out of
     // Account), not just true app launch, so the one-shot poke is guarded to once per
-    // process — RN only syncs on cold start and real app-foreground, not on in-app nav.
-    // enqueuePeriodic stays unguarded; its UPDATE policy is idempotent by design.
+    // process. enqueuePeriodic stays unguarded; its UPDATE policy is idempotent by design.
     override fun willShow() {
         super.willShow()
         LightWork.enqueuePeriodic(lightContext, SYNC_JOB_KEY, repeatInterval = 15.minutes)
@@ -215,7 +214,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                                     resultCallback = { result ->
                                         when (result) {
                                             TaskAction.DELETED -> Unit
-                                            // Reordering only makes sense within a single list, so
+                                            // reordering only makes sense within a single list, so
                                             // Today pushes that task's List Detail screen already
                                             // in reorder mode; a back-press lands back on Today.
                                             TaskAction.START_REORDER -> {
@@ -262,7 +261,7 @@ class MainScreen(sealedActivity: SealedLightActivity) :
                             onClick = { viewModel.select(Tab.TODAY) },
                             sizeUnits = 1.9f,
                         ),
-                        // Add is an action, not a tab — it opens the New Task screen.
+                        // Add is an action, not a tab, it opens the New Task screen.
                         LightBarButton.LightIcon(LightIcons.ADD, onClick = {
                             val data = (viewModel.state.value as? DataState.Ready)?.data
                             val defaultListId = data?.settings?.defaultListId ?: "inbox"

@@ -3,7 +3,7 @@ package com.zacksimpson.reminders.data
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Normalized result of any Identity Toolkit auth call — signInWithPassword and the
+/** normalized result of any Identity Toolkit auth call. signInWithPassword and the
  *  token-refresh endpoint return differently-shaped, differently-cased JSON, but both
  *  get mapped into this one shape for everything downstream to use. */
 data class AuthTokens(

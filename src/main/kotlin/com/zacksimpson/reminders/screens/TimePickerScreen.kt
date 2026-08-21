@@ -37,9 +37,9 @@ import com.zacksimpson.reminders.ui.AkkuratText
 import com.zacksimpson.reminders.ui.RemindersTheme
 
 /**
- * Numpad time entry, ported from RN's TimePicker.tsx — see [TimePickerLogic] for the
- * digit-validation state machine. SAVE closes with the confirmed "HH:MM" (24h) result;
- * the dismiss (✕), only available with zero digits typed, closes with null.
+ * numpad time entry, see [TimePickerLogic] for the digit-validation state machine.
+ * SAVE closes with the confirmed "HH:MM" (24h) result, the dismiss (✕), only available
+ * with zero digits typed, closes with null.
  */
 class TimePickerScreen(
     sealedActivity: SealedLightActivity,
@@ -75,9 +75,9 @@ class TimePickerScreen(
                     .fillMaxSize()
                     .background(LightThemeTokens.colors.background),
             ) {
-                // No LightTopBar — an empty one still reserves 3 grid units of height,
+                // no LightTopBar, an empty one still reserves 3 grid units of height,
                 // pushing this block lower than intended. AM/PM pinned to the row's
-                // edges; time display centered over the same Box via contentAlignment
+                // edges, time display centered over the same Box via contentAlignment
                 // so it doesn't shift as digits are typed.
                 Box(
                     modifier = Modifier
@@ -107,8 +107,8 @@ class TimePickerScreen(
                     )
                 }
 
-                // Each digit column is weight(1f), so the 3 columns split the row width
-                // evenly — more side padding narrows the row and pulls them closer together.
+                // each digit column is weight(1f), so the 3 columns split the row width
+                // evenly, more side padding narrows the row and pulls them closer together.
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -126,7 +126,7 @@ class TimePickerScreen(
                         }
                     }
                     NumRow {
-                        // Matches NumBtn's own vertical padding so all four rows line up.
+                        // matches NumBtn's own vertical padding so all four rows line up.
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -139,7 +139,7 @@ class TimePickerScreen(
                                     variant = LightTextVariant.Paragraph,
                                     modifier = Modifier.lightClickable { confirm() },
                                 )
-                                hasDigits -> Unit // blank — matches RN: no button while mid-entry
+                                hasDigits -> Unit // blank while mid-entry, no button shown
                                 else -> LightIcon(
                                     icon = LightIcons.CLOSE,
                                     size = 2.2f, // matches the 48px numpad digits visually
