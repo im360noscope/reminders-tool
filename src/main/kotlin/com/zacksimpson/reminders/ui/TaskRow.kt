@@ -60,13 +60,10 @@ fun TaskRowView(
     val meta = buildMeta(task, listTitle)
     val recurrenceLabel = task.recurrence?.let(::formatRecurrence)
 
-    // Leaves its own room on the right for the overlaid scroll indicator
-    // (LightScrollBarPosition.Inside doesn't reserve its own column).
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .alpha(if (dimmed) 0.4f else 1f)
-            .padding(end = 2f.gridUnitsAsDp()),
+            .alpha(if (dimmed) 0.4f else 1f),
         verticalAlignment = Alignment.Top,
     ) {
         if (isReordering) {

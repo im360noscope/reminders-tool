@@ -20,7 +20,6 @@ import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -237,7 +236,6 @@ class TaskDetailScreen(
 
                     else -> LightScrollView(
                         modifier = Modifier.fillMaxSize(),
-                        scrollBarPosition = LightScrollBarPosition.Inside,
                     ) {
                         TitleField(
                             value = title,

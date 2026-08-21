@@ -11,7 +11,6 @@ import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.SimpleLightScreen
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -53,7 +52,6 @@ class OptionPickerScreen(
                 )
                 LightScrollView(
                     modifier = Modifier.fillMaxSize(),
-                    scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     options.forEach { option ->
                         LightText(
@@ -64,8 +62,9 @@ class OptionPickerScreen(
                                 .fillMaxWidth()
                                 .lightClickable { goBack(option.key) }
                                 .padding(
-                                    horizontal = 1.5f.gridUnitsAsDp(),
-                                    vertical = 0.75f.gridUnitsAsDp(),
+                                    start = 1.5f.gridUnitsAsDp(),
+                                    top = 0.75f.gridUnitsAsDp(),
+                                    bottom = 0.75f.gridUnitsAsDp(),
                                 ),
                         )
                     }

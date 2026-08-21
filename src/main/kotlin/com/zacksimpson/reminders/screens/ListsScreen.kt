@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.thelightphone.sdk.ui.LightBarButton
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -65,7 +64,6 @@ fun ListsTab(
 
             is DataState.Ready -> LightScrollView(
                 modifier = Modifier.fillMaxSize(),
-                scrollBarPosition = LightScrollBarPosition.Inside,
             ) {
                 val sorted = RemindersLogic.applyOrder(
                     state.data.lists,
@@ -74,12 +72,7 @@ fun ListsTab(
                 ) { it.order }
                 sorted.forEachIndexed { index, list ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // Scroll-indicator clearance (LightScrollBarPosition.Inside
-                            // overlays rather than reserving its own column) — otherwise
-                            // ReorderArrows sits under the indicator in reorder mode.
-                            .padding(end = 2f.gridUnitsAsDp()),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         LightText(
@@ -92,11 +85,12 @@ fun ListsTab(
                                     onLongClick = if (isReordering) null else { { onLongPressList(list) } },
                                 )
                                 .padding(
-                                    horizontal = 1.5f.gridUnitsAsDp(),
+                                    start = 1.5f.gridUnitsAsDp(),
                                     // Matches ActionRow/OptionPickerScreen/TapField's
                                     // vertical inset — same RN paddingVertical/fontSize
                                     // family (n(11-14) + n(30)) as this row.
-                                    vertical = 0.75f.gridUnitsAsDp(),
+                                    top = 0.75f.gridUnitsAsDp(),
+                                    bottom = 0.75f.gridUnitsAsDp(),
                                 ),
                         )
                         if (isReordering) {

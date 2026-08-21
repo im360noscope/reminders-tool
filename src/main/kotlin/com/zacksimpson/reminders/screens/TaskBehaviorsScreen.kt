@@ -15,7 +15,6 @@ import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -121,7 +120,6 @@ class TaskBehaviorsScreen(
                     val defaultTitle = lists.firstOrNull { it.id == settings?.defaultListId }?.title ?: "Inbox"
                     LightScrollView(
                         modifier = Modifier.fillMaxSize(),
-                        scrollBarPosition = LightScrollBarPosition.Inside,
                     ) {
                         LinkRow("Today View") {
                             navigateTo(screenFactory = { TodayViewScreen(it) })
@@ -186,7 +184,7 @@ private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .lightClickable(onClick = onClick)
-            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+            .padding(start = 1.5f.gridUnitsAsDp(), top = 1f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
     ) {
         LightText(text = label, variant = LightTextVariant.Detail)
         LightText(text = value, variant = LightTextVariant.Heading)
@@ -201,6 +199,6 @@ private fun LinkRow(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .lightClickable(onClick = onClick)
-            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+            .padding(start = 1.5f.gridUnitsAsDp(), top = 1f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
     )
 }

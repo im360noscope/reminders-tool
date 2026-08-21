@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -47,7 +46,6 @@ fun SettingsTab(
             is DataState.Ready -> {
                 LightScrollView(
                     modifier = Modifier.fillMaxSize(),
-                    scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     SettingsLinkRow("Account", onOpenAccount)
                     SettingsLinkRow("Notifications", onOpenNotifications)
@@ -67,6 +65,6 @@ private fun SettingsLinkRow(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .lightClickable(onClick = onClick)
-            .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+            .padding(start = 1.5f.gridUnitsAsDp(), top = 1f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
     )
 }

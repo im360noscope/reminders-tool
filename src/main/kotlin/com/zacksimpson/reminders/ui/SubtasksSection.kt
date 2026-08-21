@@ -63,9 +63,7 @@ private fun SubtaskRow(subtask: Subtask, onRename: () -> Unit, onToggle: () -> U
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // end bumped for scroll-indicator clearance (LightScrollBarPosition.Inside
-            // overlays rather than reserving its own column).
-            .padding(start = 0.5f.gridUnitsAsDp(), end = 2f.gridUnitsAsDp()),
+            .padding(horizontal = 0.5f.gridUnitsAsDp()),
         verticalAlignment = Alignment.Top,
     ) {
         // Top offset tuned against this row's Paragraph text, not copied from

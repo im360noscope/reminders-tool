@@ -18,7 +18,6 @@ import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcon
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -222,7 +221,6 @@ class AddTaskScreen(
 
                 LightScrollView(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    scrollBarPosition = LightScrollBarPosition.Inside,
                 ) {
                     TitleField(
                         value = title,

@@ -19,7 +19,6 @@ import com.thelightphone.sdk.LightViewModel
 import com.thelightphone.sdk.SealedLightActivity
 import com.thelightphone.sdk.ui.LightBarButton
 import com.thelightphone.sdk.ui.LightIcons
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -160,7 +159,6 @@ class ListDetailScreen(
                         } else {
                             LightScrollView(
                                 modifier = Modifier.fillMaxSize(),
-                                scrollBarPosition = LightScrollBarPosition.Inside,
                             ) {
                                 active.forEachIndexed { index, task ->
                                     TaskRowView(
@@ -198,8 +196,9 @@ class ListDetailScreen(
                                             .lightClickable { viewModel.toggleShowCompleted() }
                                             .alpha(0.5f)
                                             .padding(
-                                                horizontal = 1.5f.gridUnitsAsDp(),
-                                                vertical = 1f.gridUnitsAsDp(),
+                                                start = 1.5f.gridUnitsAsDp(),
+                                                top = 1f.gridUnitsAsDp(),
+                                                bottom = 1f.gridUnitsAsDp(),
                                             ),
                                     )
                                     if (showCompleted) {

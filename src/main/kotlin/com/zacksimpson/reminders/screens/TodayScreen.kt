@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import com.thelightphone.sdk.ui.LightBarButton
-import com.thelightphone.sdk.ui.LightScrollBarPosition
 import com.thelightphone.sdk.ui.LightScrollView
 import com.thelightphone.sdk.ui.LightText
 import com.thelightphone.sdk.ui.LightTextVariant
@@ -91,7 +90,6 @@ fun TodayTab(
                 } else {
                     LightScrollView(
                         modifier = Modifier.fillMaxSize(),
-                        scrollBarPosition = LightScrollBarPosition.Inside,
                     ) {
                         overdueTasks.forEach { task ->
                             TaskRowView(
@@ -120,7 +118,7 @@ fun TodayTab(
                                     .fillMaxWidth()
                                     .lightClickable { onToggleShowCompleted() }
                                     .alpha(0.5f)
-                                    .padding(horizontal = 1.5f.gridUnitsAsDp(), vertical = 1f.gridUnitsAsDp()),
+                                    .padding(start = 1.5f.gridUnitsAsDp(), top = 1f.gridUnitsAsDp(), bottom = 1f.gridUnitsAsDp()),
                             )
                             if (showCompleted) {
                                 completedTasks.forEach { task ->

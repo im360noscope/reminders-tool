@@ -42,9 +42,7 @@ private fun fieldValueStyle(): TextStyle {
 
 /**
  * Big tap-to-edit title input: the value (or placeholder) at Heading size with a full
- * underline beneath and no label. Mirrors the RN title field. The right inset leaves room
- * for the scroll indicator, which overlays on top of content (LightScrollBarPosition.Inside)
- * rather than reserving its own column.
+ * underline beneath and no label. Mirrors the RN title field.
  */
 @Composable
 fun TitleField(
@@ -71,15 +69,12 @@ fun TitleField(
             fontSizeDesignPx = 38f,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 2.5f.gridUnitsAsDp()),
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(modifier = Modifier.height(0.4f.gridUnitsAsDp()))
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(end = 2.5f.gridUnitsAsDp())
                 // Thicker than the SDK's own INPUT_UNDERLINE_THICKNESS_PX (3f, also
                 // RN's literal borderBottomWidth: 3) — bumped to match Light Calendar's
                 // own title-field underline weight more closely.
@@ -137,12 +132,9 @@ fun ClearableField(label: String, value: String?, onClick: () -> Unit, onClear: 
             .fillMaxWidth()
             .lightClickable(onClick = onClick)
             .padding(
-                // end bumped to match TaskRowView/TitleField's scroll-indicator clearance
-                // (LightScrollBarPosition.Inside overlays rather than reserving its own
-                // column) — otherwise ClearIcon sits right under the indicator.
                 start = 1.5f.gridUnitsAsDp(),
                 top = 0.75f.gridUnitsAsDp(),
-                end = 2f.gridUnitsAsDp(),
+                end = 1.5f.gridUnitsAsDp(),
                 bottom = 0.75f.gridUnitsAsDp(),
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
