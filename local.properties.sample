@@ -1,5 +1,0 @@
-# Copy to local.properties (gitignored) and fill in real values.
-# firebaseApiKey: the Android-restricted Google Cloud API key for phone<->desktop sync
-# (see data/FirebaseConfig.kt). Get the current value from Google Cloud Console
-# (API Keys, project reminders-web-zs2026) or ask Zack — never commit the real value.
-firebaseApiKey=
